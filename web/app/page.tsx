@@ -1,7 +1,7 @@
 "use client";
 
 import { Camera, CircleGauge, HeartPulse, MessageCircle, ShieldCheck, Stethoscope } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,7 @@ import { Reveal, item, softSpring, spring, stagger } from "@/components/motion";
 import { ArrowDot, Badge, Button, Logo, Tag, ThemeToggle, cx } from "@/components/ui";
 import { api, type Meta } from "@/lib/api";
 
-const LensScene = dynamic(() => import("@/components/three/LensScene"), { ssr: false, loading: () => <SceneFallback /> });
+const PillarField = dynamic(() => import("@/components/three/PillarField"), { ssr: false });
 
 const DEMOS = [
   { code: "RAMESH", name: "Ramesh", meta: "Tailor · Mysuru", lang: "ಕನ್ನಡ", what: "Start the conversation" },
@@ -18,13 +18,6 @@ const DEMOS = [
   { code: "LAKSHMI", name: "Lakshmi", meta: "Retired · Chennai", lang: "தமிழ்", what: "Waiting for review" },
   { code: "ABDUL", name: "Abdul", meta: "Auto driver · Bengaluru", lang: "हिन्दी", what: "Day 3 after surgery" },
 ];
-
-// Three bubbles that tell the story (talk, answer, outcome), each in a fixed empty zone of the scene.
-const BUBBLES = [
-  { text: "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ದಿನದ ಬಗ್ಗೆ ಹೇಳಿ.", lang: "kn", tone: "light", pos: "left-[4%] top-[0%]", tail: "l" },
-  { text: "मैं दिन भर ऑटो चलाता हूँ", lang: "hi", tone: "blue", pos: "right-[2%] top-[10%]", tail: "r" },
-  { text: "Approved by your doctor ✓", lang: "en", tone: "light", pos: "right-[10%] bottom-[8%]", tail: "r" },
-] as const;
 
 const STEPS = [
   { Icon: MessageCircle, title: "Talk", text: "Voice-first, in the language you think in." },
@@ -39,10 +32,6 @@ const STATS = [
   { value: "0", label: "Photos leave the phone. Depth runs on-device", dot: "bg-red3d" },
 ];
 
-function SceneFallback() {
-  return <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url(/3d/street-cataract.jpg)" }} />;
-}
-
 export default function Home() {
   const router = useRouter();
   const reduce = useReducedMotion();
@@ -50,10 +39,19 @@ export default function Home() {
   const [meta, setMeta] = useState<Meta | null>(null);
   const [down, setDown] = useState(false);
   useEffect(() => { api<Meta>("/meta").then(setMeta).catch(() => setDown(true)); }, []);
+  // The pillar field stays behind the whole page; it steps back once you scroll past the hero.
+  const { scrollY } = useScroll();
+  const fieldOpacity = useTransform(scrollY, (y) => {
+    const vh = typeof window === "undefined" ? 800 : window.innerHeight;
+    return 1 - 0.68 * Math.min(1, Math.max(0, (y - vh * 0.35) / (vh * 0.9)));
+  });
   const go = (c: string) => c.trim() && router.push(`/p/${c.trim().toUpperCase()}`);
 
   return (
     <div className="relative overflow-x-clip">
+      <motion.div style={{ opacity: fieldOpacity }} className="pointer-events-none fixed inset-0 z-0">
+        <PillarField className="absolute inset-0" />
+      </motion.div>
       {/* ---------------------------------------------------------------- nav */}
       <header className="sticky top-0 z-40 bg-gradient-to-b from-bg/85 to-bg/0 backdrop-blur-[6px]">
         <div className="mx-auto flex max-w-[1240px] items-center gap-4 px-5 py-4">
@@ -74,13 +72,8 @@ export default function Home() {
       </header>
 
       {/* ---------------------------------------------------------------- hero */}
-      {/* Full-bleed street at dusk: blurred as a cataract patient sees it, sharp through the glasses. */}
-      <section className="relative -mt-[76px] overflow-hidden pt-[76px]">
-        <LensScene className="absolute inset-0" />
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(6,8,12,.94)_0%,rgba(6,8,12,.78)_42%,rgba(6,8,12,.1)_70%)] lg:bg-[linear-gradient(90deg,rgba(6,8,12,.96)_0%,rgba(6,8,12,.82)_30%,rgba(6,8,12,.2)_56%,rgba(6,8,12,0)_72%)]" />
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#06080c] to-transparent" />
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#06080c] to-transparent" />
-        <div className="relative mx-auto grid min-h-[calc(100dvh-76px)] max-w-[1240px] items-start gap-6 px-5 pb-[46vh] lg:grid-cols-[1.02fr_1fr] lg:items-center lg:pb-0">
+      <section className="relative z-10 -mt-[76px] pt-[76px]">
+        <div className="relative mx-auto grid min-h-[calc(100dvh-76px)] max-w-[1240px] grid-cols-[minmax(0,1fr)] items-start px-5 pb-[48vh] lg:grid-cols-[1.02fr_1fr] lg:items-center lg:pb-0">
         <motion.div variants={stagger} initial={reduce ? false : "hidden"} animate="show" className="relative z-10 flex flex-col gap-7 pt-6 lg:pt-0">
           <motion.div variants={item}><Tag>Cataract care · India</Tag></motion.div>
           <motion.h1 variants={item} className="display text-[clamp(46px,6.4vw,88px)]">
@@ -106,21 +99,11 @@ export default function Home() {
           {down && <p className="rounded-2xl bg-danger-bg px-4 py-3 text-[14px] text-danger">The API is not reachable. Start the backend on port 8000.</p>}
         </motion.div>
 
-          <div className="relative hidden h-[640px] lg:block">
-            {BUBBLES.map((b, i) => (
-              <motion.div key={b.text} lang={b.lang} className={cx("pointer-events-none absolute z-10", b.pos)}
-                initial={reduce ? false : { opacity: 0, scale: 0.6, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ ...spring, delay: 0.9 + i * 0.3 }}>
-                <div className="float" style={{ animationDelay: `${-i * 2}s`, animationDuration: "7s" }}>
-                  <div className={cx("bubble text-[14.5px]", b.tone === "blue" ? "bubble-blue" : "bubble-light", b.tail === "l" ? "bubble-l" : "bubble-r")}>{b.text}</div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* ---------------------------------------------------------------- demo strip */}
-      <section className="mx-auto max-w-[1240px] px-5">
+      <section className="relative z-10 mx-auto max-w-[1240px] px-5">
         <Reveal>
           <div className="panel hairline grid items-center gap-6 rounded-[28px] p-6 md:grid-cols-[0.8fr_2fr] md:p-8">
             <div>
@@ -143,7 +126,7 @@ export default function Home() {
       </section>
 
       {/* ---------------------------------------------------------------- how it works */}
-      <section id="how" className="mx-auto max-w-[1240px] px-5 py-28">
+      <section id="how" className="relative z-10 mx-auto max-w-[1240px] px-5 py-28">
         <Reveal className="max-w-2xl">
           <Tag>How it works</Tag>
           <h2 className="display mt-5 text-[clamp(36px,4.6vw,60px)]">One companion.<br /><span className="text-muted">First question to full recovery.</span></h2>
@@ -162,7 +145,7 @@ export default function Home() {
       </section>
 
       {/* ---------------------------------------------------------------- numbers */}
-      <section className="relative mx-auto max-w-[1240px] px-5 pb-28">
+      <section className="relative z-10 mx-auto max-w-[1240px] px-5 pb-28">
         <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.1fr]">
           <Reveal>
             <Tag>Measured, not promised</Tag>
@@ -187,7 +170,7 @@ export default function Home() {
       </section>
 
       {/* ---------------------------------------------------------------- surgeons */}
-      <section id="surgeons" className="mx-auto max-w-[1240px] px-5 pb-24">
+      <section id="surgeons" className="relative z-10 mx-auto max-w-[1240px] px-5 pb-24">
         <Reveal>
           <div className="relative overflow-hidden rounded-[32px] p-8 md:p-12" style={{ background: "linear-gradient(135deg,#0d2a6b 0%,#1f5bd8 55%,#2f7bff 100%)" }}>
             <div className="sphere sphere-red float absolute right-[10%] top-[18%] h-24 w-24" />
@@ -206,10 +189,9 @@ export default function Home() {
         </Reveal>
       </section>
 
-      <footer className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-4 border-t border-line px-5 py-8 text-[13px] text-muted">
+      <footer className="relative z-10 mx-auto flex max-w-[1240px] flex-wrap items-center gap-4 border-t border-line px-5 py-8 text-[13px] text-muted">
         <Logo size={22} />
         <span>Decision support only. Never diagnoses. Every lens choice is approved by the surgeon.</span>
-        <span className="ml-auto text-[12px]">3D glasses: “SunglassesKhronos” © 2024 Darmstadt Graphics Group GmbH, <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, materials modified · Photo: Subhashish Panigrahi, <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>, adapted</span>
       </footer>
       {!reduce && <motion.div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[2px] origin-left bg-accent" initial={{ scaleX: 0 }} animate={{ scaleX: 1, opacity: 0 }} transition={{ ...softSpring, opacity: { delay: 0.6, duration: 0.4 } }} />}
     </div>
