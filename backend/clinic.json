@@ -1,0 +1,157 @@
+{
+  "_note": "Sample clinic configuration. Every clinic replaces this with its own lens catalogue, optimised A-constants, drop protocol and contacts.",
+  "clinic": {
+    "name": "Demo Eye Clinic, Bengaluru",
+    "surgeon": "Dr. Meera Rao",
+    "phone": "+91 80 0000 0000",
+    "emergency_number": "108"
+  },
+  "rules": {
+    "toric_threshold_d": 1.0,
+    "toric_consider_d": 0.75,
+    "target_refraction_d": 0.0
+  },
+  "lens_families": {
+    "monofocal": {
+      "name": "Monofocal",
+      "defocus_curve": [[0.5, 0.12], [0, 0.0], [-0.5, 0.06], [-1.0, 0.2], [-1.5, 0.34], [-2.0, 0.48], [-2.5, 0.62], [-3.0, 0.75], [-4.0, 0.95]],
+      "halo": 0.05,
+      "affordability": 1.0,
+      "cost_tier": 1,
+      "glasses_after": "For reading and close work",
+      "a_constant": 118.4,
+      "example_models": "e.g. ZEISS CT ASPHINA 409MP",
+      "example_models_toric": "e.g. ZEISS AT TORBI 709M",
+      "condition_rules": {}
+    },
+    "edof": {
+      "name": "EDOF",
+      "defocus_curve": [[0.5, 0.12], [0, 0.0], [-0.5, 0.02], [-1.0, 0.05], [-1.5, 0.1], [-2.0, 0.2], [-2.5, 0.3], [-3.0, 0.42], [-4.0, 0.65]],
+      "halo": 0.25,
+      "affordability": 0.55,
+      "cost_tier": 2,
+      "glasses_after": "For fine print",
+      "a_constant": 118.6,
+      "example_models": "e.g. ZEISS AT LARA 829MP",
+      "example_models_toric": "e.g. ZEISS AT LARA toric 929MP",
+      "condition_rules": {
+        "macular_disease": {
+          "penalty": -0.08,
+          "reason": "Macular disease: reduced contrast may limit the benefit of an extended-range lens."
+        },
+        "glaucoma": {
+          "penalty": -0.05,
+          "reason": "Glaucoma: mild contrast loss with extended-range optics."
+        },
+        "diabetic_retinopathy": {
+          "penalty": -0.05,
+          "reason": "Diabetic retinopathy: retinal disease may limit the benefit."
+        },
+        "dry_eye": {
+          "penalty": -0.03,
+          "reason": "Dry eye: treat the ocular surface before final planning."
+        },
+        "prior_refractive_surgery": {
+          "penalty": -0.04,
+          "reason": "Previous refractive surgery: less predictable outcome with premium optics."
+        }
+      }
+    },
+    "trifocal": {
+      "name": "Trifocal",
+      "defocus_curve": [[0.5, 0.14], [0, 0.02], [-0.5, 0.1], [-1.0, 0.12], [-1.5, 0.08], [-2.0, 0.12], [-2.5, 0.08], [-3.0, 0.14], [-4.0, 0.4]],
+      "halo": 0.55,
+      "affordability": 0.25,
+      "cost_tier": 3,
+      "glasses_after": "Usually not needed",
+      "a_constant": 118.6,
+      "example_models": "e.g. ZEISS AT LISA tri 839MP",
+      "example_models_toric": "e.g. ZEISS AT LISA tri toric 939MP",
+      "condition_rules": {
+        "macular_disease": {
+          "exclude": true,
+          "reason": "Macular disease: diffractive multifocal lenses are generally avoided."
+        },
+        "amblyopia": {
+          "exclude": true,
+          "reason": "Amblyopia: limited potential acuity, multifocal benefit unlikely."
+        },
+        "glaucoma": {
+          "penalty": -0.25,
+          "reason": "Glaucoma: diffractive optics reduce contrast sensitivity further."
+        },
+        "diabetic_retinopathy": {
+          "penalty": -0.2,
+          "reason": "Diabetic retinopathy: risk of macular oedema; multifocal optics are a relative contraindication."
+        },
+        "dry_eye": {
+          "penalty": -0.08,
+          "reason": "Dry eye degrades multifocal image quality. Treat first."
+        },
+        "prior_refractive_surgery": {
+          "penalty": -0.1,
+          "reason": "Previous refractive surgery: higher-order aberrations and power surprises are more likely."
+        }
+      }
+    }
+  },
+  "drops": [
+    {
+      "key": "antibiotic",
+      "name": {
+        "en": "Antibiotic drops",
+        "kn": "ಆ್ಯಂಟಿಬಯೋಟಿಕ್ ಡ್ರಾಪ್ಸ್",
+        "hi": "एंटीबायोटिक ड्रॉप्स",
+        "ta": "ஆன்டிபயாடிக் சொட்டு மருந்து"
+      },
+      "phases": [
+        {
+          "days": 7,
+          "times": ["08:00", "12:00", "16:00", "20:00"]
+        }
+      ]
+    },
+    {
+      "key": "steroid",
+      "name": {
+        "en": "Anti-inflammatory drops",
+        "kn": "ಉರಿಯೂತ ನಿವಾರಕ ಡ್ರಾಪ್ಸ್",
+        "hi": "सूजन कम करने वाली ड्रॉप्स",
+        "ta": "வீக்கம் குறைக்கும் சொட்டு மருந்து"
+      },
+      "phases": [
+        {
+          "days": 7,
+          "times": ["08:00", "12:00", "16:00", "20:00"]
+        },
+        {
+          "days": 7,
+          "times": ["08:00", "14:00", "20:00"]
+        },
+        {
+          "days": 7,
+          "times": ["08:00", "20:00"]
+        },
+        {
+          "days": 7,
+          "times": ["08:00"]
+        }
+      ]
+    }
+  ],
+  "follow_ups": [
+    {
+      "day": 1,
+      "label": "Day-1 check"
+    },
+    {
+      "day": 7,
+      "label": "Week-1 check"
+    },
+    {
+      "day": 30,
+      "label": "Final check and glasses prescription"
+    }
+  ],
+  "_defocus_note": "defocus_curve: [vergence D, logMAR] points, illustrative shapes. Replace with published curves for the lenses the clinic stocks. halo: 0-1 relative night halo/glare noticeability."
+}
