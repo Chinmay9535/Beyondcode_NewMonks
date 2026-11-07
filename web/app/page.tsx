@@ -19,12 +19,11 @@ const DEMOS = [
   { code: "ABDUL", name: "Abdul", meta: "Auto driver · Bengaluru", lang: "हिन्दी", what: "Day 3 after surgery" },
 ];
 
+// Three bubbles that tell the story (talk, answer, outcome), each in a fixed empty zone of the scene.
 const BUBBLES = [
-  { text: "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ದಿನದ ಬಗ್ಗೆ ಹೇಳಿ.", lang: "kn", tone: "light", pos: "left-[4%] top-[14%]", tail: "l" },
-  { text: "मैं दिन भर ऑटो चलाता हूँ", lang: "hi", tone: "blue", pos: "right-[2%] top-[24%]", tail: "r" },
-  { text: "Trifocal · halos at night", lang: "en", tone: "light", pos: "left-[0%] top-[52%]", tail: "l" },
-  { text: "Approved by your doctor ✓", lang: "en", tone: "blue", pos: "right-[6%] top-[62%]", tail: "r" },
-  { text: "Day 7 · 6/9 · on track", lang: "en", tone: "light", pos: "left-[22%] bottom-[6%]", tail: "l" },
+  { text: "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ದಿನದ ಬಗ್ಗೆ ಹೇಳಿ.", lang: "kn", tone: "light", pos: "left-[3%] top-[9%]", tail: "l" },
+  { text: "मैं दिन भर ऑटो चलाता हूँ", lang: "hi", tone: "blue", pos: "right-[0%] top-[72%]", tail: "r" },
+  { text: "Approved by your doctor ✓", lang: "en", tone: "light", pos: "left-[4%] bottom-[6%]", tail: "l" },
 ] as const;
 
 const STEPS = [
@@ -108,11 +107,12 @@ export default function Home() {
         </motion.div>
 
         <div className="relative h-[420px] sm:h-[520px] lg:h-[660px]">
-          <LensScene className="absolute inset-[-12%_-22%_-12%_-18%]" />
+          <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(47,123,255,.28),rgba(47,123,255,.06)_45%,transparent_70%)] blur-2xl" />
+          <LensScene className="absolute inset-[-8%_-14%_-8%_-18%]" />
           {BUBBLES.map((b, i) => (
             <motion.div key={b.text} lang={b.lang} className={cx("pointer-events-none absolute z-10 hidden sm:block", b.pos)}
-              initial={reduce ? false : { opacity: 0, scale: 0.6, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ ...spring, delay: 0.7 + i * 0.22 }}>
-              <div className="float" style={{ animationDelay: `${-i * 1.3}s` }}>
+              initial={reduce ? false : { opacity: 0, scale: 0.6, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ ...spring, delay: 0.8 + i * 0.3 }}>
+              <div className="float" style={{ animationDelay: `${-i * 2}s`, animationDuration: "7s" }}>
                 <div className={cx("bubble text-[14.5px]", b.tone === "blue" ? "bubble-blue" : "bubble-light", b.tail === "l" ? "bubble-l" : "bubble-r")}>{b.text}</div>
               </div>
             </motion.div>
