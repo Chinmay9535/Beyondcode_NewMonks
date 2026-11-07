@@ -1,7 +1,7 @@
 "use client";
 
 import { Camera, CircleGauge, HeartPulse, MessageCircle, ShieldCheck, Stethoscope } from "lucide-react";
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Reveal, item, softSpring, spring, stagger } from "@/components/motion";
 import { ArrowDot, Badge, Button, Logo, Tag, ThemeToggle, cx } from "@/components/ui";
 import { api, type Meta } from "@/lib/api";
+import { STAGES, STORY_ID, storyProgress } from "@/lib/story";
 
 const PillarField = dynamic(() => import("@/components/three/PillarField"), { ssr: false });
 
@@ -17,6 +18,13 @@ const DEMOS = [
   { code: "KAMALA", name: "Kamala", meta: "Homemaker · Mandya", lang: "ಕನ್ನಡ", what: "Blended vision plan", staff: true },
   { code: "LAKSHMI", name: "Lakshmi", meta: "Retired · Chennai", lang: "தமிழ்", what: "Waiting for review" },
   { code: "ABDUL", name: "Abdul", meta: "Auto driver · Bengaluru", lang: "हिन्दी", what: "Day 3 after surgery" },
+];
+
+// The pinned story after the opening headline; the pillar field takes one shape per chapter.
+const CHAPTERS = [
+  { eyebrow: "Your day", title: "Every hour", rest: "of your day.", text: "Threading a needle at 33 cm, riding home at night. Each activity is matched against every lens." },
+  { eyebrow: "Both eyes", title: "Two eyes,", rest: "one plan.", text: "Monofocal, EDOF, trifocal or blended vision, with per-eye powers your surgeon approves." },
+  { eyebrow: "Recovery", title: "Recovery,", rest: "measured.", text: "Drops, daily check-ins and a home vision test. Warning signs reach your doctor in seconds." },
 ];
 
 const STEPS = [
@@ -39,11 +47,17 @@ export default function Home() {
   const [meta, setMeta] = useState<Meta | null>(null);
   const [down, setDown] = useState(false);
   useEffect(() => { api<Meta>("/meta").then(setMeta).catch(() => setDown(true)); }, []);
-  // The pillar field stays behind the whole page; it steps back once you scroll past the hero.
+  // The hero is pinned while the pillar field plays its four shapes; then it steps back.
   const { scrollY } = useScroll();
-  const fieldOpacity = useTransform(scrollY, (y) => {
-    const vh = typeof window === "undefined" ? 800 : window.innerHeight;
-    return 1 - 0.68 * Math.min(1, Math.max(0, (y - vh * 0.35) / (vh * 0.9)));
+  const progress = useTransform(scrollY, () => storyProgress().p);
+  const fieldOpacity = useTransform(scrollY, () => 1 - 0.68 * storyProgress().q);
+  const [stage, setStage] = useState(0);
+  useMotionValueEvent(progress, "change", (p) => setStage(Math.round(p)));
+  const panel = (i: number) => ({
+    animate: { opacity: stage === i ? 1 : 0, y: stage === i ? 0 : stage > i ? -36 : 36, filter: stage === i ? "blur(0px)" : "blur(8px)" },
+    transition: { type: "spring" as const, stiffness: 170, damping: 26 },
+    className: cx("[grid-area:1/1]", stage !== i && "pointer-events-none"),
+    "aria-hidden": stage !== i,
   });
   const go = (c: string) => c.trim() && router.push(`/p/${c.trim().toUpperCase()}`);
 
@@ -71,34 +85,52 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ---------------------------------------------------------------- hero */}
-      <section className="relative z-10 -mt-[76px] pt-[76px]">
-        <div className="relative mx-auto grid min-h-[calc(100dvh-76px)] max-w-[1240px] grid-cols-[minmax(0,1fr)] items-start px-5 pb-[48vh] lg:grid-cols-[1.02fr_1fr] lg:items-center lg:pb-0">
-        <motion.div variants={stagger} initial={reduce ? false : "hidden"} animate="show" className="relative z-10 flex flex-col gap-7 pt-6 lg:pt-0">
-          <motion.div variants={item}><Tag>Cataract care · India</Tag></motion.div>
-          <motion.h1 variants={item} className="display text-[clamp(46px,6.4vw,88px)]">
-            See your lens<br /><span className="text-muted">before you choose it.</span>
-          </motion.h1>
-          <motion.p variants={item} className="max-w-[44ch] text-[17px] leading-relaxed text-muted">
-            A voice companion in Kannada, Hindi, Tamil and English. It learns your day, shows you every lens, and stays with you through recovery.
-          </motion.p>
-          <motion.form variants={item} onSubmit={(e) => { e.preventDefault(); go(code); }} className="flex w-full max-w-[520px] items-center gap-2">
-            <label className="glass flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-2xl pl-2.5 pr-4">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface-2 text-[11px] font-bold text-accent-text">ID</span>
-              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Enter your clinic code" aria-label="Clinic code"
-                className="min-w-0 flex-1 bg-transparent text-[16px] uppercase tracking-[.06em] placeholder:normal-case placeholder:tracking-normal placeholder:text-muted focus:outline-none" />
-            </label>
-            <Button type="submit" size="lg" arrow>Start</Button>
-          </motion.form>
-          <motion.div variants={item} className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
-            <span>Try a demo:</span>
-            {DEMOS.filter((d) => !d.staff).map((d) => (
-              <Link key={d.code} href={`/p/${d.code}`} className="rounded-full border border-line px-3 py-1 font-medium text-ink transition hover:border-accent hover:text-accent-text">{d.name} · {d.lang}</Link>
-            ))}
-          </motion.div>
-          {down && <p className="rounded-2xl bg-danger-bg px-4 py-3 text-[14px] text-danger">The API is not reachable. Start the backend on port 8000.</p>}
-        </motion.div>
-
+      {/* ---------------------------------------------------------------- hero: pinned scroll story */}
+      <section id={STORY_ID} className="relative z-10 -mt-[76px]" style={{ height: `${100 + (STAGES - 1) * 90}vh` }}>
+        <div className="sticky top-0 h-[100svh] overflow-hidden">
+          <div className="mx-auto grid h-full max-w-[1240px] grid-cols-[minmax(0,1fr)] items-start px-5 pt-[96px] lg:grid-cols-[1.02fr_1fr] lg:items-center lg:pt-[76px]">
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)]">
+              <motion.div {...panel(0)}>
+                <motion.div variants={stagger} initial={reduce ? false : "hidden"} animate="show" className="flex flex-col gap-7">
+                  <motion.div variants={item}><Tag>Cataract care · India</Tag></motion.div>
+                  <motion.h1 variants={item} className="display text-[clamp(46px,6.4vw,88px)]">
+                    See your lens<br /><span className="text-muted">before you choose it.</span>
+                  </motion.h1>
+                  <motion.p variants={item} className="max-w-[44ch] text-[17px] leading-relaxed text-muted">
+                    A voice companion in Kannada, Hindi, Tamil and English. It learns your day, shows you every lens, and stays with you through recovery.
+                  </motion.p>
+                  <motion.form variants={item} onSubmit={(e) => { e.preventDefault(); go(code); }} className="flex w-full max-w-[520px] items-center gap-2">
+                    <label className="glass flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-2xl pl-2.5 pr-4">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface-2 text-[11px] font-bold text-accent-text">ID</span>
+                      <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Enter your clinic code" aria-label="Clinic code" tabIndex={stage === 0 ? 0 : -1}
+                        className="min-w-0 flex-1 bg-transparent text-[16px] uppercase tracking-[.06em] placeholder:normal-case placeholder:tracking-normal placeholder:text-muted focus:outline-none" />
+                    </label>
+                    <Button type="submit" size="lg" arrow tabIndex={stage === 0 ? 0 : -1}>Start</Button>
+                  </motion.form>
+                  <motion.div variants={item} className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
+                    <span>Try a demo:</span>
+                    {DEMOS.filter((d) => !d.staff).map((d) => (
+                      <Link key={d.code} href={`/p/${d.code}`} tabIndex={stage === 0 ? 0 : -1} className="rounded-full border border-line px-3 py-1 font-medium text-ink transition hover:border-accent hover:text-accent-text">{d.name} · {d.lang}</Link>
+                    ))}
+                  </motion.div>
+                  {down && <p className="rounded-2xl bg-danger-bg px-4 py-3 text-[14px] text-danger">The API is not reachable. Start the backend on port 8000.</p>}
+                </motion.div>
+              </motion.div>
+              {CHAPTERS.map((c, i) => (
+                <motion.div key={c.eyebrow} {...panel(i + 1)} initial={false}>
+                  <div className="flex flex-col gap-7">
+                    <div><Tag>0{i + 2} · {c.eyebrow}</Tag></div>
+                    <h2 className="display text-[clamp(46px,6.4vw,88px)]">{c.title}<br /><span className="text-muted">{c.rest}</span></h2>
+                    <p className="max-w-[40ch] text-[17px] leading-relaxed text-muted">{c.text}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+          <div className="absolute inset-x-0 bottom-6 mx-auto flex max-w-[1240px] items-center gap-4 px-5 lg:bottom-10">
+            <div className="flex gap-1.5">{Array.from({ length: STAGES }, (_, i) => <StorySegment key={i} i={i} progress={progress} />)}</div>
+            <motion.span animate={{ opacity: stage === 0 ? 1 : 0 }} className="font-mono text-[11px] uppercase tracking-[.18em] text-muted">Scroll</motion.span>
+          </div>
         </div>
       </section>
 
@@ -195,5 +227,14 @@ export default function Home() {
       </footer>
       {!reduce && <motion.div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[2px] origin-left bg-accent" initial={{ scaleX: 0 }} animate={{ scaleX: 1, opacity: 0 }} transition={{ ...softSpring, opacity: { delay: 0.6, duration: 0.4 } }} />}
     </div>
+  );
+}
+
+function StorySegment({ i, progress }: { i: number; progress: MotionValue<number> }) {
+  const fill = useTransform(progress, (p) => (i === 0 ? 1 : Math.min(1, Math.max(0, p - i + 1))));
+  return (
+    <span className="relative h-[3px] w-9 overflow-hidden rounded-full bg-line-strong">
+      <motion.span style={{ scaleX: fill }} className="absolute inset-0 origin-left rounded-full bg-accent" />
+    </span>
   );
 }
