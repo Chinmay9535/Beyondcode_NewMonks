@@ -192,8 +192,8 @@ export default function Simulator({ looks, initial, lang, nearCm = 40 }: { looks
             </div>
           </>
         )}
-        <span className="absolute left-3 top-3 rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[.1em] text-white">{tr(lang, "today")}</span>
-        <span className="absolute right-3 top-3 max-w-[58%] truncate rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[.1em] text-[#FF8A5B]">{tr(lang, "afterSurgery")} · {curve?.name}</span>
+        <span className="absolute left-3 top-3 rounded-lg bg-black/70 px-2.5 py-1.5 text-[12px] font-medium text-white">{tr(lang, "today")}</span>
+        <span className="absolute right-3 top-3 max-w-[58%] truncate rounded-lg bg-black/70 px-2.5 py-1.5 text-[12px] font-medium text-[#FF8A5B]">{tr(lang, "afterSurgery")} · {curve?.name}</span>
         <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white/90" style={{ left: `${pos}%` }}>
           <button
             type="button"

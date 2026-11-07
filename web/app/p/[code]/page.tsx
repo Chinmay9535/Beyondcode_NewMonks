@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Composer, MessageList } from "@/components/Chat";
 import { PatientDayMap } from "@/components/DayMap";
-import Simulator from "@/components/Simulator";
+import SeeIt from "@/components/SeeIt";
 import VisionTest from "@/components/VisionTest";
 import { Badge, Button, Card, Logo, Spinner, ThemeToggle, cx } from "@/components/ui";
 import { ApiError, api, type Lang, type LensOption, type Message, type Meta, type PatientView, type Recovery } from "@/lib/api";
@@ -208,7 +208,7 @@ function LensTab({ me, meta }: { me: PatientView; meta: Meta }) {
         {me.activities.length > 0 && <Card><p className="eyebrow mb-1">{tr(lang, "yourDay")}</p><PatientDayMap activities={me.activities} lang={lang} labels={me.local_labels as Record<string, string>} /></Card>}
         <Card>
           <h3 className="mb-3 text-[19px] font-semibold">{tr(lang, "seeIt")}</h3>
-          <Simulator looks={Object.entries(meta.curves).map(([k, c]) => ({ key: k, name: c.name, curve: c.curve, halo: c.halo }))} lang={lang} nearCm={nearCm} />
+          <SeeIt looks={Object.entries(meta.curves).map(([k, c]) => ({ key: k, name: c.name, curve: c.curve, halo: c.halo }))} lang={lang} nearCm={nearCm} />
         </Card>
       </div>
     );
@@ -255,7 +255,7 @@ function LensTab({ me, meta }: { me: PatientView; meta: Meta }) {
 
       <Card>
         <h3 className="mb-3 text-[19px] font-semibold">{tr(lang, "seeIt")}</h3>
-        <Simulator looks={plan.compare.map((o) => ({ key: o.key, name: planName(o.key, lang, o.name), curve: o.binocular_curve, halo: o.halo }))} initial={shown?.key} lang={lang} nearCm={nearCm} />
+        <SeeIt looks={plan.compare.map((o) => ({ key: o.key, name: planName(o.key, lang, o.name), curve: o.binocular_curve, halo: o.halo }))} initial={shown?.key} lang={lang} nearCm={nearCm} />
       </Card>
 
       <Button variant="soft" size="lg" onClick={share}><Share2 size={18} /> {tr(lang, "share")}</Button>

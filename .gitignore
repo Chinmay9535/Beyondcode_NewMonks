@@ -13,3 +13,6 @@ __pycache__/
 .pytest_cache/
 next-env.d.ts
 *.tsbuildinfo
+
+# downloaded by scripts/fetch-depth-model.sh
+web/public/models/
