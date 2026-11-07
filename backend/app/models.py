@@ -106,3 +106,18 @@ class Dose(SQLModel, table=True):
     drug_key: str
     due_at: datetime = Field(index=True, sa_type=DateTime)  # clinic local time, naive
     taken_at: Optional[datetime] = Field(default=None, sa_type=DateTime)
+
+
+class VisionTest(SQLModel, table=True):
+    """A home vision check: tumbling-E acuity (distance or near) or an Amsler grid."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    patient_id: str = Field(foreign_key="patient.id", index=True)
+    eye: str  # right | left
+    kind: str  # distance | near | amsler
+    distance_cm: Optional[float] = None
+    logmar: Optional[float] = None
+    amsler_abnormal: Optional[bool] = None
+    amsler_cells: list[int] = Field(default_factory=list, sa_column=Column(JSON))
+    day: Optional[int] = None  # days since this eye's surgery (negative or None = before surgery)
+    meta: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=now, sa_type=DateTime)

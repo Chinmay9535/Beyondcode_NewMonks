@@ -13,7 +13,7 @@ from . import i18n
 from .config import local_now
 from .core import add_message, clinic, raise_alert, recompute
 from .db import engine
-from .models import Biometry, Dose, Patient, now
+from .models import Biometry, Dose, Patient, VisionTest, now
 from .services import intake, rag, recovery, redflag
 
 DEMO = [
@@ -49,6 +49,7 @@ DEMO = [
             "glasses": ("", "dont_mind"),
             "budget": ("", "low"),
         },
+        "amsler_preop": [44, 45, 54],
     },
     {
         "patient": dict(id="ABDUL", name="Abdul Rahim", age=66, sex="M", city="Bengaluru", occupation="Auto-rickshaw driver", language="hi", eye="right", phone="+91 90000 00004", dominant_eye="right",
@@ -63,6 +64,7 @@ DEMO = [
             "glasses": ("", "dont_mind"),
             "budget": ("", "low"),
         },
+        "vision": [("right", "distance", 0.6, -5), ("left", "distance", 0.5, -5), ("right", "distance", 0.3, 1), ("right", "distance", 0.2, 3)],
         "approve": ("monofocal", "Glaucoma and long hours of night driving: monofocal for distance, reading glasses for the phone."),
         "surgery_days_ago": 3,
         "recovery": ["क्या मैं नमाज़ पढ़ सकता हूँ?", "आँख लाल है और दर्द बढ़ रहा है"],
@@ -122,6 +124,11 @@ def seed() -> None:
                     if i not in (5, 9):  # two missed doses, to show adherence tracking
                         dose.taken_at = dose.due_at + timedelta(minutes=7)
                         s.add(dose)
+            for eye, kind, lm, day in d.get("vision", []):
+                s.add(VisionTest(patient_id=p.id, eye=eye, kind=kind, distance_cm=200, logmar=lm, day=None if day < 0 else day,
+                                 created_at=now() - timedelta(days=(3 - day) if day >= 0 else 8), meta={"seed": True}))
+            if d.get("amsler_preop"):
+                s.add(VisionTest(patient_id=p.id, eye=p.eye, kind="amsler", amsler_abnormal=True, amsler_cells=d["amsler_preop"], meta={"seed": True}))
             for text in d.get("recovery", []):
                 add_message(s, p, "recovery", "patient", text)
                 det = redflag.detect(text, use_llm=False)

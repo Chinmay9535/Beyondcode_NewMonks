@@ -93,3 +93,27 @@ def test_second_eye_planning(client, staff):
     assert rec["status"] == "pending" and rec["refinement"]["prediction_error"] == -0.5
     assert all(o["eyes"]["right"]["fixed"] for o in rec["options"])
     assert all(o["eyes"]["left"]["refined"] for o in rec["options"] if o["eyes"]["left"]["iol_power_d"] is not None)
+
+
+def test_vision_tests_and_drop_alert(client, staff):
+    pid = client.post("/api/staff/patients", headers=staff, json={"name": "Vision Test", "language": "en"}).json()["id"]
+    client.post(f"/api/p/{pid}/consent")
+    base = client.post(f"/api/p/{pid}/vision-tests", json={"eye": "right", "kind": "distance", "logmar": 0.6}).json()
+    assert base["test"]["day"] is None and base["test"]["snellen"] == "6/24"
+    am = client.post(f"/api/p/{pid}/vision-tests", json={"eye": "right", "kind": "amsler", "amsler_cells": [12, 13]}).json()
+    assert am["test"]["amsler_abnormal"] and any("macula" in n for n in am["test"]["notes"])
+    # Fake an operated eye: approve something and set the surgery date to today.
+    client.post(f"/api/staff/patients/{pid}/biometry", headers=staff, json={"axial_length": 23.5, "k1": 43.5, "k2": 44.0})
+    d = client.post(f"/api/staff/patients/{pid}/recommend", headers=staff).json()
+    client.post(f"/api/staff/patients/{pid}/approve", headers=staff, json={"lens_key": d["recommendation"]["options"][0]["key"]})
+    import datetime
+    from app.config import local_now
+    client.patch(f"/api/staff/patients/{pid}", headers=staff, json={"surgery_date": local_now().date().isoformat()})
+    ok = client.post(f"/api/p/{pid}/vision-tests", json={"eye": "right", "kind": "distance", "logmar": 0.1}).json()
+    assert ok["test"]["day"] == 0 and ok["test"]["vs_baseline_lines"] == 5.0 and "predicted_snellen" in ok["test"]
+    assert not ok["messages"]
+    bad = client.post(f"/api/p/{pid}/vision-tests", json={"eye": "right", "kind": "distance", "logmar": 0.4}).json()
+    assert bad["messages"][0]["meta"]["severity"] == "urgent"
+    alerts = [a for a in client.get("/api/staff/alerts", headers=staff).json() if a["patient_id"] == pid]
+    assert any(a["category"] == "vision_drop" for a in alerts)
+    assert len(client.get(f"/api/staff/patients/{pid}", headers=staff).json()["vision_tests"]) == 4

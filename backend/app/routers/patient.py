@@ -11,8 +11,8 @@ from .. import i18n
 from ..config import local_now
 from ..core import add_message, alert_out, clinic, get_patient, latest_rec, msg_out, raise_alert, recompute
 from ..db import get_session
-from ..models import Alert, Biometry, Dose, Message, Patient, Recommendation, now
-from ..services import intake, lenses, rag, recovery, redflag
+from ..models import Alert, Biometry, Dose, Message, Patient, Recommendation, VisionTest, now
+from ..services import intake, lenses, rag, recovery, redflag, visiontest
 
 router = APIRouter(prefix="/api/p", tags=["patient"])
 
@@ -79,7 +79,7 @@ def erase_me(p: Patient = Depends(get_patient), session: Session = Depends(get_s
 
 
 def erase(session: Session, pid: str) -> None:
-    for model in (Message, Alert, Dose, Recommendation, Biometry):
+    for model in (Message, Alert, Dose, Recommendation, Biometry, VisionTest):
         session.exec(delete(model).where(model.patient_id == pid))
     session.exec(delete(Patient).where(Patient.id == pid))
 
@@ -226,3 +226,71 @@ def get_recovery(p: Patient = Depends(get_patient), session: Session = Depends(g
         raise HTTPException(404, "No surgery date yet")
     return recovery.summary(p, session, p.language)
 
+
+
+class VisionIn(BaseModel):
+    eye: Literal["right", "left"]
+    kind: Literal["distance", "near", "amsler"]
+    distance_cm: Optional[float] = Field(default=None, gt=10, le=700)
+    logmar: Optional[float] = Field(default=None, ge=-0.3, le=1.3)
+    amsler_cells: list[int] = Field(default_factory=list, max_length=100)
+    px_per_mm: Optional[float] = Field(default=None, gt=1, lt=40)
+    trials: Optional[list[dict]] = Field(default=None, max_length=80)
+    helper: Optional[bool] = None
+
+
+def vision_out(t: VisionTest, info: dict | None = None) -> dict:
+    from ..core import iso
+    return {"id": t.id, "eye": t.eye, "kind": t.kind, "distance_cm": t.distance_cm, "logmar": t.logmar,
+            "snellen": lenses.snellen(t.logmar) if t.logmar is not None else None,
+            "amsler_abnormal": t.amsler_abnormal, "amsler_cells": t.amsler_cells, "day": t.day,
+            "created_at": iso(t.created_at), **(info or {})}
+
+
+def vision_history(session: Session, p: Patient) -> list[dict]:
+    rows = session.exec(select(VisionTest).where(VisionTest.patient_id == p.id).order_by(VisionTest.id)).all()
+    rec = latest_rec(session, p)
+    approved = next((o for o in rec.result.get("options", []) if o["key"] == rec.approved_lens), None) if rec and rec.status == "approved" else None
+    out = []
+    for i, t in enumerate(rows):
+        info = visiontest.interpret(p, t, rows[:i], approved)
+        info.pop("alert", None)
+        out.append(vision_out(t, info))
+    return out
+
+
+@router.get("/{code}/vision-tests")
+def list_vision(p: Patient = Depends(get_patient), session: Session = Depends(get_session)):
+    return vision_history(session, p)
+
+
+@router.post("/{code}/vision-tests")
+def add_vision(body: VisionIn, p: Patient = Depends(get_patient), session: Session = Depends(get_session)):
+    _require_consent(p)
+    if body.kind != "amsler" and body.logmar is None:
+        raise HTTPException(422, "logmar is required for an acuity test")
+    history = session.exec(select(VisionTest).where(VisionTest.patient_id == p.id).order_by(VisionTest.id)).all()
+    t = VisionTest(patient_id=p.id, eye=body.eye, kind=body.kind, distance_cm=body.distance_cm or (200 if body.kind == "distance" else 40),
+                   logmar=body.logmar, amsler_abnormal=(len(body.amsler_cells) > 0) if body.kind == "amsler" else None,
+                   amsler_cells=body.amsler_cells, day=visiontest.operated_day(p, body.eye),
+                   meta={"px_per_mm": body.px_per_mm, "trials": body.trials, "helper": body.helper})
+    session.add(t)
+    session.flush()
+    rec = latest_rec(session, p)
+    approved = next((o for o in rec.result.get("options", []) if o["key"] == rec.approved_lens), None) if rec and rec.status == "approved" else None
+    info = visiontest.interpret(p, t, history, approved)
+    msgs = []
+    al = info.pop("alert", None)
+    c = clinic()
+    if al:
+        a = Alert(patient_id=p.id, severity=al["severity"], category=al["category"], text=al["text"], text_en=al["text"])
+        session.add(a)
+        session.flush()
+        info["alert_id"] = a.id
+        if al["severity"] in ("urgent", "soon"):
+            key = "redflag_" + al["severity"]
+            kw = dict(doctor=c["surgeon"], emergency=c["emergency_number"], phone=c["phone"])
+            msgs.append(add_message(session, p, "recovery", "assistant", i18n.t(key, p.language, **kw), i18n.t(key, "en", **kw),
+                                    kind="safety", severity=al["severity"], alert_id=a.id))
+    session.commit()
+    return {"test": vision_out(t, info), "saved": i18n.t("vision_saved", p.language), "messages": [msg_out(m) for m in msgs]}

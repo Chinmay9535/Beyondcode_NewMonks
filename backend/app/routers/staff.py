@@ -18,7 +18,7 @@ from ..core import (alert_out, biometry_for, biometry_out, iso, latest_biometry,
 from ..db import get_session
 from ..models import Alert, Biometry, Message, Patient, now
 from ..services import lenses, recovery
-from .patient import erase
+from .patient import erase, vision_history
 
 router = APIRouter(prefix="/api/staff", tags=["staff"])
 auth = [Depends(require_staff)]
@@ -124,6 +124,7 @@ def patient_detail(pid: str, session: Session = Depends(get_session)):
         "messages": [msg_out(m) for m in msgs],
         "alerts": [alert_out(a) for a in alerts],
         "recovery": recovery.summary(p, session, "en") if p.surgery_date else None,
+        "vision_tests": vision_history(session, p),
     }
 
 

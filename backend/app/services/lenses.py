@@ -128,9 +128,16 @@ def verdict(logmar: float, detail: str) -> tuple[str, float]:
     return ("strain" if logmar <= need + 0.12 else "glasses"), u
 
 
+# Standard 6-metre Snellen lines used in Indian clinics, with their logMAR values.
+SNELLEN_LINES = [("6/4", -0.18), ("6/5", -0.08), ("6/6", 0.0), ("6/7.5", 0.1), ("6/9", 0.18), ("6/12", 0.3), ("6/15", 0.4),
+                 ("6/18", 0.48), ("6/24", 0.6), ("6/36", 0.78), ("6/60", 1.0)]
+
+
 def snellen(logmar: float) -> str:
-    """6/x notation, as used in Indian clinics."""
-    return f"6/{round(6 * 10 ** logmar, 1):g}"
+    """Nearest standard Snellen line (6/x), as written in Indian clinics."""
+    if logmar > 1.05:
+        return "<6/60"
+    return min(SNELLEN_LINES, key=lambda s: abs(s[1] - logmar))[0]
 
 
 # --------------------------------------------------------------------------- ranking

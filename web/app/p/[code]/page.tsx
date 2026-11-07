@@ -1,17 +1,18 @@
 "use client";
 
-import { CalendarCheck, Droplet, HeartPulse, Languages, MessageCircleQuestion, MessagesSquare, Share2, Trash2, Volume2, VolumeX, ScanEye } from "lucide-react";
+import { CalendarCheck, Droplet, Eye, HeartPulse, Languages, MessageCircleQuestion, MessagesSquare, Share2, Trash2, Volume2, VolumeX, ScanEye } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Composer, MessageList } from "@/components/Chat";
 import { PatientDayMap } from "@/components/DayMap";
 import Simulator from "@/components/Simulator";
+import VisionTest from "@/components/VisionTest";
 import { Badge, Button, Card, Logo, Spinner, ThemeToggle, cx } from "@/components/ui";
 import { ApiError, api, type Lang, type LensOption, type Message, type Meta, type PatientView, type Recovery } from "@/lib/api";
 import { LANG_NAMES, planName, tr } from "@/lib/i18n";
 import { speak, stopSpeaking } from "@/lib/speech";
 
-type Tab = "talk" | "lens" | "recovery" | "ask";
+type Tab = "talk" | "lens" | "recovery" | "test" | "ask";
 
 export default function PatientApp() {
   const { code } = useParams<{ code: string }>();
@@ -91,6 +92,7 @@ export default function PatientApp() {
     { id: "talk", label: tr(lang, "tabTalk"), Icon: MessagesSquare },
     { id: "lens", label: tr(lang, "tabLens"), Icon: ScanEye },
     ...(me.recovery ? [{ id: "recovery" as Tab, label: tr(lang, "tabRecovery"), Icon: HeartPulse }] : []),
+    { id: "test", label: tr(lang, "tabTest"), Icon: Eye },
     { id: "ask", label: tr(lang, "tabAsk"), Icon: MessageCircleQuestion },
   ];
 
@@ -131,6 +133,7 @@ export default function PatientApp() {
             {tab === "talk" && <TalkTab me={me} msgs={intakeMsgs} busy={busy} showEn={showEn} onSend={sendIntake} meta={meta} />}
             {tab === "lens" && <LensTab me={me} meta={meta} />}
             {tab === "recovery" && me.recovery && <RecoveryTab me={me} code={code} onChange={(r) => setMe({ ...me, recovery: r })} onCheckin={(m) => { setAskMsgs((x) => [...x, ...m]); say(m); }} />}
+            {tab === "test" && <VisionTest code={code} lang={lang} clinic={me.clinic} operatedEye={me.stage === "post_op" ? me.eye : null} onSafety={(m) => { setAskMsgs((x) => [...x, ...m]); say(m); }} />}
             {tab === "ask" && (
               <div className="flex flex-col gap-5">
                 <div>
@@ -154,7 +157,7 @@ export default function PatientApp() {
             <div className="mx-auto flex max-w-2xl">
               {tabs.map(({ id, label, Icon }) => (
                 <button key={id} type="button" onClick={() => setTab(id)} aria-current={tab === id}
-                  className={cx("flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[13px]", tab === id ? "text-accent-text" : "text-muted")}>
+                  className={cx("flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5 text-center text-[12px] leading-tight", tab === id ? "text-accent-text" : "text-muted")}>
                   <Icon size={22} />{label}
                 </button>
               ))}

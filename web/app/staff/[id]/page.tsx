@@ -8,7 +8,7 @@ import DefocusChart from "@/components/DefocusChart";
 import { DayMatrix } from "@/components/DayMap";
 import { AlertItem, STAGE, StaffShell } from "@/components/StaffShell";
 import { Badge, Button, Card, Spinner, cx } from "@/components/ui";
-import { api, type Activity, type LensOption, type Meta, type StaffPatientDetail } from "@/lib/api";
+import { api, type Activity, type LensOption, type Meta, type StaffPatientDetail, type VisionResult } from "@/lib/api";
 import { LANG_NAMES } from "@/lib/i18n";
 
 export default function StaffPatient() {
@@ -104,6 +104,7 @@ function Detail({ meta }: { meta: Meta }) {
             </div>
             <p className="mt-3 text-[12px] text-muted">Changing conditions re-ranks the shortlist immediately.</p>
           </Card>
+          <VisionCard tests={d.vision_tests || []} operatedEye={d.patient.stage === "post_op" ? d.patient.eye : null} />
           <SurgeryCard d={d} onDate={(date) => patch(date ? { surgery_date: date } : { clear_surgery_date: true })} />
           <Card>
             <h2 className="mb-2 text-[17px] font-semibold">Data</h2>
@@ -419,6 +420,59 @@ function Transcript({ d }: { d: StaffPatientDetail }) {
           ))}
         </ol>
       )}
+    </Card>
+  );
+}
+
+function VisionCard({ tests, operatedEye }: { tests: VisionResult[]; operatedEye: "right" | "left" | null }) {
+  const acu = tests.filter((t) => t.kind === "distance" && t.logmar != null);
+  const amsler = tests.filter((t) => t.kind === "amsler");
+  const W = 320, H = 150, m = { l: 40, r: 10, t: 12, b: 24 };
+  const x = (i: number, n: number) => m.l + (n <= 1 ? (W - m.l - m.r) / 2 : (i / (n - 1)) * (W - m.l - m.r));
+  const y = (lm: number) => m.t + ((Math.min(1.1, Math.max(-0.2, lm)) + 0.2) / 1.3) * (H - m.t - m.b);
+  const COL = { right: "var(--accent)", left: "var(--sky)" } as const;
+  const sn = (lm: number) => (lm >= 1 ? "6/60" : lm >= 0.6 ? "6/24" : lm >= 0.3 ? "6/12" : "6/6");
+  const pred = acu.find((t) => t.predicted_logmar != null);
+  return (
+    <Card>
+      <h2 className="mb-1 text-[17px] font-semibold">Home vision tests</h2>
+      <p className="mb-3 text-[12px] text-muted">Tumbling E at 2 m (helper), card-calibrated. Higher is better.</p>
+      {acu.length === 0 ? <p className="text-[13px] text-muted">No results yet. The patient can test from the Eye test tab.</p> : (
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Distance acuity over time">
+          {[0, 0.3, 0.6, 1.0].map((v) => <g key={v}><line x1={m.l} x2={W - m.r} y1={y(v)} y2={y(v)} stroke="var(--line)" /><text x={m.l - 6} y={y(v) + 3} fontSize="9" textAnchor="end" fill="var(--muted)" fontFamily="var(--font-mono)">{sn(v)}</text></g>)}
+          {pred && <line x1={m.l} x2={W - m.r} y1={y(pred.predicted_logmar!)} y2={y(pred.predicted_logmar!)} stroke="var(--ok)" strokeDasharray="4 4" />}
+          {(["right", "left"] as const).map((e) => {
+            const pts = acu.map((t, i) => ({ t, i })).filter((p) => p.t.eye === e);
+            if (!pts.length) return null;
+            return (
+              <g key={e}>
+                <polyline points={pts.map((p) => `${x(p.i, acu.length)},${y(p.t.logmar!)}`).join(" ")} fill="none" stroke={COL[e]} strokeWidth={2} />
+                {pts.map((p) => <circle key={p.t.id} cx={x(p.i, acu.length)} cy={y(p.t.logmar!)} r={p.t.day === null ? 3 : 4} fill={p.t.day === null ? "var(--surface)" : COL[e]} stroke={COL[e]} strokeWidth={1.5}><title>{`${e} · ${p.t.day === null ? "pre-op" : "day " + p.t.day} · ${p.t.snellen}`}</title></circle>)}
+              </g>
+            );
+          })}
+        </svg>
+      )}
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-muted">
+        <span style={{ color: "var(--accent)" }}>● OD{operatedEye === "right" ? " (operated)" : ""}</span>
+        <span style={{ color: "var(--sky)" }}>● OS{operatedEye === "left" ? " (operated)" : ""}</span>
+        <span>○ pre-op</span>
+        {pred && <span className="text-ok">--- expected with approved lens {pred.predicted_snellen}</span>}
+      </div>
+      {acu.length > 0 && (() => {
+        const last = acu[acu.length - 1];
+        return (
+          <p className="mt-3 text-[13px]">Latest {last.eye === "right" ? "OD" : "OS"}: <b className="font-mono">{last.snellen}</b>{last.day != null ? ` on day ${last.day}` : " (pre-op)"}
+            {last.vs_baseline_lines != null && ` · ${last.vs_baseline_lines > 0 ? "+" : ""}${last.vs_baseline_lines} lines vs pre-op`}
+            {last.vs_predicted_lines != null && ` · ${last.vs_predicted_lines >= 0 ? "on or above" : `${Math.abs(last.vs_predicted_lines)} lines below`} expected`}
+            {last.day != null && last.day < 7 && last.vs_predicted_lines != null && last.vs_predicted_lines < 0 && <span className="text-muted"> (early: vision usually keeps improving through the first weeks)</span>}</p>
+        );
+      })()}
+      {amsler.map((a) => (
+        <p key={a.id} className={cx("mt-2 rounded-xl px-3 py-2 text-[13px]", a.amsler_abnormal ? "bg-warn-bg text-warn" : "bg-ok-bg text-ok")}>
+          Amsler {a.eye === "right" ? "OD" : "OS"} {a.day == null ? "pre-op" : `day ${a.day}`}: {a.amsler_abnormal ? `distortion in ${a.amsler_cells.length} areas${a.day == null ? " · check the macula (OCT) before a multifocal lens" : ""}` : "normal"}
+        </p>
+      ))}
     </Card>
   );
 }

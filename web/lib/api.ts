@@ -165,6 +165,7 @@ export type StaffPatientDetail = {
   messages: Message[];
   alerts: Alert[];
   recovery: Recovery | null;
+  vision_tests: VisionResult[];
 };
 
 export class ApiError extends Error {
@@ -195,3 +196,10 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown;
   }
   return res.json() as Promise<T>;
 }
+
+export type VisionResult = {
+  id: number; eye: "right" | "left"; kind: "distance" | "near" | "amsler"; distance_cm: number | null; logmar: number | null; snellen: string | null;
+  amsler_abnormal: boolean | null; amsler_cells: number[]; day: number | null; created_at: string;
+  baseline_snellen?: string; vs_baseline_lines?: number; predicted_snellen?: string; predicted_logmar?: number; vs_predicted_lines?: number;
+  change_lines?: number; notes?: string[];
+};
