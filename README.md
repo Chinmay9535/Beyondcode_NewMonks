@@ -113,6 +113,7 @@ docs/      submission form answers and video script
 ## Credits
 
 - Hero 3D model: "SunglassesKhronos" from the Khronos glTF Sample Assets, © 2024 Darmstadt Graphics Group GmbH, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Materials are modified at runtime and the logo texture is not rendered; see `web/public/3d/CREDITS.md`.
+- Hero photo: "Evening traffic block in Egipura signal, Bangalore" by Subhashish Panigrahi, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/); cropped, and a blurred "cataract" version made from it (both shared under the same licence).
 
 ## Important limits
 

@@ -21,9 +21,9 @@ const DEMOS = [
 
 // Three bubbles that tell the story (talk, answer, outcome), each in a fixed empty zone of the scene.
 const BUBBLES = [
-  { text: "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ದಿನದ ಬಗ್ಗೆ ಹೇಳಿ.", lang: "kn", tone: "light", pos: "left-[2%] top-[4%]", tail: "l" },
-  { text: "मैं दिन भर ऑटो चलाता हूँ", lang: "hi", tone: "blue", pos: "right-[0%] top-[72%]", tail: "r" },
-  { text: "Approved by your doctor ✓", lang: "en", tone: "light", pos: "left-[4%] bottom-[6%]", tail: "l" },
+  { text: "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ದಿನದ ಬಗ್ಗೆ ಹೇಳಿ.", lang: "kn", tone: "light", pos: "left-[4%] top-[0%]", tail: "l" },
+  { text: "मैं दिन भर ऑटो चलाता हूँ", lang: "hi", tone: "blue", pos: "right-[2%] top-[10%]", tail: "r" },
+  { text: "Approved by your doctor ✓", lang: "en", tone: "light", pos: "right-[10%] bottom-[8%]", tail: "r" },
 ] as const;
 
 const STEPS = [
@@ -40,13 +40,7 @@ const STATS = [
 ];
 
 function SceneFallback() {
-  return (
-    <div className="relative h-full w-full">
-      <div className="sphere sphere-blue float absolute left-[38%] top-[34%] h-40 w-40" />
-      <div className="sphere sphere-red float absolute left-[62%] top-[58%] h-16 w-16" style={{ animationDelay: "-2s" }} />
-      <div className="sphere sphere-yellow float absolute left-[28%] top-[66%] h-10 w-10" style={{ animationDelay: "-4s" }} />
-    </div>
-  );
+  return <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url(/3d/street-cataract.jpg)" }} />;
 }
 
 export default function Home() {
@@ -80,8 +74,14 @@ export default function Home() {
       </header>
 
       {/* ---------------------------------------------------------------- hero */}
-      <section className="relative mx-auto grid max-w-[1240px] items-center gap-6 px-5 pt-6 lg:min-h-[calc(100dvh-80px)] lg:grid-cols-[1.02fr_1fr] lg:pt-0">
-        <motion.div variants={stagger} initial={reduce ? false : "hidden"} animate="show" className="relative z-10 flex flex-col gap-7">
+      {/* Full-bleed street at dusk: blurred as a cataract patient sees it, sharp through the glasses. */}
+      <section className="relative -mt-[76px] overflow-hidden pt-[76px]">
+        <LensScene className="absolute inset-0" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(6,8,12,.94)_0%,rgba(6,8,12,.78)_42%,rgba(6,8,12,.1)_70%)] lg:bg-[linear-gradient(90deg,rgba(6,8,12,.96)_0%,rgba(6,8,12,.82)_30%,rgba(6,8,12,.2)_56%,rgba(6,8,12,0)_72%)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#06080c] to-transparent" />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#06080c] to-transparent" />
+        <div className="relative mx-auto grid min-h-[calc(100dvh-76px)] max-w-[1240px] items-start gap-6 px-5 pb-[46vh] lg:grid-cols-[1.02fr_1fr] lg:items-center lg:pb-0">
+        <motion.div variants={stagger} initial={reduce ? false : "hidden"} animate="show" className="relative z-10 flex flex-col gap-7 pt-6 lg:pt-0">
           <motion.div variants={item}><Tag>Cataract care · India</Tag></motion.div>
           <motion.h1 variants={item} className="display text-[clamp(46px,6.4vw,88px)]">
             See your lens<br /><span className="text-muted">before you choose it.</span>
@@ -106,17 +106,16 @@ export default function Home() {
           {down && <p className="rounded-2xl bg-danger-bg px-4 py-3 text-[14px] text-danger">The API is not reachable. Start the backend on port 8000.</p>}
         </motion.div>
 
-        <div className="relative h-[420px] sm:h-[520px] lg:h-[660px]">
-          <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(47,123,255,.28),rgba(47,123,255,.06)_45%,transparent_70%)] blur-2xl" />
-          <LensScene className="absolute inset-0 lg:inset-[-8%_-14%_-8%_-18%]" />
-          {BUBBLES.map((b, i) => (
-            <motion.div key={b.text} lang={b.lang} className={cx("pointer-events-none absolute z-10 hidden sm:block", b.pos)}
-              initial={reduce ? false : { opacity: 0, scale: 0.6, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ ...spring, delay: 0.8 + i * 0.3 }}>
-              <div className="float" style={{ animationDelay: `${-i * 2}s`, animationDuration: "7s" }}>
-                <div className={cx("bubble text-[14.5px]", b.tone === "blue" ? "bubble-blue" : "bubble-light", b.tail === "l" ? "bubble-l" : "bubble-r")}>{b.text}</div>
-              </div>
-            </motion.div>
-          ))}
+          <div className="relative hidden h-[640px] lg:block">
+            {BUBBLES.map((b, i) => (
+              <motion.div key={b.text} lang={b.lang} className={cx("pointer-events-none absolute z-10", b.pos)}
+                initial={reduce ? false : { opacity: 0, scale: 0.6, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ ...spring, delay: 0.9 + i * 0.3 }}>
+                <div className="float" style={{ animationDelay: `${-i * 2}s`, animationDuration: "7s" }}>
+                  <div className={cx("bubble text-[14.5px]", b.tone === "blue" ? "bubble-blue" : "bubble-light", b.tail === "l" ? "bubble-l" : "bubble-r")}>{b.text}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -210,7 +209,7 @@ export default function Home() {
       <footer className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-4 border-t border-line px-5 py-8 text-[13px] text-muted">
         <Logo size={22} />
         <span>Decision support only. Never diagnoses. Every lens choice is approved by the surgeon.</span>
-        <span className="ml-auto text-[12px]">3D glasses: “SunglassesKhronos” © 2024 Darmstadt Graphics Group GmbH, <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, materials modified</span>
+        <span className="ml-auto text-[12px]">3D glasses: “SunglassesKhronos” © 2024 Darmstadt Graphics Group GmbH, <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, materials modified · Photo: Subhashish Panigrahi, <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>, adapted</span>
       </footer>
       {!reduce && <motion.div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[2px] origin-left bg-accent" initial={{ scaleX: 0 }} animate={{ scaleX: 1, opacity: 0 }} transition={{ ...softSpring, opacity: { delay: 0.6, duration: 0.4 } }} />}
     </div>
