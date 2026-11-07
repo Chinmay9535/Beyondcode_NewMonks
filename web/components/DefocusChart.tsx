@@ -1,13 +1,17 @@
 "use client";
 
-import type { Activity, Curve } from "@/lib/api";
+import type { Activity } from "@/lib/api";
 import { interp, vergence } from "@/lib/optics";
+import { cx } from "./ui";
+
+export type ChartCurve = { key: string; name: string; curve: [number, number][]; family?: string };
 
 const COLORS: Record<string, string> = { monofocal: "var(--muted)", edof: "var(--sky)", trifocal: "var(--accent)" };
+const DASH: Record<string, string> = {};
 const DETAIL = { fine: 0.1, normal: 0.2, coarse: 0.3 } as const;
 
 /** Defocus curves of each lens family with the patient's own activities placed at their working distance. */
-export default function DefocusChart({ curves, activities, highlight }: { curves: Record<string, Curve>; activities: Activity[]; highlight?: string }) {
+export default function DefocusChart({ curves, activities, highlight }: { curves: ChartCurve[]; activities: Activity[]; highlight?: string }) {
   const W = 640, H = 300, m = { l: 46, r: 16, t: 26, b: 40 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const X0 = 0.5, X1 = -4;
@@ -42,16 +46,17 @@ export default function DefocusChart({ curves, activities, highlight }: { curves
             </text>
           </g>
         ))}
-        {Object.entries(curves).map(([k, c]) => (
-          <path key={k} d={path(c.curve)} fill="none" stroke={COLORS[k] || "var(--text)"} strokeWidth={highlight === k ? 3.2 : 2} opacity={highlight && highlight !== k ? 0.5 : 1} strokeLinecap="round" />
+        {curves.map((c) => (
+          <path key={c.key} d={path(c.curve)} fill="none" stroke={COLORS[c.family || c.key] || "var(--text)"} strokeWidth={highlight === c.key ? 3.4 : 1.8}
+            strokeDasharray={c.key.includes("blend") || c.key.includes("micro") ? "7 5" : DASH[c.key]} opacity={highlight && highlight !== c.key ? 0.45 : 1} strokeLinecap="round" />
         ))}
       </svg>
       <figcaption className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-muted">
-        {Object.entries(curves).map(([k, c]) => (
-          <span key={k} className="inline-flex items-center gap-1.5"><i className="inline-block h-0.5 w-4" style={{ background: COLORS[k] }} />{c.name}</span>
+        {curves.map((c) => (
+          <span key={c.key} className={cx("inline-flex items-center gap-1.5", highlight === c.key && "text-ink")}><i className="inline-block h-0.5 w-4" style={{ background: COLORS[c.family || c.key] }} />{c.name}</span>
         ))}
         <span className="inline-flex items-center gap-1.5"><i className="inline-block h-[3px] w-3 bg-ink/60" />acuity the activity needs</span>
-        <span>Illustrative curves from clinic.json</span>
+        <span>Both eyes combined · dashed = blended · illustrative curves</span>
       </figcaption>
     </figure>
   );

@@ -30,7 +30,12 @@ class Patient(SQLModel, table=True):
     city: Optional[str] = None
     occupation: Optional[str] = None
     language: str = "kn"
-    eye: str = "right"  # eye being operated: right | left
+    eye: str = "right"  # eye being planned/operated now: right | left
+    dominant_eye: Optional[str] = None  # right | left | None (unknown)
+    # The other eye: "planned" (also needs surgery), "operated" (has an IOL) or "natural" (not for surgery)
+    fellow_status: str = "planned"
+    # For an operated fellow eye: {"family", "actual_se", "predicted_se", "iol_power_d", "date"}
+    fellow: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     # Ocular conditions relevant to lens choice, e.g. ["macular_disease", "dry_eye"].
     conditions: list[str] = Field(default_factory=list, sa_column=Column(JSON))
     # intake -> review -> approved -> post_op

@@ -9,12 +9,15 @@
   "rules": {
     "toric_threshold_d": 1.0,
     "toric_consider_d": 0.75,
-    "target_refraction_d": 0.0
+    "target_refraction_d": 0.0,
+    "second_eye_adjustment": 0.5,
+    "monovision_penalty": 0.03,
+    "monovision_night_penalty": 0.04
   },
   "lens_families": {
     "monofocal": {
       "name": "Monofocal",
-      "defocus_curve": [[0.5, 0.12], [0, 0.0], [-0.5, 0.06], [-1.0, 0.2], [-1.5, 0.34], [-2.0, 0.48], [-2.5, 0.62], [-3.0, 0.75], [-4.0, 0.95]],
+      "defocus_curve": [[2.0, 0.6], [1.5, 0.45], [1.0, 0.3], [0.5, 0.12], [0, 0.0], [-0.5, 0.06], [-1.0, 0.2], [-1.5, 0.34], [-2.0, 0.48], [-2.5, 0.62], [-3.0, 0.75], [-4.0, 0.95]],
       "halo": 0.05,
       "affordability": 1.0,
       "cost_tier": 1,
@@ -26,7 +29,7 @@
     },
     "edof": {
       "name": "EDOF",
-      "defocus_curve": [[0.5, 0.12], [0, 0.0], [-0.5, 0.02], [-1.0, 0.05], [-1.5, 0.1], [-2.0, 0.2], [-2.5, 0.3], [-3.0, 0.42], [-4.0, 0.65]],
+      "defocus_curve": [[2.0, 0.55], [1.5, 0.42], [1.0, 0.28], [0.5, 0.12], [0, 0.0], [-0.5, 0.02], [-1.0, 0.05], [-1.5, 0.1], [-2.0, 0.2], [-2.5, 0.3], [-3.0, 0.42], [-4.0, 0.65]],
       "halo": 0.25,
       "affordability": 0.55,
       "cost_tier": 2,
@@ -59,7 +62,7 @@
     },
     "trifocal": {
       "name": "Trifocal",
-      "defocus_curve": [[0.5, 0.14], [0, 0.02], [-0.5, 0.1], [-1.0, 0.12], [-1.5, 0.08], [-2.0, 0.12], [-2.5, 0.08], [-3.0, 0.14], [-4.0, 0.4]],
+      "defocus_curve": [[2.0, 0.58], [1.5, 0.45], [1.0, 0.3], [0.5, 0.14], [0, 0.02], [-0.5, 0.1], [-1.0, 0.12], [-1.5, 0.08], [-2.0, 0.12], [-2.5, 0.08], [-3.0, 0.14], [-4.0, 0.4]],
       "halo": 0.55,
       "affordability": 0.25,
       "cost_tier": 3,
@@ -153,5 +156,40 @@
       "label": "Final check and glasses prescription"
     }
   ],
-  "_defocus_note": "defocus_curve: [vergence D, logMAR] points, illustrative shapes. Replace with published curves for the lenses the clinic stocks. halo: 0-1 relative night halo/glare noticeability."
+  "_defocus_note": "defocus_curve: [vergence D, logMAR] points, illustrative shapes. Replace with published curves for the lenses the clinic stocks. halo: 0-1 relative night halo/glare noticeability.",
+  "strategies": [
+    {
+      "key": "mono",
+      "name": "Monofocal, both eyes for distance",
+      "families": ["monofocal", "monofocal"],
+      "targets": [0.0, 0.0]
+    },
+    {
+      "key": "mono_blend",
+      "name": "Blended vision: monofocal, one eye set for near",
+      "families": ["monofocal", "monofocal"],
+      "targets": [0.0, -1.25],
+      "blended": true
+    },
+    {
+      "key": "edof",
+      "name": "EDOF, both eyes",
+      "families": ["edof", "edof"],
+      "targets": [0.0, 0.0]
+    },
+    {
+      "key": "edof_micro",
+      "name": "EDOF with micro-monovision",
+      "families": ["edof", "edof"],
+      "targets": [0.0, -0.75],
+      "blended": true
+    },
+    {
+      "key": "tri",
+      "name": "Trifocal, both eyes",
+      "families": ["trifocal", "trifocal"],
+      "targets": [0.0, 0.0]
+    }
+  ],
+  "_strategies_note": "families/targets are [dominant eye, non-dominant eye]. Targets are post-op spherical equivalent in dioptres; negative = set for nearer."
 }

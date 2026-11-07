@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 
 from ..config import get_settings
-from ..core import (alert_out, biometry_out, iso, latest_biometry, latest_rec, msg_out, rec_out, recompute,
+from ..core import (alert_out, biometry_for, biometry_out, iso, latest_biometry, latest_rec, msg_out, rec_out, recompute,
                     require_staff, staff_token)
 from ..db import get_session
 from ..models import Alert, Biometry, Message, Patient, now
@@ -68,6 +68,7 @@ def list_patients(session: Session = Depends(get_session)):
 
 
 class BiometryIn(BaseModel):
+    eye: Optional[Literal["right", "left"]] = None
     axial_length: float = Field(gt=15, lt=40)
     k1: float = Field(gt=30, lt=60)
     k2: float = Field(gt=30, lt=60)
@@ -99,7 +100,7 @@ def create_patient(body: PatientIn, session: Session = Depends(get_session)):
     session.add(p)
     session.flush()
     if body.biometry:
-        session.add(Biometry(patient_id=p.id, eye=p.eye, **body.biometry.model_dump()))
+        session.add(Biometry(patient_id=p.id, eye=body.biometry.eye or p.eye, **body.biometry.model_dump(exclude={"eye"})))
     session.commit()
     return {"id": p.id}
 
@@ -113,10 +114,12 @@ def patient_detail(pid: str, session: Session = Depends(get_session)):
         "patient": {
             "id": p.id, "name": p.name, "age": p.age, "sex": p.sex, "phone": p.phone, "city": p.city, "occupation": p.occupation or p.profile.get("occupation"),
             "language": p.language, "eye": p.eye, "stage": p.stage, "conditions": p.conditions, "consent_at": iso(p.consent_at),
+            "dominant_eye": p.dominant_eye, "fellow_status": p.fellow_status or "planned", "fellow": p.fellow or {},
             "surgery_date": p.surgery_date.isoformat() if p.surgery_date else None, "created_at": iso(p.created_at),
             "profile": {k: v for k, v in p.profile.items() if k not in ("asked", "current_topic")},
         },
         "biometry": biometry_out(latest_biometry(session, p)),
+        "biometry_by_eye": {e: biometry_out(biometry_for(session, p, e)) for e in ("right", "left")},
         "recommendation": rec_out(latest_rec(session, p)),
         "messages": [msg_out(m) for m in msgs],
         "alerts": [alert_out(a) for a in alerts],
@@ -144,6 +147,8 @@ class PatientPatch(BaseModel):
     occupation: Optional[str] = None
     language: Optional[Literal["kn", "hi", "ta", "en"]] = None
     eye: Optional[Literal["right", "left"]] = None
+    dominant_eye: Optional[Literal["right", "left", "unknown"]] = None
+    fellow_status: Optional[Literal["planned", "operated", "natural"]] = None
     conditions: Optional[list[str]] = None
     surgery_date: Optional[date] = None
     clear_surgery_date: bool = False
@@ -162,6 +167,10 @@ def update_patient(pid: str, body: PatientPatch, session: Session = Depends(get_
             setattr(p, f, v)
     if body.eye and body.eye != p.eye:
         p.eye, rerank = body.eye, True
+    if body.dominant_eye:
+        p.dominant_eye, rerank = (None if body.dominant_eye == "unknown" else body.dominant_eye), True
+    if body.fellow_status and body.fellow_status != (p.fellow_status or "planned"):
+        p.fellow_status, rerank = body.fellow_status, True
     if body.conditions is not None:
         p.conditions, rerank = [c for c in body.conditions if c in lenses.CONDITIONS], True
     prof = dict(p.profile)
@@ -189,7 +198,9 @@ def update_patient(pid: str, body: PatientPatch, session: Session = Depends(get_
 @router.post("/patients/{pid}/biometry", dependencies=auth)
 def add_biometry(pid: str, body: BiometryIn, session: Session = Depends(get_session)):
     p = _get(session, pid)
-    session.add(Biometry(patient_id=p.id, eye=p.eye, **body.model_dump()))
+    data = body.model_dump()
+    eye = data.pop("eye") or p.eye
+    session.add(Biometry(patient_id=p.id, eye=eye, **data))
     session.flush()
     if p.stage != "intake":
         recompute(session, p)
@@ -197,8 +208,10 @@ def add_biometry(pid: str, body: BiometryIn, session: Session = Depends(get_sess
     return patient_detail(pid, session)
 
 
-def parse_biometer_export(raw: bytes, eye: str) -> dict[str, Any]:
-    """Reads a biometer export (CSV with headers like 'AL [mm]', 'K1 [D]', 'K2 axis', or JSON)."""
+def parse_biometer_export(raw: bytes) -> dict[str, dict[str, Any]]:
+    """Reads a biometer export (CSV with headers like 'Eye', 'AL [mm]', 'K1 [D]', 'K2 axis', or JSON).
+    Returns {"right": {...}, "left": {...}} for the eyes present. Rows without an eye column
+    are treated as the right eye."""
     text = raw.decode("utf-8-sig", errors="replace")
     rows: list[dict[str, Any]]
     if text.lstrip().startswith(("{", "[")):
@@ -206,37 +219,68 @@ def parse_biometer_export(raw: bytes, eye: str) -> dict[str, Any]:
         rows = data if isinstance(data, list) else data.get("eyes") or [data]
     else:
         rows = list(csv.DictReader(io.StringIO(text)))
-    want = {"right": ("od", "right", "r"), "left": ("os", "left", "l")}[eye]
 
     def norm(h: str) -> str:
         return re.sub(r"[^a-z0-9]+", "", h.lower().split("[")[0])
 
-    def pick(row: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, dict[str, Any]] = {}
+    for row in rows:
         n = {norm(k): v for k, v in row.items() if k}
+
         def f(*keys):
             for k in keys:
                 if n.get(k) not in (None, ""):
                     return float(str(n[k]).replace(",", "."))
             return None
-        return {"axial_length": f("al", "axiallength"), "k1": f("k1"), "k2": f("k2"), "k2_axis": f("k2axis"),
-                "acd": f("acd"), "wtw": f("wtw"), "lens_thickness": f("lt", "lensthickness"), "_eye": str(n.get("eye", "")).lower()}
-
-    parsed = [pick(r) for r in rows]
-    row = next((r for r in parsed if r["_eye"] in want), parsed[0] if parsed else None)
-    if not row or None in (row["axial_length"], row["k1"], row["k2"]):
+        side = str(n.get("eye", "od")).strip().lower()
+        eye = "left" if side in ("os", "left", "l") else "right"
+        r = {"axial_length": f("al", "axiallength"), "k1": f("k1"), "k2": f("k2"), "k2_axis": f("k2axis"),
+             "acd": f("acd"), "wtw": f("wtw"), "lens_thickness": f("lt", "lensthickness")}
+        if None in (r["axial_length"], r["k1"], r["k2"]):
+            continue
+        if r["k2_axis"] is not None:
+            r["k2_axis"] = int(r["k2_axis"])
+        out[eye] = r
+    if not out:
         raise HTTPException(422, "Could not find AL, K1 and K2 in the file")
-    row.pop("_eye")
-    if row["k2_axis"] is not None:
-        row["k2_axis"] = int(row["k2_axis"])
-    return row
+    return out
 
 
 @router.post("/patients/{pid}/biometry/import", dependencies=auth)
 async def import_biometry(pid: str, file: UploadFile = File(...), session: Session = Depends(get_session)):
     p = _get(session, pid)
-    data = parse_biometer_export(await file.read(), p.eye)
-    body = BiometryIn(**data, source=f"import: {file.filename}")
-    return add_biometry(pid, body, session)
+    for eye, data in parse_biometer_export(await file.read()).items():
+        session.add(Biometry(patient_id=p.id, eye=eye, **BiometryIn(**data).model_dump(exclude={"eye", "source"}), source=f"import: {file.filename}"))
+    session.flush()
+    if p.stage != "intake":
+        recompute(session, p)
+    session.commit()
+    return patient_detail(pid, session)
+
+
+class Outcome(BaseModel):
+    actual_se: float = Field(ge=-10, le=10)  # post-op spherical equivalent of the operated eye, D
+
+
+@router.post("/patients/{pid}/second-eye", dependencies=auth)
+def plan_second_eye(pid: str, body: Outcome, session: Session = Depends(get_session)):
+    """Record the operated eye's real outcome, then plan the fellow eye around it."""
+    p = _get(session, pid)
+    rec = latest_rec(session, p)
+    if not rec or rec.status != "approved":
+        raise HTTPException(409, "Approve and operate the first eye before planning the second")
+    opt = next((o for o in rec.result.get("options", []) if o["key"] == rec.approved_lens), None)
+    first = (opt or {}).get("eyes", {}).get(p.eye, {})
+    p.fellow = {"family": first.get("family", (opt or {}).get("family", "monofocal")), "actual_se": body.actual_se,
+                "predicted_se": first.get("power_target", first.get("target", 0.0)), "iol_power_d": first.get("iol_power_d"),
+                "lens": first.get("name"), "eye": p.eye, "date": p.surgery_date.isoformat() if p.surgery_date else None}
+    p.fellow_status = "operated"
+    p.eye = "left" if p.eye == "right" else "right"
+    p.stage = "review"
+    session.add(p)
+    recompute(session, p, fresh=True)
+    session.commit()
+    return patient_detail(pid, session)
 
 
 @router.post("/patients/{pid}/recommend", dependencies=auth)

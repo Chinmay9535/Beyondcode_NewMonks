@@ -84,3 +84,12 @@ def test_biometry_import_and_dose_marking(client, staff):
 def test_meta(client):
     m = client.get("/api/meta").json()
     assert m["ai"] == "offline" and set(m["curves"]) == {"monofocal", "edof", "trifocal"}
+
+
+def test_second_eye_planning(client, staff):
+    d = client.post("/api/staff/patients/ABDUL/second-eye", headers=staff, json={"actual_se": -0.5}).json()
+    assert d["patient"]["eye"] == "left" and d["patient"]["fellow_status"] == "operated"
+    rec = d["recommendation"]
+    assert rec["status"] == "pending" and rec["refinement"]["prediction_error"] == -0.5
+    assert all(o["eyes"]["right"]["fixed"] for o in rec["options"])
+    assert all(o["eyes"]["left"]["refined"] for o in rec["options"] if o["eyes"]["left"]["iol_power_d"] is not None)

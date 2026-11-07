@@ -49,6 +49,17 @@ const S = {
   near: { en: "Reading distance", kn: "ಓದುವ ದೂರ", hi: "पढ़ने की दूरी", ta: "படிக்கும் தூரம்" },
   share: { en: "Share with family on WhatsApp", kn: "ಕುಟುಂಬದೊಂದಿಗೆ ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ಹಂಚಿ", hi: "परिवार के साथ व्हाट्सएप पर भेजें", ta: "குடும்பத்துடன் வாட்ஸ்அப்பில் பகிருங்கள்" },
   noPlan: { en: "Your doctor has not approved a lens yet. Finish the conversation in Talk, then your doctor will go through the options with you.", kn: "ನಿಮ್ಮ ವೈದ್ಯರು ಇನ್ನೂ ಲೆನ್ಸ್ ಅನುಮೋದಿಸಿಲ್ಲ. 'ಮಾತು' ವಿಭಾಗದಲ್ಲಿ ಮಾತುಕತೆ ಮುಗಿಸಿ, ನಂತರ ವೈದ್ಯರು ನಿಮ್ಮೊಂದಿಗೆ ಆಯ್ಕೆಗಳನ್ನು ಚರ್ಚಿಸುತ್ತಾರೆ.", hi: "आपके डॉक्टर ने अभी लेंस मंज़ूर नहीं किया है। 'बातचीत' में बात पूरी करें, फिर डॉक्टर आपके साथ विकल्प देखेंगे।", ta: "உங்கள் மருத்துவர் இன்னும் லென்ஸை அங்கீகரிக்கவில்லை. 'பேச்சு' பகுதியில் உரையாடலை முடியுங்கள், பிறகு மருத்துவர் வாய்ப்புகளைப் பற்றிப் பேசுவார்." },
+  rightEye: { en: "Right eye", kn: "ಬಲ ಕಣ್ಣು", hi: "दायीं आँख", ta: "வலது கண்" },
+  leftEye: { en: "Left eye", kn: "ಎಡ ಕಣ್ಣು", hi: "बायीं आँख", ta: "இடது கண்" },
+  forDistance: { en: "set for distance", kn: "ದೂರಕ್ಕೆ ಹೊಂದಿಸಲಾಗಿದೆ", hi: "दूर के लिए", ta: "தொலைவுக்கு அமைக்கப்பட்டது" },
+  forNear: { en: "set a little for near", kn: "ಸ್ವಲ್ಪ ಹತ್ತಿರಕ್ಕೆ ಹೊಂದಿಸಲಾಗಿದೆ", hi: "थोड़ा पास के लिए", ta: "சற்று அருகுக்கு அமைக்கப்பட்டது" },
+  alreadyDone: { en: "already operated", kn: "ಈಗಾಗಲೇ ಶಸ್ತ್ರಚಿಕಿತ್ಸೆ ಆಗಿದೆ", hi: "ऑपरेशन हो चुका", ta: "ஏற்கனவே அறுவை சிகிச்சை முடிந்தது" },
+  blendedExplain: {
+    en: "Blended vision: one eye sees far, the other is set a little closer. Your brain combines them, so you need glasses less often, even with a lower-priced lens.",
+    kn: "ಮಿಶ್ರ ದೃಷ್ಟಿ: ಒಂದು ಕಣ್ಣು ದೂರ ನೋಡುತ್ತದೆ, ಇನ್ನೊಂದು ಸ್ವಲ್ಪ ಹತ್ತಿರಕ್ಕೆ ಹೊಂದಿಸಲಾಗಿದೆ. ಮೆದುಳು ಎರಡನ್ನೂ ಸೇರಿಸುತ್ತದೆ, ಹಾಗಾಗಿ ಕಡಿಮೆ ಬೆಲೆಯ ಲೆನ್ಸ್‌ನಲ್ಲೇ ಕನ್ನಡಕದ ಅಗತ್ಯ ಕಡಿಮೆಯಾಗುತ್ತದೆ.",
+    hi: "मिली-जुली नज़र: एक आँख दूर देखती है, दूसरी थोड़ा पास के लिए रखी जाती है। दिमाग़ दोनों को जोड़ लेता है, इसलिए कम कीमत के लेंस में भी चश्मे की ज़रूरत कम होती है।",
+    ta: "கலப்புப் பார்வை: ஒரு கண் தொலைவைப் பார்க்கும், மற்றொன்று சற்று அருகுக்கு அமைக்கப்படும். மூளை இரண்டையும் இணைக்கிறது, அதனால் குறைந்த விலை லென்ஸிலேயே கண்ணாடி தேவை குறையும்.",
+  },
   dayN: { en: "Day {n} after surgery", kn: "ಶಸ್ತ್ರಚಿಕಿತ್ಸೆಯ ನಂತರ {n}ನೇ ದಿನ", hi: "सर्जरी के बाद दिन {n}", ta: "அறுவை சிகிச்சைக்குப் பின் {n}வது நாள்" },
   surgeryOn: { en: "Surgery on {d}", kn: "ಶಸ್ತ್ರಚಿಕಿತ್ಸೆ {d}", hi: "सर्जरी {d} को", ta: "அறுவை சிகிச்சை {d}" },
   todaysDrops: { en: "Today's drops", kn: "ಇಂದಿನ ಡ್ರಾಪ್ಸ್", hi: "आज की ड्रॉप्स", ta: "இன்றைய சொட்டு மருந்து" },
@@ -88,6 +99,23 @@ const S = {
 } as const;
 
 export type Key = keyof typeof S;
+
+// Patient-facing names for lens plans (strategy keys from backend/clinic.json).
+const PLAN: Record<string, Record<Lang, string>> = {
+  mono: { en: "Monofocal in both eyes", kn: "ಎರಡೂ ಕಣ್ಣಿಗೆ ಮೊನೊಫೋಕಲ್", hi: "दोनों आँखों में मोनोफोकल", ta: "இரு கண்களிலும் மோனோஃபோகல்" },
+  mono_blend: { en: "Blended vision (monofocal)", kn: "ಮಿಶ್ರ ದೃಷ್ಟಿ (ಮೊನೊಫೋಕಲ್)", hi: "मिली-जुली नज़र (मोनोफोकल)", ta: "கலப்புப் பார்வை (மோனோஃபோகல்)" },
+  edof: { en: "EDOF in both eyes", kn: "ಎರಡೂ ಕಣ್ಣಿಗೆ EDOF", hi: "दोनों आँखों में EDOF", ta: "இரு கண்களிலும் EDOF" },
+  edof_micro: { en: "Blended vision (EDOF)", kn: "ಮಿಶ್ರ ದೃಷ್ಟಿ (EDOF)", hi: "मिली-जुली नज़र (EDOF)", ta: "கலப்புப் பார்வை (EDOF)" },
+  tri: { en: "Trifocal in both eyes", kn: "ಎರಡೂ ಕಣ್ಣಿಗೆ ಟ್ರೈಫೋಕಲ್", hi: "दोनों आँखों में ट्राइफोकल", ta: "இரு கண்களிலும் ட்ரைஃபோகல்" },
+  mono_single: { en: "Monofocal", kn: "ಮೊನೊಫೋಕಲ್", hi: "मोनोफोकल", ta: "மோனோஃபோகல்" },
+  mono_blend_single: { en: "Monofocal, set for near", kn: "ಮೊನೊಫೋಕಲ್, ಹತ್ತಿರಕ್ಕೆ", hi: "मोनोफोकल, पास के लिए", ta: "மோனோஃபோகல், அருகுக்கு" },
+  edof_single: { en: "EDOF", kn: "EDOF", hi: "EDOF", ta: "EDOF" },
+  edof_micro_single: { en: "EDOF, set for near", kn: "EDOF, ಹತ್ತಿರಕ್ಕೆ", hi: "EDOF, पास के लिए", ta: "EDOF, அருகுக்கு" },
+  tri_single: { en: "Trifocal", kn: "ಟ್ರೈಫೋಕಲ್", hi: "ट्राइफोकल", ta: "ட்ரைஃபோகல்" },
+};
+export function planName(key: string, lang: Lang, fallback: string): string {
+  return PLAN[key]?.[lang] ?? fallback;
+}
 
 export function tr(lang: Lang, key: Key, vars: Record<string, string | number> = {}): string {
   const entry = S[key] as Record<string, string>;

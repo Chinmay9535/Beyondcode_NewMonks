@@ -8,7 +8,7 @@ import { PatientDayMap } from "@/components/DayMap";
 import Simulator from "@/components/Simulator";
 import { Badge, Button, Card, Logo, Spinner, ThemeToggle, cx } from "@/components/ui";
 import { ApiError, api, type Lang, type LensOption, type Message, type Meta, type PatientView, type Recovery } from "@/lib/api";
-import { LANG_NAMES, tr } from "@/lib/i18n";
+import { LANG_NAMES, planName, tr } from "@/lib/i18n";
 import { speak, stopSpeaking } from "@/lib/speech";
 
 type Tab = "talk" | "lens" | "recovery" | "ask";
@@ -205,7 +205,7 @@ function LensTab({ me, meta }: { me: PatientView; meta: Meta }) {
         {me.activities.length > 0 && <Card><p className="eyebrow mb-1">{tr(lang, "yourDay")}</p><PatientDayMap activities={me.activities} lang={lang} labels={me.local_labels as Record<string, string>} /></Card>}
         <Card>
           <h3 className="mb-3 text-[19px] font-semibold">{tr(lang, "seeIt")}</h3>
-          <Simulator curves={meta.curves} families={["monofocal", "edof", "trifocal"]} lang={lang} nearCm={nearCm} />
+          <Simulator looks={Object.entries(meta.curves).map(([k, c]) => ({ key: k, name: c.name, curve: c.curve, halo: c.halo }))} lang={lang} nearCm={nearCm} />
         </Card>
       </div>
     );
@@ -214,7 +214,7 @@ function LensTab({ me, meta }: { me: PatientView; meta: Meta }) {
   const share = () => {
     const lines = [
       `DrishtiSaathi · ${me.name}`,
-      `${tr(lang, "yourLens")}: ${lens.name} (${tr(lang, "approvedBy", { doctor: me.clinic.surgeon })})`,
+      `${tr(lang, "yourLens")}: ${planName(lens.key, lang, lens.name)} (${tr(lang, "approvedBy", { doctor: me.clinic.surgeon })})`,
       plan.note ? `${tr(lang, "doctorNote")}: ${plan.note}` : "",
       me.recovery?.surgery_date ? tr(lang, "surgeryOn", { d: me.recovery.surgery_date }) : "",
       me.recovery?.follow_ups.length ? `${tr(lang, "checkups")}: ${me.recovery.follow_ups.map((f) => f.date).join(", ")}` : "",
@@ -226,8 +226,9 @@ function LensTab({ me, meta }: { me: PatientView; meta: Meta }) {
     <div className="flex flex-col gap-5">
       <Card className="rise">
         <p className="eyebrow">{tr(lang, "yourLens")}</p>
-        <h2 className="mt-1 text-[34px] font-semibold leading-tight tracking-[-0.03em]">{lens.name}</h2>
+        <h2 className="mt-1 text-[30px] font-semibold leading-tight tracking-[-0.03em]">{planName(lens.key, lang, lens.name)}</h2>
         <p className="mt-1 text-[15px] text-ok">✓ {tr(lang, "approvedBy", { doctor: me.clinic.surgeon })}</p>
+        <EyesLine lens={lens} lang={lang} />
         {plan.note && <blockquote className="mt-4 rounded-2xl border-l-4 border-accent bg-surface-2 px-4 py-3 text-[16px]"><span className="eyebrow block">{tr(lang, "doctorNote")}</span>{plan.note}</blockquote>}
       </Card>
 
@@ -240,7 +241,7 @@ function LensTab({ me, meta }: { me: PatientView; meta: Meta }) {
             {plan.compare.map((o) => (
               <button key={o.key} type="button" role="tab" aria-selected={shown?.key === o.key} onClick={() => setView(o.key)}
                 className={cx("min-h-10 rounded-full border px-3.5 text-[14px]", shown?.key === o.key ? "border-accent bg-accent text-on-accent" : "border-line")}>
-                {o.name}{o.key === lens.key ? " ✓" : ""}
+                {planName(o.key, lang, o.name)}{o.key === lens.key ? " ✓" : ""}
               </button>
             ))}
           </div>
@@ -251,8 +252,7 @@ function LensTab({ me, meta }: { me: PatientView; meta: Meta }) {
 
       <Card>
         <h3 className="mb-3 text-[19px] font-semibold">{tr(lang, "seeIt")}</h3>
-        <Simulator curves={meta.curves} families={Array.from(new Set(plan.compare.map((o) => o.family)))} initial={shown?.family} lang={lang} nearCm={nearCm}
-          labels={Object.fromEntries(plan.compare.map((o) => [o.family, o.name]))} />
+        <Simulator looks={plan.compare.map((o) => ({ key: o.key, name: planName(o.key, lang, o.name), curve: o.binocular_curve, halo: o.halo }))} initial={shown?.key} lang={lang} nearCm={nearCm} />
       </Card>
 
       <Button variant="soft" size="lg" onClick={share}><Share2 size={18} /> {tr(lang, "share")}</Button>
@@ -333,6 +333,26 @@ function RecoveryTab({ me, code, onChange, onCheckin }: { me: PatientView; code:
           ))}
         </ul>
       </Card>
+    </div>
+  );
+}
+
+function EyesLine({ lens, lang }: { lens: LensOption; lang: Lang }) {
+  const eye = (k: "right" | "left") => {
+    const e = lens.eyes?.[k];
+    if (!e) return null;
+    const how = e.fixed ? tr(lang, "alreadyDone") : e.target < -0.4 ? tr(lang, "forNear") : tr(lang, "forDistance");
+    return (
+      <li className="flex items-center gap-3 rounded-2xl bg-surface-2 px-4 py-3">
+        <span className="w-24 shrink-0 text-[14px] text-muted">{tr(lang, k === "right" ? "rightEye" : "leftEye")}</span>
+        <span className="text-[15px]"><b className="font-semibold">{e.name.replace(" (already implanted)", "")}</b> · {how}</span>
+      </li>
+    );
+  };
+  return (
+    <div className="mt-4 flex flex-col gap-2">
+      <ul className="flex flex-col gap-2">{eye("right")}{eye("left")}</ul>
+      {lens.strategy === "blended" && <p className="rounded-2xl bg-sky-bg px-4 py-3 text-[15px] leading-relaxed text-sky">{tr(lang, "blendedExplain")}</p>}
     </div>
   );
 }

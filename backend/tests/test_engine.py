@@ -199,3 +199,77 @@ def test_scorecard_safety_floor():
 @pytest.mark.parametrize("text", ["कम दिख रहा है", "I'm seeing less than yesterday", "ಕಡಿಮೆ ಕಾಣುತ್ತಿದೆ", "kam dikh raha hai"])
 def test_seeing_less_is_urgent(text):
     assert redflag.detect_rules(text)["severity"] == "urgent"
+
+
+# ----------------------------------------------------------------------------- both eyes
+
+BOTH = {"right": RAMESH_BIO, "left": {"axial_length": 23.38, "k1": 43.62, "k2": 44.12, "k2_axis": 88}}
+READER = {"activities": [
+    {"id": "phone", "label": "Phone", "distance_cm": 40, "detail": "normal", "hours": 3, "importance": 3},
+    {"id": "tv", "label": "TV", "distance_cm": 300, "detail": "coarse", "hours": 3, "importance": 2},
+], "glasses_free": 2, "budget": 3}
+
+
+def test_binocular_summation_and_monovision():
+    assert lenses.binocular(0.1, 0.1) == pytest.approx(0.06)  # two equal eyes see better together
+    assert lenses.binocular(0.0, 0.4) == pytest.approx(0.0)    # very different eyes: the better eye
+
+
+def test_target_shifts_the_curve():
+    mono = lenses.clinic_config()["lens_families"]["monofocal"]
+    # An eye set at -1.25 D is sharpest around 80 cm, and blurrier far away.
+    assert lenses.eye_logmar(mono, -1.25, 80) < lenses.eye_logmar(mono, 0.0, 80)
+    assert lenses.eye_logmar(mono, -1.25, 600) > lenses.eye_logmar(mono, 0.0, 600)
+
+
+def test_blended_vision_beats_plain_monofocal_for_a_cost_sensitive_reader():
+    r = lenses.rank(READER, BOTH, [], primary="right", dominant="right")
+    by = {o["key"]: o for o in r["options"]}
+    assert by["mono_blend"]["score"] > by["mono"]["score"]
+    phone = lambda o: next(x for x in o["day_map"] if x["activity"] == "phone")
+    assert phone(by["mono_blend"])["logmar"] < phone(by["mono"])["logmar"]
+    assert by["mono_blend"]["eyes"]["left"]["target"] == -1.25 and by["mono_blend"]["eyes"]["right"]["target"] == 0
+    assert any("contact-lens trial" in f["text"] for f in by["mono_blend"]["flags"])
+
+
+def test_powers_for_both_eyes_and_blended_eye_is_stronger():
+    by = {o["key"]: o for o in lenses.rank(READER, BOTH, [], dominant="right")["options"]}
+    assert by["mono"]["eyes"]["left"]["iol_power_d"] is not None
+    assert by["mono_blend"]["eyes"]["left"]["iol_power_d"] > by["mono"]["eyes"]["left"]["iol_power_d"]
+
+
+def test_second_eye_refinement_uses_half_the_first_eye_error():
+    fellow = {"family": "monofocal", "actual_se": -0.5, "predicted_se": 0.0}
+    r = lenses.rank(READER, BOTH, [], primary="left", dominant="right", fellow_status="operated", fellow=fellow)
+    assert r["refinement"]["target_adjustment"] == pytest.approx(0.25)
+    plain = lenses.rank(READER, BOTH, [], primary="left", dominant="right", fellow_status="operated",
+                        fellow={"family": "monofocal", "actual_se": 0.0, "predicted_se": 0.0})
+    a = next(o for o in r["options"] if o["key"] == "mono_single")
+    b = next(o for o in plain["options"] if o["key"] == "mono_single")
+    # First eye ended more myopic than predicted -> aim the second eye slightly hyperopic -> weaker lens.
+    assert a["eyes"]["left"]["iol_power_d"] <= b["eyes"]["left"]["iol_power_d"]
+    assert all(o["eyes"]["right"]["fixed"] for o in r["options"])
+
+
+def test_old_database_is_migrated(tmp_path):
+    import sqlite3
+
+    from sqlalchemy import create_engine, inspect
+    from sqlmodel import SQLModel
+
+    from app import db
+
+    path = tmp_path / "old.db"
+    con = sqlite3.connect(path)
+    con.execute("CREATE TABLE patient (id VARCHAR PRIMARY KEY, name VARCHAR NOT NULL, language VARCHAR, eye VARCHAR, stage VARCHAR)")
+    con.execute("INSERT INTO patient VALUES ('OLD1', 'Old', 'kn', 'right', 'intake')")
+    con.commit(); con.close()
+    old_engine = db.engine
+    db.engine = create_engine(f"sqlite:///{path}")
+    try:
+        SQLModel.metadata.create_all(db.engine)
+        db._add_missing_columns()
+        cols = {c["name"] for c in inspect(db.engine).get_columns("patient")}
+        assert {"dominant_eye", "fellow_status", "fellow", "profile"} <= cols
+    finally:
+        db.engine = old_engine

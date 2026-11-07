@@ -2,7 +2,10 @@
 
 import { Camera, Image as ImageIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Curve, Lang } from "@/lib/api";
+import type { Lang } from "@/lib/api";
+
+/** One way of seeing: a (binocular) defocus curve plus its night-halo level. */
+export type Look = { key: string; name: string; curve: [number, number][]; halo: number };
 import { tr } from "@/lib/i18n";
 import { DISTANCES, blurPx, interp, vergence } from "@/lib/optics";
 import { cx } from "./ui";
@@ -93,15 +96,15 @@ function drawHalo(cv: HTMLCanvasElement, halo: number | "cataract", lights: Ligh
   g.globalCompositeOperation = "source-over";
 }
 
-type Look = { far: string; near: string; veil: number; halo: number | "cataract" };
-function lookFor(curve: Curve | null, nearCm: number): Look {
+type Render = { far: string; near: string; veil: number; halo: number | "cataract" };
+function lookFor(curve: Look | null, nearCm: number): Render {
   if (!curve) return { ...CATARACT, halo: "cataract" };
   const f = blurPx(interp(curve.curve, vergence(DISTANCES.far)));
   const n = blurPx(interp(curve.curve, vergence(nearCm)));
   return { far: f > 0.2 ? `blur(${f.toFixed(1)}px)` : "none", near: n > 0.2 ? `blur(${n.toFixed(1)}px)` : "none", veil: 0, halo: curve.halo };
 }
 
-function Stack({ scene, look, className }: { scene: Scene | null; look: Look; className?: string }) {
+function Stack({ scene, look, className }: { scene: Scene | null; look: Render; className?: string }) {
   const farR = useRef<HTMLCanvasElement>(null), nearR = useRef<HTMLCanvasElement>(null), haloR = useRef<HTMLCanvasElement>(null);
   useEffect(() => { if (!scene) return; farR.current!.getContext("2d")!.drawImage(scene.far, 0, 0); nearR.current!.getContext("2d")!.drawImage(scene.near, 0, 0); }, [scene]);
   useEffect(() => { if (scene) drawHalo(haloR.current!, look.halo, scene.lights); }, [scene, look.halo]);
@@ -116,11 +119,9 @@ function Stack({ scene, look, className }: { scene: Scene | null; look: Look; cl
   );
 }
 
-export default function Simulator({ curves, families, initial, lang, nearCm = 40, labels }: {
-  curves: Record<string, Curve>; families: string[]; initial?: string; lang: Lang; nearCm?: number; labels?: Record<string, string>;
-}) {
+export default function Simulator({ looks, initial, lang, nearCm = 40 }: { looks: Look[]; initial?: string; lang: Lang; nearCm?: number }) {
   const [scene, setScene] = useState<Scene | null>(null);
-  const [fam, setFam] = useState(initial || families[0]);
+  const [fam, setFam] = useState(initial || looks[0]?.key);
   const [pos, setPos] = useState(50);
   const [cam, setCam] = useState(false);
   const [camDist, setCamDist] = useState<keyof typeof DISTANCES>("near");
@@ -142,7 +143,7 @@ export default function Simulator({ curves, families, initial, lang, nearCm = 40
     return () => { stream.current?.getTracks().forEach((t) => t.stop()); };
   }, [cam]);
 
-  const curve = curves[fam] || null;
+  const curve = looks.find((l) => l.key === fam) || looks[0] || null;
   const look = lookFor(curve, nearCm);
   const camBlur = curve ? blurPx(interp(curve.curve, vergence(DISTANCES[camDist]))) : 0;
   const clamp = (p: number) => Math.max(3, Math.min(97, p));
@@ -151,10 +152,10 @@ export default function Simulator({ curves, families, initial, lang, nearCm = 40
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Lens type">
-        {families.map((k) => (
-          <button key={k} type="button" role="tab" aria-selected={fam === k} onClick={() => setFam(k)}
-            className={cx("min-h-11 rounded-full border px-4 text-[15px] font-medium transition", fam === k ? "border-accent bg-accent text-on-accent" : "border-line bg-surface hover:border-muted")}>
-            {labels?.[k] || curves[k]?.name || k}
+        {looks.map((l) => (
+          <button key={l.key} type="button" role="tab" aria-selected={curve?.key === l.key} onClick={() => setFam(l.key)}
+            className={cx("min-h-11 rounded-full border px-4 text-left text-[15px] font-medium transition", curve?.key === l.key ? "border-accent bg-accent text-on-accent" : "border-line bg-surface hover:border-muted")}>
+            {l.name}
           </button>
         ))}
         <button type="button" onClick={() => setCam(!cam)} className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-full border border-line px-4 text-[14px] text-muted hover:text-ink">
@@ -192,7 +193,7 @@ export default function Simulator({ curves, families, initial, lang, nearCm = 40
           </>
         )}
         <span className="absolute left-3 top-3 rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[.1em] text-white">{tr(lang, "today")}</span>
-        <span className="absolute right-3 top-3 rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[.1em] text-[#FF8A5B]">{tr(lang, "afterSurgery")} · {labels?.[fam] || curve?.name}</span>
+        <span className="absolute right-3 top-3 max-w-[58%] truncate rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[.1em] text-[#FF8A5B]">{tr(lang, "afterSurgery")} · {curve?.name}</span>
         <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white/90" style={{ left: `${pos}%` }}>
           <button
             type="button"

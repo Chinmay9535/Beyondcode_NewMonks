@@ -76,14 +76,17 @@ function Detail({ meta }: { meta: Meta }) {
             </Card>
           )}
           <Card>
-            <h2 className="mb-1 text-[20px] font-semibold">Defocus curves × this patient</h2>
+            <h2 className="mb-1 text-[20px] font-semibold">Both-eyes defocus curves × this patient</h2>
             <p className="mb-4 text-[13px] text-muted">Dashed lines mark the patient&apos;s activities at their vergence; ticks show the acuity each one needs.</p>
-            <DefocusChart curves={meta.curves} activities={activities} highlight={rec?.options.find((o) => o.key === rec.approved_lens)?.family || rec?.options[0]?.family} />
+            <DefocusChart
+              curves={rec ? rec.options.filter((o) => !o.excluded).map((o) => ({ key: o.key, name: o.name, curve: o.binocular_curve, family: o.family })) : Object.entries(meta.curves).map(([k, c]) => ({ key: k, name: c.name, curve: c.curve, family: k }))}
+              activities={activities} highlight={rec?.approved_lens || rec?.options[0]?.key} />
           </Card>
           <Transcript d={d} />
         </div>
 
         <div className="flex flex-col gap-6">
+          <EyesCard d={d} onPatch={patch} onSecondEye={(se) => post("/second-eye", { actual_se: se })} />
           <BiometryCard d={d} onImport={async (file) => {
             const fd = new FormData(); fd.append("file", file);
             setD(await api<StaffPatientDetail>(`/staff/patients/${id}/biometry/import`, { method: "POST", body: fd, staff: true }));
@@ -126,15 +129,20 @@ function Shortlist({ rec, onApprove, onReopen }: { rec: NonNullable<StaffPatient
         {approved ? <Badge tone="ok"><Check size={12} /> Approved</Badge> : <Badge tone="warn">Awaiting your approval</Badge>}
         <span className="ml-auto font-mono text-[11px] text-muted">glasses-free wish {rec.preferences.glasses_free}/3 · cost sensitivity {rec.preferences.budget}/3</span>
       </div>
-      {(rec.astigmatism.cyl != null || rec.biometry_notes.length > 0) && (
-        <div className="mb-4 flex flex-col gap-1.5 rounded-2xl bg-surface-2 px-4 py-3 text-[13.5px]">
-          {rec.astigmatism.cyl != null && (
-            <p>Corneal astigmatism <b>{rec.astigmatism.cyl} D</b>{rec.astigmatism.axis != null ? ` @ ${rec.astigmatism.axis}°` : ""}:{" "}
-              {rec.astigmatism.toric ? <span className="text-warn">toric indicated (≈ {rec.astigmatism.iol_cyl_estimate} D at IOL plane; confirm with a toric calculator)</span> : rec.astigmatism.borderline ? "borderline, consider toric" : "no toric needed"}</p>
-          )}
-          {rec.biometry_notes.map((n) => <p key={n.text} className="text-warn">⚠ {n.text}</p>)}
-        </div>
+      {rec.refinement && (
+        <p className="mb-3 rounded-2xl border border-sky/40 bg-sky-bg px-4 py-3 text-[13.5px] text-sky"><b>Second-eye refinement.</b> {rec.refinement.text}</p>
       )}
+      <div className="mb-4 flex flex-col gap-1.5 rounded-2xl bg-surface-2 px-4 py-3 text-[13.5px]">
+        {(["right", "left"] as const).map((e) => {
+          const a = rec.astigmatism_by_eye?.[e];
+          if (!a || a.cyl == null) return null;
+          return (
+            <p key={e}><b className="font-mono">{e === "right" ? "OD" : "OS"}</b>{rec.dominant_eye === e ? " (dominant)" : ""}: corneal astigmatism <b>{a.cyl} D</b>{a.axis != null ? ` @ ${a.axis}°` : ""} ·{" "}
+              {a.toric ? <span className="text-warn">toric indicated (≈ {a.iol_cyl_estimate} D at IOL plane; confirm with a toric calculator)</span> : a.borderline ? "borderline, consider toric" : "no toric needed"}</p>
+          );
+        })}
+        {rec.biometry_notes.map((n) => <p key={n.text} className="text-warn">⚠ {n.text}</p>)}
+      </div>
       <ol className="flex flex-col gap-3">
         {rec.options.map((o, i) => (
           <OptionCard key={o.key} o={o} rank={i + 1} selected={sel === o.key} onSelect={() => !approved && !o.excluded && setSel(o.key)} approved={rec.approved_lens === o.key} locked={approved} />
@@ -176,11 +184,27 @@ function OptionCard({ o, rank, selected, onSelect, approved, locked }: { o: Lens
         </div>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2"><div className={cx("h-full rounded-full", o.excluded ? "bg-muted" : "bg-accent")} style={{ width: `${o.excluded ? 0 : o.score * 100}%` }} /></div>
         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[12px] text-muted">
-          <span><b className="font-medium text-ink">{o.hours_clear}/{o.hours_total} h</b> clear w/o glasses</span>
-          <span>IOL <b className="font-medium text-ink">{o.iol_power_d != null ? `${o.iol_power_d > 0 ? "+" : ""}${o.iol_power_d.toFixed(1)} D` : "—"}</b> SRK/T · A {o.a_constant}</span>
-          <span>cost {"₹".repeat(o.cost_tier)}</span>
+          <span><b className="font-medium text-ink">{o.hours_clear}/{o.hours_total} h</b> clear w/o glasses (both eyes)</span>
+          <span>cost {"₹".repeat(Math.max(1, o.cost_tier))}</span>
           <span>glasses: {o.glasses_after.toLowerCase()}</span>
+          {o.strategy === "blended" && <Badge tone="sky">blended · {o.anisometropia_d.toFixed(2)} D apart</Badge>}
         </div>
+        <table className="mt-3 w-full font-mono text-[12px]">
+          <tbody>
+            {(["right", "left"] as const).map((e) => {
+              const p = o.eyes?.[e];
+              if (!p) return null;
+              return (
+                <tr key={e} className="border-t border-line">
+                  <td className="w-10 py-1.5 text-muted">{e === "right" ? "OD" : "OS"}</td>
+                  <td className="py-1.5 pr-2 font-sans text-[13px]">{p.name}</td>
+                  <td className="py-1.5 pr-2 text-muted">{p.fixed ? "implanted" : `target ${p.target > 0 ? "+" : ""}${p.target.toFixed(2)} D`}</td>
+                  <td className="py-1.5 text-right">{p.iol_power_d != null ? <><b className="font-medium">{p.iol_power_d > 0 ? "+" : ""}{p.iol_power_d.toFixed(1)} D</b><span className="text-muted"> SRK/T{p.refined ? " · refined" : ""}</span></> : <span className="text-muted">—</span>}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
         {!o.excluded && (
           <div className="mt-3 grid gap-1">
             <p className="font-mono text-[10.5px] uppercase tracking-[.1em] text-muted">Why (vs. average lens = {pct(o.baseline)})</p>
@@ -249,35 +273,39 @@ function ActivityEditor({ activities, prefs, onSave }: { activities: Activity[];
 }
 
 function BiometryCard({ d, onImport, onSave }: { d: StaffPatientDetail; onImport: (f: File) => Promise<void>; onSave: (b: object) => Promise<void> }) {
-  const b = d.biometry;
   const file = useRef<HTMLInputElement>(null);
   const [edit, setEdit] = useState(false);
-  const [f, setF] = useState({ axial_length: b?.axial_length ?? "", k1: b?.k1 ?? "", k2: b?.k2 ?? "", k2_axis: b?.k2_axis ?? "", acd: b?.acd ?? "", wtw: b?.wtw ?? "" });
+  const [eye, setEye] = useState<"right" | "left">(d.patient.eye);
+  const cur = d.biometry_by_eye?.[eye];
+  const [f, setF] = useState({ axial_length: "", k1: "", k2: "", k2_axis: "", acd: "", wtw: "" });
+  useEffect(() => {
+    setF({ axial_length: String(cur?.axial_length ?? ""), k1: String(cur?.k1 ?? ""), k2: String(cur?.k2 ?? ""), k2_axis: String(cur?.k2_axis ?? ""), acd: String(cur?.acd ?? ""), wtw: String(cur?.wtw ?? "") });
+  }, [cur, eye]);
   const [err, setErr] = useState<string | null>(null);
-  const rows: [string, string][] = b ? [
-    ["Axial length", `${b.axial_length.toFixed(2)} mm`], ["K1 / K2", `${b.k1.toFixed(2)} / ${b.k2.toFixed(2)} D`],
-    ["Corneal cyl", `${Math.abs(b.k2 - b.k1).toFixed(2)} D${b.k2_axis != null ? ` @ ${b.k2_axis}°` : ""}`],
-    ["ACD", b.acd != null ? `${b.acd.toFixed(2)} mm` : "—"], ["WTW", b.wtw != null ? `${b.wtw.toFixed(1)} mm` : "—"],
-  ] : [];
+  const B = d.biometry_by_eye || { right: null, left: null };
+  const fmt = (v: number | null | undefined, n = 2) => (v == null ? "—" : v.toFixed(n));
+  const rows: [string, (b: NonNullable<typeof B.right>) => string][] = [
+    ["AL mm", (b) => fmt(b.axial_length)], ["K1 D", (b) => fmt(b.k1)], ["K2 D", (b) => fmt(b.k2)],
+    ["Cyl D", (b) => `${Math.abs(b.k2 - b.k1).toFixed(2)}${b.k2_axis != null ? ` @${b.k2_axis}°` : ""}`], ["ACD mm", (b) => fmt(b.acd)], ["WTW mm", (b) => fmt(b.wtw, 1)],
+  ];
   const inp = "min-h-9 w-full rounded-lg border border-line bg-surface-2 px-2 font-mono text-[13px]";
   return (
     <Card>
-      <div className="mb-3 flex items-center gap-2">
-        <h2 className="text-[17px] font-semibold">Biometry</h2>
-        <span className="ml-auto font-mono text-[11px] text-muted">{d.patient.eye === "right" ? "OD" : "OS"}</span>
-      </div>
-      {b ? (
-        <dl className="grid grid-cols-[1fr_auto] gap-y-1.5 font-mono text-[13.5px]">
-          {rows.map(([k, v]) => <Fragment key={k}><dt className="text-muted">{k}</dt><dd className="text-right">{v}</dd></Fragment>)}
-        </dl>
-      ) : <p className="text-[14px] text-muted">No measurements yet.</p>}
-      {b && <p className="mt-2 font-mono text-[11px] text-muted">{b.source}</p>}
+      <h2 className="mb-3 text-[17px] font-semibold">Biometry</h2>
+      <table className="w-full font-mono text-[13px]">
+        <thead><tr><th /><th className={cx("pb-1 text-right font-normal", d.patient.eye === "right" ? "text-accent-text" : "text-muted")}>OD{d.patient.eye === "right" ? " ●" : ""}</th><th className={cx("pb-1 text-right font-normal", d.patient.eye === "left" ? "text-accent-text" : "text-muted")}>OS{d.patient.eye === "left" ? " ●" : ""}</th></tr></thead>
+        <tbody>{rows.map(([k, fn]) => (
+          <tr key={k} className="border-t border-line"><td className="py-1 text-muted">{k}</td><td className="py-1 text-right">{B.right ? fn(B.right) : "—"}</td><td className="py-1 text-right">{B.left ? fn(B.left) : "—"}</td></tr>
+        ))}</tbody>
+      </table>
+      <p className="mt-2 font-mono text-[11px] text-muted">● eye being planned now{d.biometry?.source ? ` · ${d.biometry.source}` : ""}</p>
       {edit && (
-        <form className="mt-3 grid grid-cols-3 gap-2" onSubmit={async (e) => { e.preventDefault(); try { await onSave(Object.fromEntries(Object.entries(f).filter(([, v]) => v !== "").map(([k, v]) => [k, Number(v)]))); setEdit(false); setErr(null); } catch (x) { setErr(String(x)); } }}>
+        <form className="mt-3 grid grid-cols-3 gap-2" onSubmit={async (e) => { e.preventDefault(); try { await onSave({ eye, ...Object.fromEntries(Object.entries(f).filter(([, v]) => v !== "").map(([k, v]) => [k, Number(v)])) }); setEdit(false); setErr(null); } catch (x) { setErr(String(x)); } }}>
+          <div className="col-span-3 flex gap-2">{(["right", "left"] as const).map((e) => <button key={e} type="button" onClick={() => setEye(e)} className={cx("min-h-8 rounded-full border px-3 text-[12px]", eye === e ? "border-sky text-sky" : "border-line text-muted")}>{e === "right" ? "OD (right)" : "OS (left)"}</button>)}</div>
           {(Object.keys(f) as (keyof typeof f)[]).map((k) => (
             <label key={k} className="text-[11px] text-muted">{k.replace("_", " ")}<input className={inp} inputMode="decimal" value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></label>
           ))}
-          <Button type="submit" size="sm" className="col-span-3">Save measurements</Button>
+          <Button type="submit" size="sm" className="col-span-3">Save {eye === "right" ? "OD" : "OS"}</Button>
         </form>
       )}
       {err && <p className="mt-2 text-[13px] text-danger">{err}</p>}
@@ -286,6 +314,46 @@ function BiometryCard({ d, onImport, onSave }: { d: StaffPatientDetail; onImport
         <Button size="sm" variant="soft" onClick={() => file.current?.click()}><FileUp size={14} /> Import biometer export</Button>
         <Button size="sm" variant="ghost" onClick={() => setEdit(!edit)}><Pencil size={14} /> Enter manually</Button>
       </div>
+    </Card>
+  );
+}
+
+function EyesCard({ d, onPatch, onSecondEye }: { d: StaffPatientDetail; onPatch: (b: object) => Promise<void>; onSecondEye: (se: number) => Promise<void> }) {
+  const p = d.patient;
+  const [se, setSe] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const canSecond = (p.stage === "approved" || p.stage === "post_op") && (p.fellow_status || "planned") === "planned";
+  const sel = "min-h-9 rounded-lg border border-line bg-surface-2 px-2 text-[13px]";
+  return (
+    <Card>
+      <h2 className="mb-3 text-[17px] font-semibold">Both eyes</h2>
+      <div className="grid grid-cols-2 gap-3 text-[13px]">
+        <label className="text-muted">Planning now
+          <select className={cx(sel, "mt-1 w-full")} value={p.eye} onChange={(e) => onPatch({ eye: e.target.value })}><option value="right">Right (OD)</option><option value="left">Left (OS)</option></select>
+        </label>
+        <label className="text-muted">Dominant eye
+          <select className={cx(sel, "mt-1 w-full")} value={p.dominant_eye || "unknown"} onChange={(e) => onPatch({ dominant_eye: e.target.value })}><option value="unknown">Not tested</option><option value="right">Right</option><option value="left">Left</option></select>
+        </label>
+        <label className="col-span-2 text-muted">Other eye
+          <select className={cx(sel, "mt-1 w-full")} value={p.fellow_status || "planned"} onChange={(e) => onPatch({ fellow_status: e.target.value })}>
+            <option value="planned">Also needs surgery (plan both)</option><option value="operated">Already has an IOL</option><option value="natural">Not for surgery</option>
+          </select>
+        </label>
+      </div>
+      {!p.dominant_eye && <p className="mt-2 text-[12px] text-muted">Dominance test: patient makes a small triangle with both hands, frames a distant object, then closes each eye. The eye that keeps the object in the frame is dominant.</p>}
+      {p.fellow_status === "operated" && p.fellow?.lens && (
+        <p className="mt-3 rounded-xl bg-surface-2 px-3 py-2 font-mono text-[12px]">{p.fellow.eye === "right" ? "OD" : "OS"}: {p.fellow.lens} · ended {Number(p.fellow.actual_se).toFixed(2)} D (predicted {Number(p.fellow.predicted_se).toFixed(2)} D){p.fellow.date ? ` · ${p.fellow.date}` : ""}</p>
+      )}
+      {canSecond && (
+        <form className="mt-4 flex flex-col gap-2 border-t border-line pt-4" onSubmit={async (e) => { e.preventDefault(); try { await onSecondEye(Number(se)); setErr(null); } catch (x) { setErr(String(x)); } }}>
+          <p className="text-[13px] text-muted">First eye done? Enter its post-op refraction (spherical equivalent) to plan the other eye around the real result.</p>
+          <div className="flex gap-2">
+            <input value={se} onChange={(e) => setSe(e.target.value)} inputMode="decimal" placeholder="e.g. -0.50" aria-label="Spherical equivalent in dioptres" className="min-h-10 min-w-0 flex-1 rounded-xl border border-line bg-surface-2 px-3 font-mono text-[14px]" />
+            <Button size="sm" type="submit" disabled={se.trim() === "" || isNaN(Number(se))}>Plan second eye</Button>
+          </div>
+          {err && <p className="text-[12px] text-danger">{err}</p>}
+        </form>
+      )}
     </Card>
   );
 }

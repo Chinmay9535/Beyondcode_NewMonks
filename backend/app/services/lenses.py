@@ -157,121 +157,240 @@ def normalise_activities(profile: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
-def rank(profile: dict[str, Any], biometry: dict[str, Any] | None, conditions: list[str]) -> dict[str, Any]:
+EYES = ("right", "left")
+OTHER = {"right": "left", "left": "right"}
+ABBR = {"right": "OD", "left": "OS"}
+
+
+def binocular(a: float, b: float) -> float:
+    """Binocular acuity from two monocular logMARs: the better eye, plus a summation bonus
+    (~0.04 logMAR) that fades as the eyes differ (as in monovision)."""
+    return round(min(a, b) - 0.04 * max(0.0, 1 - abs(a - b) / 0.3), 3)
+
+
+def eye_logmar(fam: dict[str, Any], target: float, distance_cm: float, residual_cyl: float = 0.0) -> float:
+    # An eye left at refraction `target` (e.g. -1.25 D) is in focus at vergence = target,
+    # so its defocus curve shifts by the target.
+    return round(interp(fam["defocus_curve"], vergence(distance_cm) - target) + 0.15 * residual_cyl, 3)
+
+
+def _astig(b: dict[str, Any] | None, rules: dict[str, Any]) -> dict[str, Any]:
+    a: dict[str, Any] = {"cyl": None, "axis": None, "toric": False, "borderline": False}
+    if b:
+        cyl = round(abs(b["k2"] - b["k1"]), 2)
+        a.update(cyl=cyl, axis=b.get("k2_axis"), toric=cyl >= rules["toric_threshold_d"])
+        a["borderline"] = not a["toric"] and cyl >= rules["toric_consider_d"]
+        if a["toric"]:
+            # Rough corneal-to-IOL-plane ratio; a toric calculator (with posterior cornea) decides the model.
+            a["iol_cyl_estimate"] = round_power(cyl * 1.46)
+    a["residual"] = a["cyl"] if (a["cyl"] and not a["toric"] and a["borderline"]) else 0.0
+    return a
+
+
+def _plans(cfg: dict[str, Any], primary: str, dominant: str, fellow_status: str, fellow: dict[str, Any]) -> list[dict[str, Any]]:
+    """Candidate plans. Each eye gets {family, target, fixed}. Fixed = already operated (or natural)."""
+    plans = []
+    non_dom = OTHER[dominant]
+    if fellow_status == "planned":
+        for st in cfg["strategies"]:
+            plans.append({"key": st["key"], "name": st["name"], "blended": bool(st.get("blended")), "eyes": {
+                dominant: {"family": st["families"][0], "target": st["targets"][0], "fixed": False},
+                non_dom: {"family": st["families"][1], "target": st["targets"][1], "fixed": False}}})
+        return plans
+    # One eye to plan; the fellow eye is fixed.
+    fel_eye = OTHER[primary]
+    if fellow_status == "operated":
+        fam = fellow.get("family") or "monofocal"
+        fel_target = fellow.get("actual_se", fellow.get("target", 0.0)) or 0.0
+    else:  # natural lens, not planned: behaves like a distance-corrected presbyopic eye
+        fam, fel_target = "monofocal", 0.0
+    fixed = {"family": fam, "target": float(fel_target), "fixed": True, "natural": fellow_status == "natural"}
+    prefix = "Second eye: " if fellow_status == "operated" else ""
+    seen = set()
+    for st in cfg["strategies"]:
+        famp = st["families"][0]
+        # Blended options only make sense if the fellow eye sees well at distance.
+        if st.get("blended"):
+            if abs(fixed["target"]) > 0.75:
+                continue
+            tgt = st["targets"][1]
+        else:
+            tgt = 0.0
+        if (famp, tgt) in seen:
+            continue
+        seen.add((famp, tgt))
+        nm = cfg["lens_families"][famp]["name"] + (" set for near (blended with the other eye)" if tgt else " for distance")
+        plans.append({"key": f"{st['key']}_single", "name": prefix + nm, "blended": tgt != 0, "eyes": {
+            primary: {"family": famp, "target": tgt, "fixed": False}, fel_eye: fixed}})
+    return plans
+
+
+def rank(profile: dict[str, Any], biometry: dict[str, Any] | None, conditions: list[str], *, primary: str = "right",
+         dominant: str | None = None, fellow_status: str = "planned", fellow: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Rank lens plans for the patient's day.
+
+    biometry: either {"right": {...}|None, "left": {...}|None} or a single eye's dict (treated as `primary`).
+    fellow_status: "planned" (both eyes need surgery), "operated" (fellow already has an IOL; pass
+    fellow={"family", "actual_se", "predicted_se"}) or "natural" (fellow eye not for surgery).
+    """
     cfg = clinic_config()
+    rules = cfg["rules"]
     families: dict[str, Any] = cfg["lens_families"]
     profile = profile or {}
+    fellow = fellow or {}
     acts = normalise_activities(profile)
-    glasses_free = _level(profile.get("glasses_free"), 2)  # 3 = strongly wants to avoid glasses
-    budget = _level(profile.get("budget"), 1)  # 3 = cost matters a lot
+    glasses_free = _level(profile.get("glasses_free"), 2)
+    budget = _level(profile.get("budget"), 1)
+    bio = biometry if (biometry and set(biometry) <= set(EYES)) else {primary: biometry, OTHER[primary]: None}
+    dom = dominant if dominant in EYES else primary
+    astig = {e: _astig(bio.get(e), rules) for e in EYES}
 
-    # Astigmatism
-    astig: dict[str, Any] = {"cyl": None, "axis": None, "toric": False, "borderline": False}
-    if biometry:
-        cyl = round(abs(biometry["k2"] - biometry["k1"]), 2)
-        astig.update(cyl=cyl, axis=biometry.get("k2_axis"))
-        astig["toric"] = cyl >= cfg["rules"]["toric_threshold_d"]
-        astig["borderline"] = not astig["toric"] and cyl >= cfg["rules"]["toric_consider_d"]
-        if astig["toric"]:
-            # Rough corneal-to-IOL-plane ratio; a toric calculator (with posterior cornea) decides the model.
-            astig["iol_cyl_estimate"] = round_power(cyl * 1.46)
-    # Up to ~0.75 D of corneal cylinder is routinely left uncorrected; only model blur beyond that.
-    residual = (astig["cyl"] or 0.0) if (not astig["toric"] and (astig["cyl"] or 0) >= cfg["rules"]["toric_consider_d"]) else 0.0
+    # Second-eye refinement: adjust the planned eye's target by half the fellow eye's prediction error.
+    refinement = None
+    if fellow_status == "operated" and fellow.get("actual_se") is not None and fellow.get("predicted_se") is not None:
+        pe = round(float(fellow["actual_se"]) - float(fellow["predicted_se"]), 2)
+        adj = round(-rules["second_eye_adjustment"] * pe, 2)
+        refinement = {"prediction_error": pe, "target_adjustment": adj,
+                      "text": f"First eye ended at {float(fellow['actual_se']):+.2f} D vs. predicted {float(fellow['predicted_se']):+.2f} D "
+                              f"(error {pe:+.2f} D). Second-eye power is calculated for a target shifted by {adj:+.2f} D "
+                              f"(half the first-eye error, as in Covert 2010 and Jivrajka 2012)."}
 
-    # Not minding glasses softens the cost of "needs glasses" for an activity.
     floor = (3 - glasses_free) / 3 * 0.5
-    beta = 0.04 + 0.08 * budget  # weight of affordability in the final score
+    beta = 0.04 + 0.08 * budget
     W = sum(a["hours"] * a["importance"] for a in acts)
+    plans = _plans(cfg, primary, dom, fellow_status, fellow)
 
-    per: dict[str, dict[str, Any]] = {}
-    for key, fam in families.items():
+    per = []
+    for pl in plans:
         rows = []
+        halo = max(families[e["family"]]["halo"] for e in pl["eyes"].values())
         for a in acts:
-            lm = predicted_logmar(fam, a["distance_cm"], residual)
-            status, u = verdict(lm, a["detail"])
-            halos = a["night"] and fam["halo"] >= 0.2
+            lm = {e: eye_logmar(families[pl["eyes"][e]["family"]], pl["eyes"][e]["target"], a["distance_cm"], astig[e]["residual"] if not pl["eyes"][e]["fixed"] else 0.0) for e in EYES}
+            b = binocular(lm["right"], lm["left"])
+            status, u = verdict(b, a["detail"])
+            halos = a["night"] and halo >= 0.2
             if a["night"]:
-                u *= 1 - 0.5 * fam["halo"]
+                u *= 1 - 0.5 * halo
             u = max(u, floor) if status == "glasses" else u
-            rows.append({"activity": a["id"], "logmar": lm, "snellen": snellen(lm), "status": status, "halos": halos, "utility": round(u, 3)})
-        aff = fam["affordability"] - (0.1 if astig["toric"] else 0)
-        per[key] = {"rows": rows, "aff": aff}
+            rows.append({"activity": a["id"], "logmar": b, "snellen": snellen(b), "od": lm["right"], "os": lm["left"],
+                         "status": status, "halos": halos, "utility": round(u, 3)})
+        planned = [e for e in pl["eyes"].values() if not e["fixed"]]
+        aff = sum(families[e["family"]]["affordability"] for e in planned) / len(planned)
+        if any(astig[eye]["toric"] for eye, e in pl["eyes"].items() if not e["fixed"]):
+            aff -= 0.1
+        per.append({"rows": rows, "aff": aff, "halo": halo})
 
-    n = len(families)
-    avg_u = [sum(per[k]["rows"][i]["utility"] for k in families) / n for i in range(len(acts))]
-    avg_aff = sum(per[k]["aff"] for k in families) / n
+    n = len(plans)
+    avg_u = [sum(p["rows"][i]["utility"] for p in per) / n for i in range(len(acts))]
+    avg_aff = sum(p["aff"] for p in per) / n
     baseline = (1 - beta) * sum(a["hours"] * a["importance"] * avg_u[i] for i, a in enumerate(acts)) / W + beta * avg_aff
 
     options = []
-    for key, fam in families.items():
-        rows, aff = per[key]["rows"], per[key]["aff"]
+    for pl, pp in zip(plans, per):
+        rows, aff = pp["rows"], pp["aff"]
         contributions = []
         for i, a in enumerate(acts):
             c = (1 - beta) * a["hours"] * a["importance"] * (rows[i]["utility"] - avg_u[i]) / W
             contributions.append({"factor": a["id"], "label": a["label"], "value": round(c, 4), "status": rows[i]["status"], "halos": rows[i]["halos"]})
         contributions.append({"factor": "cost", "label": "Cost", "value": round(beta * (aff - avg_aff), 4), "status": None, "halos": False})
         score = baseline + sum(c["value"] for c in contributions)
-
         flags: list[dict[str, str]] = []
         adjustments: list[dict[str, Any]] = []
         excluded = False
+        used = {e["family"] for e in pl["eyes"].values() if not e["fixed"]}
         for cond in conditions:
-            rule = fam.get("condition_rules", {}).get(cond)
-            if not rule:
+            worst = None
+            for famk in used:
+                rule = families[famk].get("condition_rules", {}).get(cond)
+                if rule and (rule.get("exclude") or worst is None or (not worst.get("exclude") and rule["penalty"] < worst["penalty"])):
+                    worst = rule if not (worst and worst.get("exclude")) else worst
+            if not worst:
                 continue
-            if rule.get("exclude"):
+            if worst.get("exclude"):
                 excluded = True
-                flags.append({"level": "contraindicated", "text": rule["reason"]})
+                flags.append({"level": "contraindicated", "text": worst["reason"]})
             else:
-                score += rule["penalty"]
-                adjustments.append({"value": rule["penalty"], "reason": rule["reason"]})
-                flags.append({"level": "caution", "text": rule["reason"]})
+                score += worst["penalty"]
+                adjustments.append({"value": worst["penalty"], "reason": worst["reason"]})
+                flags.append({"level": "caution", "text": worst["reason"]})
+        targets = [e["target"] for e in pl["eyes"].values()]
+        aniso = round(abs(targets[0] - targets[1]), 2)
+        if aniso >= 0.75:
+            score -= rules["monovision_penalty"]
+            adjustments.append({"value": -rules["monovision_penalty"], "reason": f"Eyes set {aniso:.2f} D apart: slightly less depth perception, needs adaptation"})
+            flags.append({"level": "caution", "text": f"Eyes set {aniso:.2f} D apart. Confirm eye dominance and consider a contact-lens trial before committing."})
+            if any(a["night"] and a["importance"] >= 3 for a in acts):
+                score -= rules["monovision_night_penalty"]
+                adjustments.append({"value": -rules["monovision_night_penalty"], "reason": "Important night driving: monovision lowers night contrast and depth cues"})
+        if dominant not in EYES and pl["blended"]:
+            flags.append({"level": "info", "text": "Eye dominance not recorded: assumed the operated eye is dominant."})
         if any(r["halos"] for r in rows):
             flags.append({"level": "info", "text": "Night activities: halos and glare around lights are more noticeable with this design."})
-        if residual >= 0.75:
-            flags.append({"level": "info", "text": f"Borderline astigmatism ({astig['cyl']} D) left uncorrected: surgeon may consider a toric version."})
+        for eye in EYES:
+            if astig[eye]["residual"] and not pl["eyes"][eye]["fixed"]:
+                flags.append({"level": "info", "text": f"{ABBR[eye]}: borderline astigmatism ({astig[eye]['cyl']} D) left uncorrected; consider toric."})
 
-        power = None
-        if biometry:
-            k_avg = (biometry["k1"] + biometry["k2"]) / 2
-            power = round_power(srkt(biometry["axial_length"], k_avg, fam["a_constant"], cfg["rules"]["target_refraction_d"]))
+        eyes_out = {}
+        for eye in EYES:
+            e = pl["eyes"][eye]
+            fam = families[e["family"]]
+            toric = astig[eye]["toric"] and not e["fixed"]
+            out = {"family": e["family"], "name": fam["name"] + (" toric" if toric else ""), "target": e["target"],
+                   "fixed": e["fixed"], "toric": toric, "a_constant": fam["a_constant"], "iol_power_d": None, "refined": False}
+            if e.get("natural"):
+                out["name"] = "Natural lens (not for surgery)"
+            elif e["fixed"]:
+                out["name"] = f"{fam['name']} (already implanted)"
+            b = bio.get(eye)
+            if b and not e["fixed"]:
+                tgt = e["target"] + (refinement["target_adjustment"] if refinement and eye == primary else 0.0)
+                out["iol_power_d"] = round_power(srkt(b["axial_length"], (b["k1"] + b["k2"]) / 2, fam["a_constant"], tgt))
+                out["refined"] = bool(refinement and eye == primary)
+                out["power_target"] = round(tgt, 2)
+            out["example_models"] = fam.get("example_models_toric" if toric else "example_models", "")
+            eyes_out[eye] = out
+
+        curve = []
+        for i in range(19):
+            v = round(0.5 - 0.25 * i, 2)
+            m = [round(interp(families[pl["eyes"][e]["family"]]["defocus_curve"], v - pl["eyes"][e]["target"]), 3) for e in EYES]
+            curve.append([v, binocular(m[0], m[1])])
 
         hours_total = sum(a["hours"] for a in acts)
         hours_clear = sum(a["hours"] for a, r in zip(acts, rows) if r["status"] == "clear")
-        toric = astig["toric"]
+        main = eyes_out[primary]
+        cost = sum(families[e["family"]]["cost_tier"] + (1 if eyes_out[eye]["toric"] else 0) for eye, e in pl["eyes"].items() if not e["fixed"])
+        glasses = sorted({families[e["family"]]["glasses_after"] for e in pl["eyes"].values() if not e["fixed"]})
         options.append({
-            "key": key + ("_toric" if toric else ""),
-            "family": key,
-            "name": fam["name"] + (" toric" if toric else ""),
-            "toric": toric,
-            "score": round(max(0.0, min(1.0, score)), 3),
-            "baseline": round(baseline, 4),
+            "key": pl["key"], "name": pl["name"], "strategy": "blended" if pl["blended"] else "bilateral" if fellow_status == "planned" else "single",
+            "family": main["family"], "toric": any(eyes_out[e]["toric"] for e in EYES),
+            "eyes": eyes_out, "anisometropia_d": aniso,
+            "score": round(max(0.0, min(1.0, score)), 3), "baseline": round(baseline, 4),
             "contributions": sorted(contributions, key=lambda c: -abs(c["value"])),
-            "adjustments": adjustments,
-            "flags": flags,
-            "excluded": excluded,
-            "day_map": rows,
-            "hours_clear": round(hours_clear, 2),
-            "hours_total": round(hours_total, 2),
-            "halo": fam["halo"],
-            "cost_tier": fam["cost_tier"] + (1 if toric else 0),
-            "glasses_after": fam["glasses_after"],
-            "example_models": fam.get("example_models_toric" if toric else "example_models", ""),
-            "a_constant": fam["a_constant"],
-            "iol_power_d": power,
+            "adjustments": adjustments, "flags": flags, "excluded": excluded,
+            "day_map": rows, "hours_clear": round(hours_clear, 2), "hours_total": round(hours_total, 2),
+            "halo": pp["halo"], "binocular_curve": curve,
+            "cost_tier": cost, "glasses_after": "; ".join(glasses),
+            "example_models": " · ".join(sorted({eyes_out[e]["example_models"] for e in EYES if not eyes_out[e]["fixed"]})),
+            "a_constant": main["a_constant"], "iol_power_d": main["iol_power_d"],
         })
 
     options.sort(key=lambda o: (o["excluded"], -o["score"]))
+    notes = []
+    for eye in EYES:
+        if bio.get(eye) or eye == primary:
+            notes += [{**nt, "text": f"{ABBR[eye]}: {nt['text']}"} for nt in biometry_notes(bio.get(eye), conditions if eye == primary else [])]
     return {
         "options": options,
         "activities": acts,
         "preferences": {"glasses_free": glasses_free, "budget": budget},
-        "astigmatism": astig,
-        "biometry_notes": biometry_notes(biometry, conditions),
+        "primary_eye": primary, "dominant_eye": dominant if dominant in EYES else None,
+        "fellow_status": fellow_status, "fellow": fellow or None, "refinement": refinement,
+        "astigmatism": astig[primary], "astigmatism_by_eye": astig,
+        "biometry_notes": notes,
         "conditions": conditions,
-        "target_refraction_d": cfg["rules"]["target_refraction_d"],
         "generated_at": datetime.now().isoformat(timespec="seconds"),
-        "disclaimer": "Decision support for the surgeon, not a diagnosis. Acuity predictions use illustrative defocus curves; IOL powers use SRK/T with example A-constants and must be confirmed on the biometer.",
+        "disclaimer": "Decision support for the surgeon, not a diagnosis. Acuity predictions use illustrative defocus curves and a simple binocular model; IOL powers use SRK/T with example A-constants and must be confirmed on the biometer.",
     }
 
 

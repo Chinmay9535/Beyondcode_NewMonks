@@ -20,11 +20,13 @@ DEMO = [
     {
         "patient": dict(id="RAMESH", name="Ramesh Kumar", age=62, sex="M", city="Mysuru", occupation="Tailor", language="kn", eye="right", phone="+91 90000 00001"),
         "biometry": dict(axial_length=23.42, k1=43.50, k2=44.00, k2_axis=92, acd=3.08, wtw=11.9, source="IOLMaster export (sample)"),
+        "fellow_biometry": dict(axial_length=23.38, k1=43.62, k2=44.12, k2_axis=88, acd=3.10, wtw=11.8, source="IOLMaster export (sample)"),
         "script": None,  # fresh: used for the live demo
     },
     {
-        "patient": dict(id="LAKSHMI", name="Lakshmi Iyer", age=58, sex="F", city="Chennai", occupation="Retired bank officer", language="ta", eye="left", phone="+91 90000 00002"),
+        "patient": dict(id="LAKSHMI", name="Lakshmi Iyer", age=58, sex="F", city="Chennai", occupation="Retired bank officer", language="ta", eye="left", phone="+91 90000 00002", dominant_eye="left"),
         "biometry": dict(axial_length=24.10, k1=42.75, k2=44.25, k2_axis=85, acd=3.21, wtw=12.0, source="IOLMaster export (sample)"),
+        "fellow_biometry": dict(axial_length=24.02, k1=42.90, k2=44.10, k2_axis=95, acd=3.18, wtw=12.0, source="IOLMaster export (sample)"),
         # topic -> (what the patient said, tapped option)
         "script": {
             "day": ("நான் ஓய்வு பெற்றவள். தினமும் காலையில் செய்தித்தாள் படிக்கிறேன், மாலையில் டிவி பார்க்கிறேன்.", None),
@@ -39,6 +41,7 @@ DEMO = [
         "patient": dict(id="KAMALA", name="Kamala Devi", age=71, sex="F", city="Mandya", occupation="Homemaker", language="kn", eye="right", phone="+91 90000 00003",
                         conditions=["macular_disease"]),
         "biometry": dict(axial_length=22.85, k1=44.25, k2=44.75, k2_axis=95, acd=2.85, wtw=11.6, source="IOLMaster export (sample)"),
+        "fellow_biometry": dict(axial_length=22.91, k1=44.10, k2=44.60, k2_axis=90, acd=2.88, wtw=11.6, source="IOLMaster export (sample)"),
         "script": {
             "day": ("ನಾನು ಗೃಹಿಣಿ. ಬೆಳಿಗ್ಗೆ ಅಡುಗೆ ಮಾಡುತ್ತೇನೆ, ಸಂಜೆ ದೇವಸ್ಥಾನಕ್ಕೆ ಹೋಗುತ್ತೇನೆ.", None),
             "near": ("ಭಜನೆ ಪುಸ್ತಕ ಓದುತ್ತೇನೆ, ದಿನಕ್ಕೆ 1 ಗಂಟೆ", None),
@@ -48,9 +51,10 @@ DEMO = [
         },
     },
     {
-        "patient": dict(id="ABDUL", name="Abdul Rahim", age=66, sex="M", city="Bengaluru", occupation="Auto-rickshaw driver", language="hi", eye="right", phone="+91 90000 00004",
+        "patient": dict(id="ABDUL", name="Abdul Rahim", age=66, sex="M", city="Bengaluru", occupation="Auto-rickshaw driver", language="hi", eye="right", phone="+91 90000 00004", dominant_eye="right",
                         conditions=["glaucoma"]),
         "biometry": dict(axial_length=23.95, k1=43.00, k2=43.50, k2_axis=178, acd=3.15, wtw=11.8, source="IOLMaster export (sample)"),
+        "fellow_biometry": dict(axial_length=23.88, k1=43.12, k2=43.62, k2_axis=2, acd=3.12, wtw=11.8, source="IOLMaster export (sample)"),
         "script": {
             "day": ("मैं ऑटो चलाता हूँ, दिन भर। रात को भी सवारी लेता हूँ।", None),
             "near": ("फ़ोन पर थोड़ा व्हाट्सएप देखता हूँ", None),
@@ -76,6 +80,8 @@ def seed() -> None:
             s.add(p)
             s.flush()
             s.add(Biometry(patient_id=p.id, eye=p.eye, **d["biometry"]))
+            if d.get("fellow_biometry"):
+                s.add(Biometry(patient_id=p.id, eye="left" if p.eye == "right" else "right", **d["fellow_biometry"]))
             if not d["script"]:
                 continue
             p.consent_at = now()
@@ -102,7 +108,7 @@ def seed() -> None:
             if d.get("approve"):
                 fam, note = d["approve"]
                 rec.status, rec.surgeon_note, rec.approved_at = "approved", note, now()
-                rec.approved_lens = next(o["key"] for o in rec.result["options"] if o["family"] == fam)
+                rec.approved_lens = next(o["key"] for o in rec.result["options"] if o["family"] == fam and o["strategy"] != "blended")
                 s.add(rec)
                 p.stage = "approved"
             if d.get("surgery_days_ago") is not None:

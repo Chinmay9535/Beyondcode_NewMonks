@@ -35,10 +35,15 @@ export type Activity = {
   quote?: string | null;
 };
 
-export type DayRow = { activity: string; logmar: number; snellen: string; status: "clear" | "strain" | "glasses"; halos: boolean; utility: number };
+export type DayRow = { activity: string; logmar: number; snellen: string; od?: number; os?: number; status: "clear" | "strain" | "glasses"; halos: boolean; utility: number };
+export type EyePlan = { family: string; name: string; target: number; fixed: boolean; toric: boolean; a_constant: number; iol_power_d: number | null; refined: boolean; power_target?: number; example_models: string };
 export type LensOption = {
   key: string;
   family: "monofocal" | "edof" | "trifocal";
+  strategy: "bilateral" | "blended" | "single";
+  eyes: { right: EyePlan; left: EyePlan };
+  anisometropia_d: number;
+  binocular_curve: [number, number][];
   name: string;
   toric: boolean;
   score: number;
@@ -68,11 +73,19 @@ export type Recommendation = {
   options: LensOption[];
   activities: Activity[];
   preferences: { glasses_free: number; budget: number };
-  astigmatism: { cyl: number | null; axis: number | null; toric: boolean; borderline: boolean; iol_cyl_estimate?: number };
+  astigmatism: Astig;
+  astigmatism_by_eye: { right: Astig; left: Astig };
+  primary_eye: "right" | "left";
+  dominant_eye: "right" | "left" | null;
+  fellow_status: "planned" | "operated" | "natural";
+  fellow: { family: string; actual_se: number; predicted_se: number; lens?: string; eye?: string; date?: string | null } | null;
+  refinement: { prediction_error: number; target_adjustment: number; text: string } | null;
   biometry_notes: { level: string; text: string }[];
   conditions: string[];
   disclaimer: string;
 };
+
+export type Astig = { cyl: number | null; axis: number | null; toric: boolean; borderline: boolean; iol_cyl_estimate?: number };
 
 export type Dose = { id: number; drug: string; drug_key: string; due_at: string; taken_at: string | null; status: "taken" | "upcoming" | "due" | "missed" };
 export type Recovery = {
@@ -142,9 +155,12 @@ export type StaffPatientDetail = {
     id: string; name: string; age: number | null; sex: string | null; phone: string | null; city: string | null; occupation: string | null;
     language: Lang; eye: "right" | "left"; stage: PatientView["stage"]; conditions: string[]; consent_at: string | null;
     surgery_date: string | null; created_at: string;
+    dominant_eye: "right" | "left" | null; fellow_status: "planned" | "operated" | "natural";
+    fellow: { family?: string; actual_se?: number; predicted_se?: number; lens?: string; eye?: string; date?: string | null };
     profile: { activities?: Activity[]; glasses_free?: number; budget?: number; occupation?: string };
   };
   biometry: Biometry | null;
+  biometry_by_eye: { right: Biometry | null; left: Biometry | null };
   recommendation: Recommendation | null;
   messages: Message[];
   alerts: Alert[];

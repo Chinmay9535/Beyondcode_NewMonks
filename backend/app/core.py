@@ -83,12 +83,20 @@ def latest_rec(session: Session, p: Patient) -> Recommendation | None:
 
 # ----------------------------------------------------------------------------- actions
 
-def recompute(session: Session, p: Patient) -> Recommendation:
-    """Re-rank lenses. Keeps an existing approval unless the surgeon re-opens it."""
-    b = biometry_out(latest_biometry(session, p))
-    result = lenses.rank(p.profile, b, p.conditions or [])
+def biometry_for(session: Session, p: Patient, eye: str) -> Biometry | None:
+    return session.exec(select(Biometry).where(Biometry.patient_id == p.id, Biometry.eye == eye)
+                        .order_by(Biometry.created_at.desc(), Biometry.id.desc())).first()
+
+
+def recompute(session: Session, p: Patient, fresh: bool = False) -> Recommendation:
+    """Re-rank lens plans for both eyes. Keeps an existing approval unless the surgeon re-opens it."""
+    bio = {e: biometry_out(biometry_for(session, p, e)) for e in ("right", "left")}
+    if not bio[p.eye]:
+        bio[p.eye] = biometry_out(latest_biometry(session, p))
+    result = lenses.rank(p.profile, bio, p.conditions or [], primary=p.eye, dominant=p.dominant_eye,
+                         fellow_status=p.fellow_status or "planned", fellow=p.fellow or {})
     prev = latest_rec(session, p)
-    if prev and prev.status == "approved":
+    if prev and prev.status == "approved" and not fresh:
         prev.result = result
         session.add(prev)
         return prev
