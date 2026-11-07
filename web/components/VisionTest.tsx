@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { tr } from "@/lib/i18n";
 import { CARD_MM, ROTATE, answer, calibration, optotypePx, result, snellen, startStair, type Dir, type Stair } from "@/lib/vision";
 import { MessageList } from "./Chat";
-import { Badge, Button, Card, cx } from "./ui";
+import { Badge, Button, Card, Spinner, cx } from "./ui";
 
 type Kind = "distance" | "near" | "amsler";
 type Step = "menu" | "calibrate" | "eye" | "test" | "result";
@@ -33,6 +33,7 @@ export default function VisionTest({ code, lang, clinic, operatedEye, onSafety }
   const [cells, setCells] = useState<number[]>([]);
   const [res, setRes] = useState<{ test: VisionResult; saved: string; messages: Message[] } | null>(null);
   const [history, setHistory] = useState<VisionResult[]>([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { setPxmm(calibration.get()); }, []);
   useEffect(() => { window.scrollTo({ top: 0 }); }, [step]);
@@ -42,13 +43,14 @@ export default function VisionTest({ code, lang, clinic, operatedEye, onSafety }
   const begin = (k: Kind) => { setKind(k); setStep(pxmm ? "eye" : "calibrate"); };
   const submit = async (payload: object) => {
     const r = await api<{ test: VisionResult; saved: string; messages: Message[] }>(`/p/${code}/vision-tests`, { method: "POST", json: payload });
-    setRes(r); setStep("result"); loadHistory();
+    setRes(r); setStep("result"); setSaving(false); loadHistory();
     if (r.messages.length) onSafety(r.messages);
   };
   const onAnswer = (a: Dir | "none") => {
     const next = answer(stair, a);
     setStair(next);
     if (next.phase === "done") {
+      setSaving(true);
       submit({ eye, kind, distance_cm: DIST[kind], logmar: result(next), px_per_mm: pxmm, helper: kind === "distance", trials: next.trials });
     }
   };
@@ -82,6 +84,8 @@ export default function VisionTest({ code, lang, clinic, operatedEye, onSafety }
     );
   }
 
+  if (saving) return <div className="grid min-h-[50vh] place-items-center"><Spinner label={tr(lang, "yourResult")} /></div>;
+
   if (step === "test" && kind === "amsler") {
     const mm5 = (pxmm || 3.78) * 5;
     const size = Math.min(mm5 * 10, typeof window !== "undefined" ? window.innerWidth - 48 : 360);
@@ -98,8 +102,8 @@ export default function VisionTest({ code, lang, clinic, operatedEye, onSafety }
           <span className="pointer-events-none absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black" />
         </div>
         <div className="grid w-full grid-cols-2 gap-2">
-          <Button size="lg" variant="soft" onClick={() => submit({ eye, kind: "amsler", distance_cm: 30, amsler_cells: [], px_per_mm: pxmm })}>{tr(lang, "allStraight")}</Button>
-          <Button size="lg" disabled={!cells.length} onClick={() => submit({ eye, kind: "amsler", distance_cm: 30, amsler_cells: cells, px_per_mm: pxmm })}>{tr(lang, "doneMarking")} ({cells.length})</Button>
+          <Button size="lg" variant="soft" onClick={() => { setSaving(true); submit({ eye, kind: "amsler", distance_cm: 30, amsler_cells: [], px_per_mm: pxmm }); }}>{tr(lang, "allStraight")}</Button>
+          <Button size="lg" disabled={!cells.length} onClick={() => { setSaving(true); submit({ eye, kind: "amsler", distance_cm: 30, amsler_cells: cells, px_per_mm: pxmm }); }}>{tr(lang, "doneMarking")} ({cells.length})</Button>
         </div>
       </div>
     );

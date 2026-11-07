@@ -24,8 +24,8 @@ export function Bubble({ m, lang, showEn, clinic, ttsServer }: { m: Message; lan
         )}
       >
         {safety && (
-          <p className={cx("mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[.12em]", urgent ? "text-danger" : "text-warn")}>
-            <ShieldAlert size={14} /> {urgent ? "Doctor alerted · urgent" : "Shared with your doctor"}
+          <p className={cx("mb-1.5 flex items-center gap-2 text-[13px] font-semibold", urgent ? "text-danger" : "text-warn")}>
+            <ShieldAlert size={15} /> {tr(lang, urgent ? "doctorAlerted" : "sharedDoctor")}
           </p>
         )}
         <p className="whitespace-pre-line">{m.text}</p>

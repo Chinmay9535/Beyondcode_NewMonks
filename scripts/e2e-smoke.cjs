@@ -57,6 +57,33 @@ const shot = (pg, name, full) => OUT ? pg.screenshot({ path: OUT + '/' + name, f
   await p.reload(); await p.getByRole('button', { name: /ನನ್ನ ಲೆನ್ಸ್/ }).click(); await p.waitForTimeout(2500);
   await shot(p, '8-ramesh-lens.png', true);
 
+  // Safety scorecard: live triage
+  const sf = await desk.newPage(); watch(sf, 'safety');
+  await sf.goto(BASE + '/safety'); await sf.waitForSelector('text=Try it');
+  await sf.getByPlaceholder(/ಕಣ್ಣು/).fill('aankh lal hai aur dard badh raha hai'); await sf.getByRole('button', { name: 'Triage' }).click();
+  await sf.waitForSelector('text=Urgent: surgeon alerted');
+  await shot(sf, '9-safety.png', true);
+  console.log('safety triage ok');
+
+  // Eye test: Abdul taps "can't see" -> worse than his last post-op result -> urgent alert
+  await a.getByRole('button', { name: 'आँख जाँच' }).click();
+  await a.getByRole('button', { name: /दूर की नज़र/ }).click();
+  await a.getByRole('button', { name: 'बराबर है' }).click();
+  await a.getByRole('button', { name: /शुरू करें/ }).click();
+  while (await a.locator('svg[aria-label="E"]').count()) { await a.getByRole('button', { name: 'नहीं दिख रहा' }).click(); await a.waitForTimeout(150); }
+  await a.waitForSelector('text=आपका नतीजा');
+  await a.waitForSelector('text=डॉक्टर');
+  await shot(a, '10-abdul-eyetest.png', true);
+  console.log('eye test drop alert ok');
+
+  // Second eye: plan Abdul's left eye from the right eye's real outcome
+  await s.goto(BASE + '/staff/ABDUL'); await s.waitForSelector('text=Plan second eye');
+  await s.getByPlaceholder('e.g. -0.50').fill('-0.50'); await s.getByRole('button', { name: 'Plan second eye' }).click();
+  await s.waitForSelector('text=Second-eye refinement');
+  await s.waitForSelector('text=vision drop');
+  await shot(s, '11-abdul-second-eye.png', true);
+  console.log('second eye ok');
+
   // Landing
   const l = await desk.newPage(); watch(l, 'landing'); await l.goto(BASE + '/'); await l.waitForTimeout(800);
   await shot(l, '0-landing.png');

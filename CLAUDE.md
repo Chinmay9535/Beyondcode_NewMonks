@@ -10,13 +10,17 @@ A voice-first assistant for cataract patients (Kannada, Hindi, Tamil, English) p
 3. **Q&A** (`services/rag.py`): BM25 plus multilingual keywords over `backend/knowledge/*.md`. Sections carry `> kn:/hi:/ta:` curated translations. Every answer cites; "not found" creates an info alert.
 4. **Red flags** (`services/redflag.py`): rules run on every patient message. The LLM may only raise severity. Daily check-in rules live here too.
 5. **Recovery** (`services/recovery.py`): dose schedule from `clinic.json`, using naive clinic-local times (`config.local_now`).
+6. **Both eyes** (`lenses.rank`): plans are strategies from `clinic.json` (`families`/`targets` = [dominant, non-dominant]). Each eye's curve is shifted by its target; `binocular()` combines the eyes (better eye + summation fading with difference). Fellow eye: `planned` | `operated` (fixed, with `actual_se`, triggering the 50% second-eye refinement) | `natural`. Endpoint `/staff/patients/{id}/second-eye`.
+7. **Vision tests** (`services/visiontest.py`, `web/lib/vision.ts`, `components/VisionTest.tsx`): card calibration (85.6 mm), tumbling E sized from logMAR and distance, staircase (pass 3 before 2 wrong), Amsler grid. Post-op 2-line drop → urgent alert; Amsler distortion pre-op → macula note, post-op → soon.
+8. **Photo simulator** (`public/depth-worker.js`, `lib/depthsim.ts`, `components/DepthSimulator.tsx`): Depth Anything V2 Small via transformers.js 4.3.1 from jsdelivr in a module worker. Inverse depth is affine in dioptres, so nearest/farthest anchors map pixels to vergence; per-pixel blend of a box-blur pyramid; halos only on compact lights.
+9. **Safety scorecard** (`services/evaluation.py`, `backend/evals/`, `/safety`): rules scored without an LLM. Never tune on the `test` split; if a test case fails, record it in `history`, move it to dev, then fix.
 
 The patient never sees a ranking until the surgeon approves (`Recommendation.status == "approved"`).
 
 ## Run / test
 
 - `./scripts/dev.sh`: API on :8000, web on :3000 (Next rewrites `/api/*` to `BACKEND_URL`).
-- `cd backend && .venv/bin/python -m pytest -q`: 42 tests, isolated DB, offline mode.
+- `cd backend && .venv/bin/python -m pytest -q`: 65 tests, isolated DB, offline mode. `python -m app.services.evaluation --errors` prints the safety scorecard.
 - `cd web && npx tsc --noEmit && npx next build`.
 - `node scripts/e2e-smoke.cjs [shotdir]`: Playwright journey (needs a fresh DB: delete `backend/drishtisaathi.db` and restart the API).
 - Demo codes: RAMESH (fresh), LAKSHMI, KAMALA, ABDUL. Staff PIN 2468. Seeds go through the real intake engine (`app/seed.py`, scripts keyed by topic).
@@ -29,6 +33,10 @@ The patient never sees a ranking until the surgeon approves (`Recommendation.sta
 - Indic text: never apply letter-spacing or uppercase (globals.css neutralises it under `:lang(kn|hi|ta)`). Set `lang` on elements holding patient-language text.
 - `next start` renames itself `next-server`; kill that when restarting.
 - Patient UI strings: `web/lib/i18n.ts`. Assistant phrases: `backend/app/i18n.py`. All Indic text still needs a native-speaker review.
+- New DB columns: `db._add_missing_columns()` adds them to existing SQLite files on startup (forward-only).
+- Red-flag rules: Indic terms match by stem (`textnorm.stem`); prefer composition (symptom + intensity) over listing sentences; add regressions to `test_red_flag_regressions`.
+- Playwright in this sandbox needs `proxy: { server: process.env.HTTPS_PROXY, bypass: 'localhost,127.0.0.1' }` to reach the model CDN.
+- Snellen values are shown as the nearest standard line (`lenses.snellen`, `lib/vision.ts`).
 - Design tokens are in `web/app/globals.css` (dark default, light theme, accent #FF6F37, sky #7DD3FC).
 
 ## Pitch materials
@@ -37,4 +45,4 @@ The patient never sees a ranking until the surgeon approves (`Recommendation.sta
 
 ## Open ideas
 
-WhatsApp Business channel; Azure Speech STT for browsers without Web Speech; per-clinic admin UI for `clinic.json`; real published defocus curves; push notifications for drop reminders (PWA); pgvector embeddings when the knowledge base grows.
+WhatsApp Business channel; Azure Speech STT for browsers without Web Speech; per-clinic admin UI for `clinic.json`; real published defocus curves; push notifications for drop reminders (PWA); camera-based viewing-distance check for the near test (MediaPipe iris); outcome-based A-constant optimisation per surgeon; native-speaker held-out safety set.
