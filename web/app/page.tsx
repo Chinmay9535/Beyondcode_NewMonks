@@ -25,6 +25,7 @@ const CHAPTERS = [
   { eyebrow: "Your day", title: "Every hour", rest: "of your day.", text: "Threading a needle at 33 cm, riding home at night. Each activity is matched against every lens." },
   { eyebrow: "Both eyes", title: "Two eyes,", rest: "one plan.", text: "Monofocal, EDOF, trifocal or blended vision, with per-eye powers your surgeon approves." },
   { eyebrow: "Recovery", title: "Recovery,", rest: "measured.", text: "Drops, daily check-ins and a home vision test. Warning signs reach your doctor in seconds." },
+  { eyebrow: "For clinics", title: "Every patient,", rest: "one dashboard.", text: "Shortlists with reasons, per-eye powers and a live alert queue. You approve every lens.", card: true },
 ];
 
 const STEPS = [
@@ -51,6 +52,8 @@ export default function Home() {
   const { scrollY } = useScroll();
   const progress = useTransform(scrollY, () => storyProgress().p);
   const fieldOpacity = useTransform(scrollY, () => 1 - 0.68 * storyProgress().q);
+  // During the final dive the field fills the screen; a soft vignette hides where the grid ends.
+  const vignette = useTransform(progress, (p) => Math.min(1, Math.max(0, p - (STAGES - 2))));
   const [stage, setStage] = useState(0);
   useMotionValueEvent(progress, "change", (p) => setStage(Math.round(p)));
   const panel = (i: number) => ({
@@ -65,6 +68,7 @@ export default function Home() {
     <div className="relative overflow-x-clip">
       <motion.div style={{ opacity: fieldOpacity }} className="pointer-events-none fixed inset-0 z-0">
         <PillarField className="absolute inset-0" />
+        <motion.div style={{ opacity: vignette }} className="absolute inset-0 bg-[radial-gradient(75%_75%_at_50%_50%,transparent_55%,var(--bg)_100%)]" />
       </motion.div>
       {/* ---------------------------------------------------------------- nav */}
       <header className="sticky top-0 z-40 bg-gradient-to-b from-bg/85 to-bg/0 backdrop-blur-[6px]">
@@ -86,7 +90,7 @@ export default function Home() {
       </header>
 
       {/* ---------------------------------------------------------------- hero: pinned scroll story */}
-      <section id={STORY_ID} className="relative z-10 -mt-[76px]" style={{ height: `${100 + (STAGES - 1) * 90}vh` }}>
+      <section id={STORY_ID} className="relative z-10 -mt-[76px]" style={{ height: `${100 + (STAGES - 1) * 75}vh` }}>
         <div className="sticky top-0 h-[100svh] overflow-hidden">
           <div className="mx-auto grid h-full max-w-[1240px] grid-cols-[minmax(0,1fr)] items-start px-5 pt-[96px] lg:grid-cols-[1.02fr_1fr] lg:items-center lg:pt-[76px]">
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)]">
@@ -118,11 +122,21 @@ export default function Home() {
               </motion.div>
               {CHAPTERS.map((c, i) => (
                 <motion.div key={c.eyebrow} {...panel(i + 1)} initial={false}>
-                  <div className="flex flex-col gap-7">
-                    <div><Tag>0{i + 2} · {c.eyebrow}</Tag></div>
-                    <h2 className="display text-[clamp(46px,6.4vw,88px)]">{c.title}<br /><span className="text-muted">{c.rest}</span></h2>
-                    <p className="max-w-[40ch] text-[17px] leading-relaxed text-muted">{c.text}</p>
-                  </div>
+                  {c.card ? (
+                    // The dive: the field fills the screen, so this chapter sits on blue glass.
+                    <div className="flex max-w-[560px] flex-col gap-6 rounded-[28px] border border-white/20 bg-[rgba(64,76,255,.62)] p-7 text-white shadow-[0_30px_80px_-30px_rgba(10,20,255,.9)] backdrop-blur-2xl md:p-10">
+                      <div><span className="tag !border-white/25 !bg-white/10 !text-white/85">0{i + 2} · {c.eyebrow}</span></div>
+                      <h2 className="display text-[clamp(40px,5.2vw,72px)]">{c.title}<br /><span className="text-white/80">{c.rest}</span></h2>
+                      <p className="max-w-[40ch] text-[17px] leading-relaxed text-white/80">{c.text}</p>
+                      <Link href="/staff" tabIndex={stage === i + 1 ? 0 : -1} className="inline-flex items-center gap-3 self-start rounded-full bg-white py-2 pl-5 pr-2 text-[15px] font-semibold text-[#1f3bd8] transition hover:bg-white/90">Open dashboard <ArrowDot tone="blue" /></Link>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-7">
+                      <div><Tag>0{i + 2} · {c.eyebrow}</Tag></div>
+                      <h2 className="display text-[clamp(46px,6.4vw,88px)]">{c.title}<br /><span className="text-muted">{c.rest}</span></h2>
+                      <p className="max-w-[40ch] text-[17px] leading-relaxed text-muted">{c.text}</p>
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </div>

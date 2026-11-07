@@ -1,6 +1,6 @@
 // Scroll progress through the pinned landing story, shared by the page text and the pillar field.
 export const STORY_ID = "story";
-export const STAGES = 4;
+export const STAGES = 5;
 
 /** p: 0..STAGES-1 while the story is pinned. q: 0..1 over the screen after it ends. */
 export function storyProgress(): { p: number; q: number } {

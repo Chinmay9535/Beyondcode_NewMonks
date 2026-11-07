@@ -37,7 +37,7 @@ The patient never sees a ranking until the surgeon approves (`Recommendation.sta
 - Red-flag rules: Indic terms match by stem (`textnorm.stem`); prefer composition (symptom + intensity) over listing sentences; add regressions to `test_red_flag_regressions`.
 - Playwright in this sandbox needs `proxy: { server: process.env.HTTPS_PROXY, bypass: 'localhost,127.0.0.1' }` to reach the model CDN.
 - Snellen values are shown as the nearest standard line (`lenses.snellen`, `lib/vision.ts`).
-- Landing hero: a pinned scroll story (`lib/story.ts`, section `#story`) drives `components/three/PillarField.tsx`, one pillar-field shape per chapter (lens, focus rings, two lenses, eye), then slow waves.
+- Landing hero: a pinned scroll story (`lib/story.ts`, section `#story`) drives `components/three/PillarField.tsx`, one pillar-field shape per chapter (lens, focus rings, two lenses, eye, then a camera dive into city blocks), then slow waves. Bodies and top caps are separate instanced meshes so only tops glow.
 - Design tokens are in `web/app/globals.css` (dark default, light theme, accent #FF6F37, sky #7DD3FC).
 
 ## Pitch materials
