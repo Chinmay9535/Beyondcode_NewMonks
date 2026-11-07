@@ -91,6 +91,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-line pt-4 text-[12.5px] text-muted">
+        <Link href="/safety" className="mr-2 text-ink underline underline-offset-4">Safety scorecard</Link>
         Decision support only. DrishtiSaathi never diagnoses; every lens choice is approved by the surgeon, and every answer cites the clinic&apos;s own guidance.
         {meta && <> · {meta.clinic.name}</>}
       </footer>

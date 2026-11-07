@@ -44,7 +44,7 @@ Avoid smoke, dust and strong kitchen fumes for the first week. Light cooking on 
 > ta: முதல் வாரம் புகை, தூசி மற்றும் சமையலறையின் கடும் ஆவியைத் தவிருங்கள். சில நாட்களுக்குப் பிறகு கேஸ் அடுப்பில் லேசான சமையல் செய்யலாம்; விறகு அடுப்பை இரண்டு வாரம் தவிருங்கள். வெளியே பாதுகாப்புக் கண்ணாடி அணியுங்கள்.
 
 ## Bending, lifting and prayer {#bending}
-keywords: bend, bending, lift, lifting, heavy, weight, prayer, pray, namaz, puja, pooja, temple, kneel, exercise, yoga, ಬಾಗು, ಭಾರ, ಎತ್ತ, ಪೂಜೆ, ನಮಾಜ್, ದೇವಸ್ಥಾನ, ಯೋಗ, झुक, भारी, उठा, पूजा, नमाज़, नमाज, मंदिर, योग, குனி, கனமான, தூக்க, பூஜை, தொழுகை, கோவில், யோகா
+keywords: bend, bending, lift, lifting, heavy, weight, carry, carrying, bucket, pot, sack, prayer, pray, namaz, puja, pooja, temple, kneel, exercise, yoga, ಬಾಗು, ಭಾರ, ಎತ್ತ, ಪೂಜೆ, ನಮಾಜ್, ದೇವಸ್ಥಾನ, ಯೋಗ, झुक, भारी, उठा, पूजा, नमाज़, नमाज, मंदिर, योग, குனி, கனமான, தூக்க, பூஜை, தொழுகை, கோவில், யோகா
 For the first week, avoid lifting heavy things and avoid bending your head below waist level, including during prayers and yoga. Sitting prayers are fine. Ask your doctor at the week-one visit when you can return to full prostration, heavy work and exercise.
 > kn: ಮೊದಲ ವಾರ ಭಾರ ಎತ್ತಬೇಡಿ ಮತ್ತು ಪೂಜೆ, ಯೋಗದ ಸಮಯದಲ್ಲೂ ತಲೆಯನ್ನು ಸೊಂಟಕ್ಕಿಂತ ಕೆಳಗೆ ಬಾಗಿಸಬೇಡಿ. ಕುಳಿತು ಪ್ರಾರ್ಥನೆ ಮಾಡಬಹುದು. ಸಾಷ್ಟಾಂಗ ನಮಸ್ಕಾರ, ಭಾರದ ಕೆಲಸ ಯಾವಾಗ ಮಾಡಬಹುದೆಂದು ಮೊದಲ ವಾರದ ಭೇಟಿಯಲ್ಲಿ ವೈದ್ಯರನ್ನು ಕೇಳಿ.
 > hi: पहले हफ़्ते भारी सामान न उठाएँ और पूजा, नमाज़ या योग के दौरान भी सिर को कमर से नीचे न झुकाएँ। बैठकर प्रार्थना कर सकते हैं। सजदा, भारी काम और व्यायाम कब शुरू करें, यह पहले हफ़्ते की जाँच में डॉक्टर से पूछें।
@@ -65,7 +65,7 @@ Do not apply kajal, surma or any eye make-up for at least two weeks, and use a f
 > ta: குறைந்தது இரண்டு வாரம் கண்மை, சுர்மா அல்லது கண் மேக்கப் எதுவும் போட வேண்டாம்; மீண்டும் தொடங்கும்போது புதியதைப் பயன்படுத்துங்கள். இவை தொற்றை ஏற்படுத்தலாம்.
 
 ## Swimming, rivers and ponds {#swimming}
-keywords: swim, swimming, pool, river, pond, lake, sea, holy dip, ಈಜು, ನದಿ, ಕೆರೆ, ತೀರ್ಥ, तैर, नदी, तालाब, डुबकी, நீச்சல், ஆறு, குளம், தீர்த்த
+keywords: swim, swimming, pool, river, pond, lake, sea, holy dip, ಈಜು, ನದಿ, ಕೆರೆ, ತೀರ್ಥ, तैर, नदी, तालाब, डुबकी, गंगा, நீச்சல், ஆறு, ஆற்றில், குளம், குளத்தில், கடலில், தீர்த்த
 No swimming, and no bathing in rivers, ponds or the sea, for four weeks. This includes a holy dip.
 > kn: ನಾಲ್ಕು ವಾರ ಈಜಬೇಡಿ, ನದಿ, ಕೆರೆ ಅಥವಾ ಸಮುದ್ರದಲ್ಲಿ ಸ್ನಾನ ಮಾಡಬೇಡಿ (ತೀರ್ಥಸ್ನಾನವೂ ಸೇರಿ).
 > hi: चार हफ़्ते तक न तैरें, और नदी, तालाब या समुद्र में न नहाएँ, पवित्र डुबकी भी नहीं।

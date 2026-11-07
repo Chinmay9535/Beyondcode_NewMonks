@@ -17,6 +17,7 @@ from typing import Any
 
 from .. import i18n, llm
 from ..config import BASE_DIR
+from ..textnorm import stem
 
 STOP = set("a an the and or of to in on for is are be can i my me you your it this that with at from do does did when what how should will after before".split())
 SPLIT = re.compile(r"[\s,.!?;:()\"'।|/\-–—]+")
@@ -93,9 +94,10 @@ def search(query: str, extra_terms: str = "", k: int = 3) -> list[tuple[Section,
         for word in s.keywords:
             if word.isascii():
                 if re.search(r"(?<![a-z])" + re.escape(word) + r"(?![a-z])", ql):
-                    kw += 1.5
-            elif word in ql:
-                kw += 2.0
+                    kw += 1.5 + 0.5 * word.count(" ")
+            elif stem(word) in ql:
+                # Indic keywords match by stem (suffixes); longer phrases are more specific.
+                kw += 2.0 + min(len(word), 12) / 12
         score = bm + kw
         if score > 0:
             scored.append((s, round(score, 3)))

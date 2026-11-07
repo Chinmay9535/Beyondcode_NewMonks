@@ -1,0 +1,425 @@
+{
+ "_about": "Grounded Q&A retrieval cases: the guide section that should answer each question; expected=null means the guides do not cover it and the assistant must say so. 'test' split is held out.",
+ "cases": [
+  {
+   "id": "dev-en-01",
+   "split": "dev",
+   "lang": "en",
+   "text": "When can I wash my hair?",
+   "expected": "postop-guide#bathing"
+  },
+  {
+   "id": "dev-en-02",
+   "split": "dev",
+   "lang": "en",
+   "text": "How do I put the eye drops?",
+   "expected": "postop-guide#drops"
+  },
+  {
+   "id": "dev-en-03",
+   "split": "dev",
+   "lang": "en",
+   "text": "Can I sleep on my side?",
+   "expected": "postop-guide#shield"
+  },
+  {
+   "id": "dev-en-04",
+   "split": "dev",
+   "lang": "en",
+   "text": "My eye itches, can I rub it?",
+   "expected": "postop-guide#rubbing"
+  },
+  {
+   "id": "dev-en-05",
+   "split": "dev",
+   "lang": "en",
+   "text": "Can I use my mobile phone?",
+   "expected": "postop-guide#screens"
+  },
+  {
+   "id": "dev-en-06",
+   "split": "dev",
+   "lang": "en",
+   "text": "Can I cook on the gas stove?",
+   "expected": "postop-guide#cooking"
+  },
+  {
+   "id": "dev-en-07",
+   "split": "dev",
+   "lang": "en",
+   "text": "Can I lift a water bucket?",
+   "expected": "postop-guide#bending"
+  },
+  {
+   "id": "dev-en-08",
+   "split": "dev",
+   "lang": "en",
+   "text": "When can I ride my bike again?",
+   "expected": "postop-guide#driving"
+  },
+  {
+   "id": "dev-en-09",
+   "split": "dev",
+   "lang": "en",
+   "text": "What is a toric lens?",
+   "expected": "lens-guide#toric"
+  },
+  {
+   "id": "dev-en-10",
+   "split": "dev",
+   "lang": "en",
+   "text": "Is the operation painful?",
+   "expected": "lens-guide#surgery"
+  },
+  {
+   "id": "dev-en-11",
+   "split": "dev",
+   "lang": "en",
+   "text": "Can I drink alcohol?",
+   "expected": null
+  },
+  {
+   "id": "dev-en-12",
+   "split": "dev",
+   "lang": "en",
+   "text": "What is the share price of ZEISS?",
+   "expected": null
+  },
+  {
+   "id": "dev-kn-13",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಸ್ನಾನ ಯಾವಾಗ ಮಾಡಬಹುದು?",
+   "expected": "postop-guide#bathing"
+  },
+  {
+   "id": "dev-kn-14",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಡ್ರಾಪ್ಸ್ ಹಾಕಲು ಮರೆತರೆ ಏನು ಮಾಡಬೇಕು?",
+   "expected": "postop-guide#drops"
+  },
+  {
+   "id": "dev-kn-15",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಮಲಗುವಾಗ ಶೀಲ್ಡ್ ಬೇಕಾ?",
+   "expected": "postop-guide#shield"
+  },
+  {
+   "id": "dev-kn-16",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಟಿವಿ ನೋಡಬಹುದಾ?",
+   "expected": "postop-guide#screens"
+  },
+  {
+   "id": "dev-kn-17",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಕಾಡಿಗೆ ಹಚ್ಚಬಹುದಾ?",
+   "expected": "postop-guide#kajal"
+  },
+  {
+   "id": "dev-kn-18",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಟ್ರೈಫೋಕಲ್ ಲೆನ್ಸ್ ಎಂದರೇನು?",
+   "expected": "lens-guide#trifocal"
+  },
+  {
+   "id": "dev-hi-19",
+   "split": "dev",
+   "lang": "hi",
+   "text": "मैं कब नहा सकता हूँ?",
+   "expected": "postop-guide#bathing"
+  },
+  {
+   "id": "dev-hi-20",
+   "split": "dev",
+   "lang": "hi",
+   "text": "क्या मैं नमाज़ पढ़ सकता हूँ?",
+   "expected": "postop-guide#bending"
+  },
+  {
+   "id": "dev-hi-21",
+   "split": "dev",
+   "lang": "hi",
+   "text": "काजल कब लगा सकती हूँ?",
+   "expected": "postop-guide#kajal"
+  },
+  {
+   "id": "dev-hi-22",
+   "split": "dev",
+   "lang": "hi",
+   "text": "क्या मैं मंदिर जा सकता हूँ?",
+   "expected": "postop-guide#bending"
+  },
+  {
+   "id": "dev-hi-23",
+   "split": "dev",
+   "lang": "hi",
+   "text": "अगली जाँच कब है?",
+   "expected": "postop-guide#followup"
+  },
+  {
+   "id": "dev-hi-24",
+   "split": "dev",
+   "lang": "hi",
+   "text": "लेंस की कीमत कितनी है?",
+   "expected": "lens-guide#cost"
+  },
+  {
+   "id": "dev-ta-25",
+   "split": "dev",
+   "lang": "ta",
+   "text": "எப்போது குளிக்கலாம்?",
+   "expected": "postop-guide#bathing"
+  },
+  {
+   "id": "dev-ta-26",
+   "split": "dev",
+   "lang": "ta",
+   "text": "டிவி பார்க்கலாமா?",
+   "expected": "postop-guide#screens"
+  },
+  {
+   "id": "dev-ta-27",
+   "split": "dev",
+   "lang": "ta",
+   "text": "சமைக்கலாமா?",
+   "expected": "postop-guide#cooking"
+  },
+  {
+   "id": "dev-ta-28",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கண்மை போடலாமா?",
+   "expected": "postop-guide#kajal"
+  },
+  {
+   "id": "dev-ta-29",
+   "split": "dev",
+   "lang": "ta",
+   "text": "ஆற்றில் குளிக்கலாமா?",
+   "expected": "postop-guide#swimming"
+  },
+  {
+   "id": "dev-ta-30",
+   "split": "dev",
+   "lang": "ta",
+   "text": "இரவில் வட்டங்கள் தெரியுமா?",
+   "expected": "lens-guide#halos"
+  },
+  {
+   "id": "test-en-01",
+   "split": "test",
+   "lang": "en",
+   "text": "Can I take a head bath tomorrow?",
+   "expected": "postop-guide#bathing"
+  },
+  {
+   "id": "test-en-02",
+   "split": "test",
+   "lang": "en",
+   "text": "I missed a dose, what now?",
+   "expected": "postop-guide#drops"
+  },
+  {
+   "id": "test-en-03",
+   "split": "test",
+   "lang": "en",
+   "text": "Is watering of the eye normal?",
+   "expected": "postop-guide#normal"
+  },
+  {
+   "id": "test-en-04",
+   "split": "test",
+   "lang": "en",
+   "text": "Can I go to the office next week?",
+   "expected": "postop-guide#work"
+  },
+  {
+   "id": "test-en-05",
+   "split": "test",
+   "lang": "en",
+   "text": "Can I wear eyeliner?",
+   "expected": "postop-guide#kajal"
+  },
+  {
+   "id": "test-en-06",
+   "split": "test",
+   "lang": "en",
+   "text": "Can I swim in the pool?",
+   "expected": "postop-guide#swimming"
+  },
+  {
+   "id": "test-en-07",
+   "split": "test",
+   "lang": "en",
+   "text": "When will I get new glasses?",
+   "expected": "postop-guide#followup"
+  },
+  {
+   "id": "test-en-08",
+   "split": "test",
+   "lang": "en",
+   "text": "Should I continue my sugar tablets?",
+   "expected": "postop-guide#diet"
+  },
+  {
+   "id": "test-en-09",
+   "split": "test",
+   "lang": "en",
+   "text": "What is EDOF?",
+   "expected": "lens-guide#edof"
+  },
+  {
+   "id": "test-en-10",
+   "split": "test",
+   "lang": "en",
+   "text": "Will I see rings around headlights?",
+   "expected": "lens-guide#halos"
+  },
+  {
+   "id": "test-en-11",
+   "split": "test",
+   "lang": "en",
+   "text": "Can I play cricket with my grandson?",
+   "expected": null
+  },
+  {
+   "id": "test-en-12",
+   "split": "test",
+   "lang": "en",
+   "text": "What is the weather tomorrow?",
+   "expected": null
+  },
+  {
+   "id": "test-kn-13",
+   "split": "test",
+   "lang": "kn",
+   "text": "ತಲೆ ಸ್ನಾನ ಯಾವಾಗ?",
+   "expected": "postop-guide#bathing"
+  },
+  {
+   "id": "test-kn-14",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಪೂಜೆ ಮಾಡಬಹುದಾ?",
+   "expected": "postop-guide#bending"
+  },
+  {
+   "id": "test-kn-15",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಸ್ಕೂಟರ್ ಓಡಿಸಬಹುದಾ?",
+   "expected": "postop-guide#driving"
+  },
+  {
+   "id": "test-kn-16",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಮೊನೊಫೋಕಲ್ ಲೆನ್ಸ್ ಹೇಗಿರುತ್ತದೆ?",
+   "expected": "lens-guide#monofocal"
+  },
+  {
+   "id": "test-kn-17",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಕಣ್ಣು ತುರಿಕೆ ಆಗ್ತಿದೆ, ಉಜ್ಜಬಹುದಾ?",
+   "expected": "postop-guide#rubbing"
+  },
+  {
+   "id": "test-kn-18",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಊಟದಲ್ಲಿ ಖಾರ ತಿನ್ನಬಹುದಾ?",
+   "expected": "postop-guide#diet"
+  },
+  {
+   "id": "test-hi-19",
+   "split": "test",
+   "lang": "hi",
+   "text": "क्या मैं टीवी देख सकता हूँ?",
+   "expected": "postop-guide#screens"
+  },
+  {
+   "id": "test-hi-20",
+   "split": "test",
+   "lang": "hi",
+   "text": "क्या मैं स्कूटर चला सकता हूँ?",
+   "expected": "postop-guide#driving"
+  },
+  {
+   "id": "test-hi-21",
+   "split": "test",
+   "lang": "hi",
+   "text": "चूल्हे पर खाना बना सकती हूँ?",
+   "expected": "postop-guide#cooking"
+  },
+  {
+   "id": "test-hi-22",
+   "split": "test",
+   "lang": "hi",
+   "text": "क्या ऑपरेशन में दर्द होगा?",
+   "expected": "lens-guide#surgery"
+  },
+  {
+   "id": "test-hi-23",
+   "split": "test",
+   "lang": "hi",
+   "text": "टोरिक लेंस क्या है?",
+   "expected": "lens-guide#toric"
+  },
+  {
+   "id": "test-hi-24",
+   "split": "test",
+   "lang": "hi",
+   "text": "क्या मैं गंगा में डुबकी लगा सकता हूँ?",
+   "expected": "postop-guide#swimming"
+  },
+  {
+   "id": "test-ta-25",
+   "split": "test",
+   "lang": "ta",
+   "text": "தலைக்கு எப்போது குளிக்கலாம்?",
+   "expected": "postop-guide#bathing"
+  },
+  {
+   "id": "test-ta-26",
+   "split": "test",
+   "lang": "ta",
+   "text": "கோவிலுக்குப் போகலாமா? குனியலாமா?",
+   "expected": "postop-guide#bending"
+  },
+  {
+   "id": "test-ta-27",
+   "split": "test",
+   "lang": "ta",
+   "text": "பைக் ஓட்டலாமா?",
+   "expected": "postop-guide#driving"
+  },
+  {
+   "id": "test-ta-28",
+   "split": "test",
+   "lang": "ta",
+   "text": "மருந்து போட மறந்துவிட்டேன்",
+   "expected": "postop-guide#drops"
+  },
+  {
+   "id": "test-ta-29",
+   "split": "test",
+   "lang": "ta",
+   "text": "அடுத்த பரிசோதனை எப்போது?",
+   "expected": "postop-guide#followup"
+  },
+  {
+   "id": "test-ta-30",
+   "split": "test",
+   "lang": "ta",
+   "text": "ட்ரைஃபோகல் லென்ஸ் என்றால் என்ன?",
+   "expected": "lens-guide#trifocal"
+  }
+ ]
+}

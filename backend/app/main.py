@@ -59,6 +59,26 @@ def meta():
     }
 
 
+@app.get("/api/safety")
+def safety():
+    """Live safety scorecard (rules only; see services/evaluation.py)."""
+    from .services.evaluation import scorecard
+
+    return scorecard()
+
+
+class TryText(BaseModel):
+    text: str = Field(min_length=1, max_length=500)
+
+
+@app.post("/api/safety/try")
+def safety_try(body: TryText):
+    """Triage one message with the rules, without storing anything."""
+    from .services.redflag import detect_rules
+
+    return detect_rules(body.text)
+
+
 VOICES = {"kn": ("kn-IN", "kn-IN-SapnaNeural"), "hi": ("hi-IN", "hi-IN-SwaraNeural"), "ta": ("ta-IN", "ta-IN-PallaviNeural"), "en": ("en-IN", "en-IN-NeerjaNeural")}
 
 

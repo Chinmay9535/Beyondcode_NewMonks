@@ -166,3 +166,36 @@ def test_out_of_scope_question_is_not_guessed():
 def test_every_section_has_all_translations():
     for s in rag.index()["sections"]:
         assert set(s.local) == {"kn", "hi", "ta"}, s.id
+
+
+# ----------------------------------------------------------------------------- safety scorecard
+
+@pytest.mark.parametrize("text,severity", [
+    ("my vision is better and less blurry today", None),
+    ("नज़र पहले से बेहतर है", None),
+    ("பார்வை நன்றாக இருக்கு", None),
+    ("I'm on blood pressure tablets, can I continue?", None),
+    ("ಕಣ್ಣು ತುಂಬಾ ನೋವಾಗುತ್ತಿದೆ", "urgent"),          # suffix on ನೋವು
+    ("கண் கொஞ்சம் சிவப்பா இருக்கு", "soon"),          # suffix on சிவப்பு
+    ("கொஞ்சம் மங்கலா தெரியுது", "soon"),              # தெரியுது is "visible", not negated
+    ("aankh lal hai aur dard badh raha hai", "urgent"),  # romanised, red + pain + worsening
+    ("பார்வை திடீரென்று குறைந்தது", "urgent"),        # words between "vision" and "reduced"
+    ("I'm not able to see clearly at night when driving", "soon"),
+])
+def test_red_flag_regressions(text, severity):
+    assert redflag.detect_rules(text)["severity"] == severity
+
+
+def test_scorecard_safety_floor():
+    from app.services.evaluation import scorecard
+    sc = scorecard()
+    for split in ("dev", "test"):
+        rf = sc["redflag"][split]
+        assert rf["urgent_missed"] == 0, rf["errors"]
+        assert rf["urgent_recall"] >= 95 and rf["false_alarm_rate"] <= 10
+    assert sc["qa"]["test"]["top1"] >= 90
+
+
+@pytest.mark.parametrize("text", ["कम दिख रहा है", "I'm seeing less than yesterday", "ಕಡಿಮೆ ಕಾಣುತ್ತಿದೆ", "kam dikh raha hai"])
+def test_seeing_less_is_urgent(text):
+    assert redflag.detect_rules(text)["severity"] == "urgent"

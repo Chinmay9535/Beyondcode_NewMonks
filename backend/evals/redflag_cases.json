@@ -1,0 +1,1249 @@
+{
+ "_about": "Red-flag triage cases. Labels follow the clinic guide: urgent = vision loss/worsening, severe or increasing pain, discharge, flashes/floaters/curtain, vomiting with eye pain, injury, redness with pain; soon = mild pain, redness, blur, headache; none = questions and normal recovery (watering, itching, grittiness, light sensitivity, halos). Written by the build team, NOT yet reviewed by native speakers or clinicians. The 'test' split is held out: never tune rules on it.",
+ "cases": [
+  {
+   "id": "dev-en-01",
+   "split": "dev",
+   "lang": "en",
+   "text": "My vision suddenly went blurry this morning and the eye hurts",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-02",
+   "split": "dev",
+   "lang": "en",
+   "text": "I can't see anything from my operated eye",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-03",
+   "split": "dev",
+   "lang": "en",
+   "text": "there's a curtain coming over my vision",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-04",
+   "split": "dev",
+   "lang": "en",
+   "text": "I keep seeing flashes of light on the side",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-05",
+   "split": "dev",
+   "lang": "en",
+   "text": "lots of new floaters since yesterday",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-06",
+   "split": "dev",
+   "lang": "en",
+   "text": "yellow sticky stuff coming out of the eye",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-07",
+   "split": "dev",
+   "lang": "en",
+   "text": "the pain is getting worse even after the tablet",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-08",
+   "split": "dev",
+   "lang": "en",
+   "text": "I vomited twice and my eye is aching badly",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-09",
+   "split": "dev",
+   "lang": "en",
+   "text": "my grandson's toy hit my eye",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-10",
+   "split": "dev",
+   "lang": "en",
+   "text": "my eye is very red and painful",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-en-11",
+   "split": "dev",
+   "lang": "en",
+   "text": "slight pain when I blink",
+   "label": "soon"
+  },
+  {
+   "id": "dev-en-12",
+   "split": "dev",
+   "lang": "en",
+   "text": "the eye looks a bit red",
+   "label": "soon"
+  },
+  {
+   "id": "dev-en-13",
+   "split": "dev",
+   "lang": "en",
+   "text": "vision is a little hazy",
+   "label": "soon"
+  },
+  {
+   "id": "dev-en-14",
+   "split": "dev",
+   "lang": "en",
+   "text": "I have a mild headache",
+   "label": "soon"
+  },
+  {
+   "id": "dev-en-15",
+   "split": "dev",
+   "lang": "en",
+   "text": "when can I take a head bath?",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-16",
+   "split": "dev",
+   "lang": "en",
+   "text": "can I watch cricket on TV?",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-17",
+   "split": "dev",
+   "lang": "en",
+   "text": "is it ok to sleep on my left side?",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-18",
+   "split": "dev",
+   "lang": "en",
+   "text": "my eye is watering a lot, is that normal?",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-19",
+   "split": "dev",
+   "lang": "en",
+   "text": "slightly itchy and gritty feeling",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-20",
+   "split": "dev",
+   "lang": "en",
+   "text": "light feels very bright",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-21",
+   "split": "dev",
+   "lang": "en",
+   "text": "I forgot my 4 pm drops",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-22",
+   "split": "dev",
+   "lang": "en",
+   "text": "no pain, no redness, all good",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-23",
+   "split": "dev",
+   "lang": "en",
+   "text": "can I eat chicken?",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-24",
+   "split": "dev",
+   "lang": "en",
+   "text": "when is my next checkup",
+   "label": "none"
+  },
+  {
+   "id": "dev-en-25",
+   "split": "dev",
+   "lang": "en",
+   "text": "I don't have any pain but can I go to temple",
+   "label": "none"
+  },
+  {
+   "id": "dev-kn-01",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಕಣ್ಣು ತುಂಬಾ ನೋವಾಗುತ್ತಿದೆ",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-kn-02",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಇದ್ದಕ್ಕಿದ್ದಂತೆ ಕಣ್ಣು ಕಾಣಿಸುತ್ತಿಲ್ಲ",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-kn-03",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಕಣ್ಣಿನಿಂದ ಕೀವು ಬರುತ್ತಿದೆ",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-kn-04",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಕಣ್ಣಿನ ಮುಂದೆ ಮಿಂಚು ಕಾಣುತ್ತಿದೆ",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-kn-05",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಕಣ್ಣು ನೋವು ಮತ್ತು ವಾಂತಿ",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-kn-06",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಕಣ್ಣು ಕೆಂಪಾಗಿದೆ ಮತ್ತು ನೋವು ಹೆಚ್ಚಾಗಿದೆ",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-kn-07",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಮಗು ಕೈ ತಾಗಿಸಿತು, ಕಣ್ಣಿಗೆ ಪೆಟ್ಟಾಗಿದೆ",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-kn-08",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಸ್ವಲ್ಪ ನೋವು ಇದೆ",
+   "label": "soon"
+  },
+  {
+   "id": "dev-kn-09",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಕಣ್ಣು ಸ್ವಲ್ಪ ಕೆಂಪಾಗಿದೆ",
+   "label": "soon"
+  },
+  {
+   "id": "dev-kn-10",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಸ್ವಲ್ಪ ಮಂಜು ಮಂಜಾಗಿ ಕಾಣುತ್ತಿದೆ",
+   "label": "soon"
+  },
+  {
+   "id": "dev-kn-11",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ತಲೆನೋವು ಇದೆ",
+   "label": "soon"
+  },
+  {
+   "id": "dev-kn-12",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಸ್ನಾನ ಯಾವಾಗ ಮಾಡಬಹುದು?",
+   "label": "none"
+  },
+  {
+   "id": "dev-kn-13",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಟಿವಿ ನೋಡಬಹುದಾ?",
+   "label": "none"
+  },
+  {
+   "id": "dev-kn-14",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಕಣ್ಣಲ್ಲಿ ನೀರು ಬರುತ್ತಿದೆ, ಇದು ಸಾಮಾನ್ಯವೇ?",
+   "label": "none"
+  },
+  {
+   "id": "dev-kn-15",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಸ್ವಲ್ಪ ತುರಿಕೆ ಇದೆ",
+   "label": "none"
+  },
+  {
+   "id": "dev-kn-16",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ನೋವು ಇಲ್ಲ, ಕೆಂಪು ಇಲ್ಲ",
+   "label": "none"
+  },
+  {
+   "id": "dev-kn-17",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ಡ್ರಾಪ್ಸ್ ಹಾಕಲು ಮರೆತೆ",
+   "label": "none"
+  },
+  {
+   "id": "dev-kn-18",
+   "split": "dev",
+   "lang": "kn",
+   "text": "ದೇವಸ್ಥಾನಕ್ಕೆ ಹೋಗಬಹುದಾ?",
+   "label": "none"
+  },
+  {
+   "id": "dev-kn-19",
+   "split": "dev",
+   "lang": "kn",
+   "text": "kannu tumba novu",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-kn-20",
+   "split": "dev",
+   "lang": "kn",
+   "text": "kannu kempagide",
+   "label": "soon"
+  },
+  {
+   "id": "dev-kn-21",
+   "split": "dev",
+   "lang": "kn",
+   "text": "kannu kaanthilla",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-kn-22",
+   "split": "dev",
+   "lang": "kn",
+   "text": "eye full red aagide, novu ide",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-01",
+   "split": "dev",
+   "lang": "hi",
+   "text": "आँख में बहुत दर्द हो रहा है",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-02",
+   "split": "dev",
+   "lang": "hi",
+   "text": "अचानक दिखना बंद हो गया",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-03",
+   "split": "dev",
+   "lang": "hi",
+   "text": "आँख से पीला पानी निकल रहा है",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-04",
+   "split": "dev",
+   "lang": "hi",
+   "text": "आँखों के सामने चमक दिख रही है",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-05",
+   "split": "dev",
+   "lang": "hi",
+   "text": "उल्टी हो रही है और आँख दुख रही है",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-06",
+   "split": "dev",
+   "lang": "hi",
+   "text": "आँख में चोट लग गई",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-07",
+   "split": "dev",
+   "lang": "hi",
+   "text": "दर्द बढ़ता जा रहा है",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-08",
+   "split": "dev",
+   "lang": "hi",
+   "text": "थोड़ा दर्द है",
+   "label": "soon"
+  },
+  {
+   "id": "dev-hi-09",
+   "split": "dev",
+   "lang": "hi",
+   "text": "आँख थोड़ी लाल है",
+   "label": "soon"
+  },
+  {
+   "id": "dev-hi-10",
+   "split": "dev",
+   "lang": "hi",
+   "text": "थोड़ा धुंधला दिख रहा है",
+   "label": "soon"
+  },
+  {
+   "id": "dev-hi-11",
+   "split": "dev",
+   "lang": "hi",
+   "text": "सिर में दर्द है",
+   "label": "soon"
+  },
+  {
+   "id": "dev-hi-12",
+   "split": "dev",
+   "lang": "hi",
+   "text": "मैं कब नहा सकता हूँ?",
+   "label": "none"
+  },
+  {
+   "id": "dev-hi-13",
+   "split": "dev",
+   "lang": "hi",
+   "text": "क्या मैं टीवी देख सकता हूँ?",
+   "label": "none"
+  },
+  {
+   "id": "dev-hi-14",
+   "split": "dev",
+   "lang": "hi",
+   "text": "आँख से पानी आ रहा है, क्या ये नॉर्मल है?",
+   "label": "none"
+  },
+  {
+   "id": "dev-hi-15",
+   "split": "dev",
+   "lang": "hi",
+   "text": "हल्की खुजली है",
+   "label": "none"
+  },
+  {
+   "id": "dev-hi-16",
+   "split": "dev",
+   "lang": "hi",
+   "text": "दर्द नहीं है, सब ठीक है",
+   "label": "none"
+  },
+  {
+   "id": "dev-hi-17",
+   "split": "dev",
+   "lang": "hi",
+   "text": "दवाई डालना भूल गया",
+   "label": "none"
+  },
+  {
+   "id": "dev-hi-18",
+   "split": "dev",
+   "lang": "hi",
+   "text": "क्या मैं मंदिर जा सकता हूँ?",
+   "label": "none"
+  },
+  {
+   "id": "dev-hi-19",
+   "split": "dev",
+   "lang": "hi",
+   "text": "aankh mein bahut dard hai",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-20",
+   "split": "dev",
+   "lang": "hi",
+   "text": "aankh lal hai",
+   "label": "soon"
+  },
+  {
+   "id": "dev-hi-21",
+   "split": "dev",
+   "lang": "hi",
+   "text": "kuch dikh nahi raha",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-hi-22",
+   "split": "dev",
+   "lang": "hi",
+   "text": "vision blur ho gaya hai suddenly",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-ta-01",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கண் ரொம்ப வலிக்குது",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-ta-02",
+   "split": "dev",
+   "lang": "ta",
+   "text": "திடீரென்று கண் தெரியவில்லை",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-ta-03",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கண்ணில் சீழ் வருகிறது",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-ta-04",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கண் முன் மின்னல் போல தெரிகிறது",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-ta-05",
+   "split": "dev",
+   "lang": "ta",
+   "text": "வாந்தி வருகிறது, கண் வலிக்கிறது",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-ta-06",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கண்ணில் அடி பட்டது",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-ta-07",
+   "split": "dev",
+   "lang": "ta",
+   "text": "வலி அதிகமாகிக்கொண்டே இருக்கிறது",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-ta-08",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கொஞ்சம் வலி இருக்கு",
+   "label": "soon"
+  },
+  {
+   "id": "dev-ta-09",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கண் கொஞ்சம் சிவப்பா இருக்கு",
+   "label": "soon"
+  },
+  {
+   "id": "dev-ta-10",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கொஞ்சம் மங்கலா தெரியுது",
+   "label": "soon"
+  },
+  {
+   "id": "dev-ta-11",
+   "split": "dev",
+   "lang": "ta",
+   "text": "தலைவலி இருக்கு",
+   "label": "soon"
+  },
+  {
+   "id": "dev-ta-12",
+   "split": "dev",
+   "lang": "ta",
+   "text": "எப்போது குளிக்கலாம்?",
+   "label": "none"
+  },
+  {
+   "id": "dev-ta-13",
+   "split": "dev",
+   "lang": "ta",
+   "text": "டிவி பார்க்கலாமா?",
+   "label": "none"
+  },
+  {
+   "id": "dev-ta-14",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கண்ணில் நீர் வடிகிறது, இது சாதாரணமா?",
+   "label": "none"
+  },
+  {
+   "id": "dev-ta-15",
+   "split": "dev",
+   "lang": "ta",
+   "text": "லேசான அரிப்பு இருக்கு",
+   "label": "none"
+  },
+  {
+   "id": "dev-ta-16",
+   "split": "dev",
+   "lang": "ta",
+   "text": "வலி இல்லை, எல்லாம் நன்றாக இருக்கு",
+   "label": "none"
+  },
+  {
+   "id": "dev-ta-17",
+   "split": "dev",
+   "lang": "ta",
+   "text": "மருந்து போட மறந்துவிட்டேன்",
+   "label": "none"
+  },
+  {
+   "id": "dev-ta-18",
+   "split": "dev",
+   "lang": "ta",
+   "text": "கோவிலுக்குப் போகலாமா?",
+   "label": "none"
+  },
+  {
+   "id": "dev-ta-19",
+   "split": "dev",
+   "lang": "ta",
+   "text": "kann romba vali",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-ta-20",
+   "split": "dev",
+   "lang": "ta",
+   "text": "kann sivappa irukku",
+   "label": "soon"
+  },
+  {
+   "id": "dev-ta-21",
+   "split": "dev",
+   "lang": "ta",
+   "text": "onnum theriyala",
+   "label": "urgent"
+  },
+  {
+   "id": "test-en-01",
+   "split": "test",
+   "lang": "en",
+   "text": "Everything went dark in my right eye an hour ago",
+   "label": "urgent"
+  },
+  {
+   "id": "test-en-02",
+   "split": "test",
+   "lang": "en",
+   "text": "eye pain unbearable since night",
+   "label": "urgent"
+  },
+  {
+   "id": "test-en-03",
+   "split": "test",
+   "lang": "en",
+   "text": "seeing black spots and a shadow over the top",
+   "label": "urgent"
+  },
+  {
+   "id": "test-en-04",
+   "split": "test",
+   "lang": "en",
+   "text": "pus in the corner of my eye",
+   "label": "urgent"
+  },
+  {
+   "id": "test-en-05",
+   "split": "test",
+   "lang": "en",
+   "text": "I fell in the bathroom and hit my face near the eye",
+   "label": "urgent"
+  },
+  {
+   "id": "test-en-06",
+   "split": "test",
+   "lang": "en",
+   "text": "feeling nauseous, eye throbbing",
+   "label": "urgent"
+  },
+  {
+   "id": "test-en-07",
+   "split": "test",
+   "lang": "en",
+   "text": "redness is increasing day by day",
+   "label": "urgent"
+  },
+  {
+   "id": "test-en-08",
+   "split": "test",
+   "lang": "en",
+   "text": "sudden decrease in vision",
+   "label": "urgent"
+  },
+  {
+   "id": "test-en-09",
+   "split": "test",
+   "lang": "en",
+   "text": "my eye hurts a little",
+   "label": "soon"
+  },
+  {
+   "id": "test-en-10",
+   "split": "test",
+   "lang": "en",
+   "text": "it's a bit bloodshot",
+   "label": "soon"
+  },
+  {
+   "id": "test-en-11",
+   "split": "test",
+   "lang": "en",
+   "text": "things look cloudy",
+   "label": "soon"
+  },
+  {
+   "id": "test-en-12",
+   "split": "test",
+   "lang": "en",
+   "text": "the vision is foggy in the morning",
+   "label": "soon"
+  },
+  {
+   "id": "dev-moved-en-13",
+   "split": "dev",
+   "lang": "en",
+   "text": "I'm not able to see clearly at night when driving",
+   "label": "soon"
+  },
+  {
+   "id": "test-en-14",
+   "split": "test",
+   "lang": "en",
+   "text": "bright light hurts my eye",
+   "label": "soon"
+  },
+  {
+   "id": "test-en-15",
+   "split": "test",
+   "lang": "en",
+   "text": "can I read the newspaper today",
+   "label": "none"
+  },
+  {
+   "id": "test-en-16",
+   "split": "test",
+   "lang": "en",
+   "text": "how many times should I put the white cap drops?",
+   "label": "none"
+  },
+  {
+   "id": "test-en-17",
+   "split": "test",
+   "lang": "en",
+   "text": "can I travel by bus to Mysore",
+   "label": "none"
+  },
+  {
+   "id": "test-en-18",
+   "split": "test",
+   "lang": "en",
+   "text": "is it normal to see halos around lights?",
+   "label": "none"
+  },
+  {
+   "id": "test-en-19",
+   "split": "test",
+   "lang": "en",
+   "text": "my wife wants to know when I can cook",
+   "label": "none"
+  },
+  {
+   "id": "test-en-20",
+   "split": "test",
+   "lang": "en",
+   "text": "is it okay to use my phone",
+   "label": "none"
+  },
+  {
+   "id": "test-en-21",
+   "split": "test",
+   "lang": "en",
+   "text": "watery eyes in the evening",
+   "label": "none"
+  },
+  {
+   "id": "test-en-22",
+   "split": "test",
+   "lang": "en",
+   "text": "eye feels like sand",
+   "label": "none"
+  },
+  {
+   "id": "test-en-23",
+   "split": "test",
+   "lang": "en",
+   "text": "I have no discharge and no pain",
+   "label": "none"
+  },
+  {
+   "id": "test-en-24",
+   "split": "test",
+   "lang": "en",
+   "text": "the shield is uncomfortable",
+   "label": "none"
+  },
+  {
+   "id": "test-kn-01",
+   "split": "test",
+   "lang": "kn",
+   "text": "ನಿನ್ನೆಯಿಂದ ನೋವು ಜಾಸ್ತಿ ಆಗ್ತಿದೆ",
+   "label": "urgent"
+  },
+  {
+   "id": "test-kn-02",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಏನೂ ಕಾಣ್ತಿಲ್ಲ, ಎಲ್ಲಾ ಕತ್ತಲು",
+   "label": "urgent"
+  },
+  {
+   "id": "test-kn-03",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಕಣ್ಣಿನ ಮುಂದೆ ಪರದೆ ಬಂದ ಹಾಗೆ ಇದೆ",
+   "label": "urgent"
+  },
+  {
+   "id": "test-kn-04",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಕಪ್ಪು ಚುಕ್ಕೆಗಳು ಕಾಣುತ್ತಿವೆ",
+   "label": "urgent"
+  },
+  {
+   "id": "test-kn-05",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಹಳದಿ ನೀರು ಸೋರುತ್ತಿದೆ",
+   "label": "urgent"
+  },
+  {
+   "id": "test-kn-06",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಕಣ್ಣು ನೋವು ತಡೆಯಲಾಗುತ್ತಿಲ್ಲ",
+   "label": "urgent"
+  },
+  {
+   "id": "test-kn-07",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಇದ್ದಕ್ಕಿದ್ದಂತೆ ದೃಷ್ಟಿ ಕಡಿಮೆ ಆಯಿತು",
+   "label": "urgent"
+  },
+  {
+   "id": "test-kn-08",
+   "split": "test",
+   "lang": "kn",
+   "text": "kannalli kivu barta ide",
+   "label": "urgent"
+  },
+  {
+   "id": "test-kn-09",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಕಣ್ಣು ಸ್ವಲ್ಪ ನೋಯುತ್ತಿದೆ",
+   "label": "soon"
+  },
+  {
+   "id": "test-kn-10",
+   "split": "test",
+   "lang": "kn",
+   "text": "ದೃಷ್ಟಿ ಮಸುಕಾಗಿದೆ",
+   "label": "soon"
+  },
+  {
+   "id": "test-kn-11",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಕಣ್ಣು ಕೆಂಪು ಕೆಂಪಾಗಿದೆ",
+   "label": "soon"
+  },
+  {
+   "id": "test-kn-12",
+   "split": "test",
+   "lang": "kn",
+   "text": "swalpa novu ide",
+   "label": "soon"
+  },
+  {
+   "id": "test-kn-13",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಪೇಪರ್ ಓದಬಹುದಾ?",
+   "label": "none"
+  },
+  {
+   "id": "test-kn-14",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಅಡುಗೆ ಮಾಡಬಹುದಾ?",
+   "label": "none"
+  },
+  {
+   "id": "test-kn-15",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಬೆಳಕು ತುಂಬಾ ಪ್ರಖರವಾಗಿ ಕಾಣುತ್ತಿದೆ",
+   "label": "none"
+  },
+  {
+   "id": "test-kn-16",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಮರಳು ಬಿದ್ದ ಹಾಗೆ ಅನಿಸುತ್ತಿದೆ",
+   "label": "none"
+  },
+  {
+   "id": "test-kn-17",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಕಾಡಿಗೆ ಹಚ್ಚಬಹುದಾ?",
+   "label": "none"
+  },
+  {
+   "id": "test-kn-18",
+   "split": "test",
+   "lang": "kn",
+   "text": "ಮುಂದಿನ ಪರೀಕ್ಷೆ ಯಾವಾಗ?",
+   "label": "none"
+  },
+  {
+   "id": "test-kn-19",
+   "split": "test",
+   "lang": "kn",
+   "text": "ನನಗೆ ನೋವು ಇಲ್ಲ, ಆದರೆ ತುರಿಕೆ ಇದೆ",
+   "label": "none"
+  },
+  {
+   "id": "test-hi-01",
+   "split": "test",
+   "lang": "hi",
+   "text": "कल रात से दर्द असहनीय है",
+   "label": "urgent"
+  },
+  {
+   "id": "test-hi-02",
+   "split": "test",
+   "lang": "hi",
+   "text": "आँख के आगे काला पर्दा आ गया",
+   "label": "urgent"
+  },
+  {
+   "id": "test-hi-03",
+   "split": "test",
+   "lang": "hi",
+   "text": "आँख में मवाद है",
+   "label": "urgent"
+  },
+  {
+   "id": "test-hi-04",
+   "split": "test",
+   "lang": "hi",
+   "text": "सब कुछ धुंधला हो गया अचानक",
+   "label": "urgent"
+  },
+  {
+   "id": "test-hi-05",
+   "split": "test",
+   "lang": "hi",
+   "text": "आँख लाल है और दर्द भी है",
+   "label": "urgent"
+  },
+  {
+   "id": "test-hi-06",
+   "split": "test",
+   "lang": "hi",
+   "text": "जी मिचला रहा है और आँख में तेज़ दर्द",
+   "label": "urgent"
+  },
+  {
+   "id": "test-hi-07",
+   "split": "test",
+   "lang": "hi",
+   "text": "गिर गया था, आँख के पास चोट है",
+   "label": "urgent"
+  },
+  {
+   "id": "test-hi-08",
+   "split": "test",
+   "lang": "hi",
+   "text": "नजर कम हो रही है",
+   "label": "urgent"
+  },
+  {
+   "id": "test-hi-09",
+   "split": "test",
+   "lang": "hi",
+   "text": "aankh se pus aa raha hai",
+   "label": "urgent"
+  },
+  {
+   "id": "test-hi-10",
+   "split": "test",
+   "lang": "hi",
+   "text": "हल्का सा दर्द है",
+   "label": "soon"
+  },
+  {
+   "id": "test-hi-11",
+   "split": "test",
+   "lang": "hi",
+   "text": "आँख लाल लग रही है",
+   "label": "soon"
+  },
+  {
+   "id": "test-hi-12",
+   "split": "test",
+   "lang": "hi",
+   "text": "नज़र थोड़ी धुंधली है",
+   "label": "soon"
+  },
+  {
+   "id": "test-hi-13",
+   "split": "test",
+   "lang": "hi",
+   "text": "thoda dard hai",
+   "label": "soon"
+  },
+  {
+   "id": "test-hi-14",
+   "split": "test",
+   "lang": "hi",
+   "text": "क्या मैं अखबार पढ़ सकता हूँ?",
+   "label": "none"
+  },
+  {
+   "id": "test-hi-15",
+   "split": "test",
+   "lang": "hi",
+   "text": "रोटी बना सकती हूँ?",
+   "label": "none"
+  },
+  {
+   "id": "test-hi-16",
+   "split": "test",
+   "lang": "hi",
+   "text": "रोशनी में चुभन होती है",
+   "label": "none"
+  },
+  {
+   "id": "test-hi-17",
+   "split": "test",
+   "lang": "hi",
+   "text": "सोते समय शील्ड पहनना ज़रूरी है?",
+   "label": "none"
+  },
+  {
+   "id": "test-hi-18",
+   "split": "test",
+   "lang": "hi",
+   "text": "मुझे कोई दर्द या लाली नहीं है",
+   "label": "none"
+  },
+  {
+   "id": "test-hi-19",
+   "split": "test",
+   "lang": "hi",
+   "text": "काजल कब लगा सकती हूँ?",
+   "label": "none"
+  },
+  {
+   "id": "test-hi-20",
+   "split": "test",
+   "lang": "hi",
+   "text": "कितने दिन ड्रॉप डालनी है?",
+   "label": "none"
+  },
+  {
+   "id": "test-hi-21",
+   "split": "test",
+   "lang": "hi",
+   "text": "dard nahi hai, bas paani aa raha hai",
+   "label": "none"
+  },
+  {
+   "id": "test-hi-22",
+   "split": "test",
+   "lang": "hi",
+   "text": "रात में रोशनी के चारों ओर घेरे दिखते हैं",
+   "label": "none"
+  },
+  {
+   "id": "test-ta-01",
+   "split": "test",
+   "lang": "ta",
+   "text": "நேற்றிலிருந்து வலி தாங்க முடியவில்லை",
+   "label": "urgent"
+  },
+  {
+   "id": "test-ta-02",
+   "split": "test",
+   "lang": "ta",
+   "text": "கண் முன்னால் திரை போல இருக்கு",
+   "label": "urgent"
+  },
+  {
+   "id": "test-ta-03",
+   "split": "test",
+   "lang": "ta",
+   "text": "கருப்பு புள்ளிகள் தெரிகின்றன",
+   "label": "urgent"
+  },
+  {
+   "id": "test-ta-04",
+   "split": "test",
+   "lang": "ta",
+   "text": "மஞ்சள் நீர் வருது",
+   "label": "urgent"
+  },
+  {
+   "id": "test-ta-05",
+   "split": "test",
+   "lang": "ta",
+   "text": "சிவப்பும் வலியும் அதிகமாகுது",
+   "label": "urgent"
+  },
+  {
+   "id": "dev-moved-ta-06",
+   "split": "dev",
+   "lang": "ta",
+   "text": "பார்வை திடீரென்று குறைந்தது",
+   "label": "urgent"
+  },
+  {
+   "id": "test-ta-07",
+   "split": "test",
+   "lang": "ta",
+   "text": "கீழே விழுந்தேன், கண் அருகே அடி",
+   "label": "urgent"
+  },
+  {
+   "id": "test-ta-08",
+   "split": "test",
+   "lang": "ta",
+   "text": "kannula seezh varudhu",
+   "label": "urgent"
+  },
+  {
+   "id": "test-ta-09",
+   "split": "test",
+   "lang": "ta",
+   "text": "லேசா வலிக்குது",
+   "label": "soon"
+  },
+  {
+   "id": "test-ta-10",
+   "split": "test",
+   "lang": "ta",
+   "text": "கண் சிவந்திருக்கு",
+   "label": "soon"
+  },
+  {
+   "id": "test-ta-11",
+   "split": "test",
+   "lang": "ta",
+   "text": "பார்வை கொஞ்சம் மங்கலாக உள்ளது",
+   "label": "soon"
+  },
+  {
+   "id": "test-ta-12",
+   "split": "test",
+   "lang": "ta",
+   "text": "konjam vali irukku",
+   "label": "soon"
+  },
+  {
+   "id": "test-ta-13",
+   "split": "test",
+   "lang": "ta",
+   "text": "செய்தித்தாள் படிக்கலாமா?",
+   "label": "none"
+  },
+  {
+   "id": "test-ta-14",
+   "split": "test",
+   "lang": "ta",
+   "text": "சமைக்கலாமா?",
+   "label": "none"
+  },
+  {
+   "id": "test-ta-15",
+   "split": "test",
+   "lang": "ta",
+   "text": "வெளிச்சம் கூசுகிறது",
+   "label": "none"
+  },
+  {
+   "id": "test-ta-16",
+   "split": "test",
+   "lang": "ta",
+   "text": "மணல் விழுந்தது போல உள்ளது",
+   "label": "none"
+  },
+  {
+   "id": "test-ta-17",
+   "split": "test",
+   "lang": "ta",
+   "text": "கண்மை போடலாமா?",
+   "label": "none"
+  },
+  {
+   "id": "test-ta-18",
+   "split": "test",
+   "lang": "ta",
+   "text": "எனக்கு வலியும் இல்லை, சிவப்பும் இல்லை",
+   "label": "none"
+  },
+  {
+   "id": "test-ta-19",
+   "split": "test",
+   "lang": "ta",
+   "text": "அடுத்த பரிசோதனை எப்போது?",
+   "label": "none"
+  },
+  {
+   "id": "test-ta-20",
+   "split": "test",
+   "lang": "ta",
+   "text": "இரவில் விளக்குகளைச் சுற்றி வட்டம் தெரிகிறது",
+   "label": "none"
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-11-07",
+   "event": "First held-out measurement after tuning the rules on dev only.",
+   "test_before_tuning": {
+    "urgent_recall": 75.8,
+    "urgent_missed": 6,
+    "false_alarm_rate": 8.8
+   },
+   "test_after_tuning": {
+    "n": 85,
+    "urgent_recall": 97.0,
+    "urgent_missed": 1,
+    "any_flag_recall": 96.1,
+    "false_alarm_rate": 0.0
+   },
+   "note": "The 2 test cases that failed were then moved to dev and fixed, so later test numbers are on the remaining 83 cases. A fresh held-out set written by native speakers is needed for an unbiased re-measurement."
+  }
+ ]
+}
