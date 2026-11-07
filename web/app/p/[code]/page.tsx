@@ -1,9 +1,11 @@
 "use client";
 
 import { CalendarCheck, Droplet, Eye, HeartPulse, Languages, MessageCircleQuestion, MessagesSquare, Share2, Trash2, Volume2, VolumeX, ScanEye } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Composer, MessageList } from "@/components/Chat";
+import { item, spring, stagger } from "@/components/motion";
 import { PatientDayMap } from "@/components/DayMap";
 import SeeIt from "@/components/SeeIt";
 import VisionTest from "@/components/VisionTest";
@@ -88,7 +90,7 @@ export default function PatientApp() {
   if (err) return <Center><p className="text-danger">{err}</p></Center>;
   if (!me || !meta) return <Center><Spinner /></Center>;
 
-  const tabs: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
+  const tabs: { id: Tab; label: string; Icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
     { id: "talk", label: tr(lang, "tabTalk"), Icon: MessagesSquare },
     { id: "lens", label: tr(lang, "tabLens"), Icon: ScanEye },
     ...(me.recovery ? [{ id: "recovery" as Tab, label: tr(lang, "tabRecovery"), Icon: HeartPulse }] : []),
@@ -98,21 +100,21 @@ export default function PatientApp() {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col" lang={lang}>
-      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-line bg-bg/90 px-4 py-3 backdrop-blur">
+      <header className="glass-strong sticky top-0 z-30 flex items-center gap-2 border-x-0 border-t-0 px-4 py-3">
         <Logo size={24} />
         <div className="ml-auto flex items-center gap-1.5">
-          <label className="relative inline-flex h-10 items-center gap-1.5 rounded-full border border-line pl-3 pr-2 text-[14px]">
+          <label className="glass relative inline-flex h-10 items-center gap-1.5 rounded-full pl-3 pr-2 text-[14px] font-medium">
             <Languages size={16} className="text-muted" />
             <select value={lang} onChange={(e) => setLang(e.target.value as Lang)} className="appearance-none bg-transparent pr-1 focus:outline-none" aria-label="Language">
-              {(Object.keys(LANG_NAMES) as Lang[]).map((l) => <option key={l} value={l} className="bg-surface text-ink">{LANG_NAMES[l]}</option>)}
+              {(Object.keys(LANG_NAMES) as Lang[]).map((l) => <option key={l} value={l} className="bg-[#10141c] text-white">{LANG_NAMES[l]}</option>)}
             </select>
           </label>
           {lang !== "en" && (
             <button type="button" onClick={() => setShowEn(!showEn)} aria-pressed={showEn} title={tr(lang, "showEnglish")}
-              className={cx("h-10 rounded-full border px-3 font-mono text-[12px]", showEn ? "border-sky text-sky" : "border-line text-muted")}>EN</button>
+              className={cx("h-10 rounded-full px-3 text-[12px] font-bold transition", showEn ? "btn-primary" : "glass text-muted")}>EN</button>
           )}
           <button type="button" onClick={() => { setAutoSpeak(!autoSpeak); stopSpeaking(); }} aria-pressed={autoSpeak} aria-label={tr(lang, "readAloud")}
-            className={cx("grid h-10 w-10 place-items-center rounded-full border", autoSpeak ? "border-accent text-accent-text" : "border-line text-muted")}>
+            className={cx("grid h-10 w-10 place-items-center rounded-full transition", autoSpeak ? "btn-primary" : "glass text-muted")}>
             {autoSpeak ? <Volume2 size={18} /> : <VolumeX size={18} />}
           </button>
           <ThemeToggle />
@@ -120,45 +122,61 @@ export default function PatientApp() {
       </header>
 
       {!me.consented ? (
-        <main className="flex flex-1 flex-col justify-center gap-6 px-5 py-10">
-          <p className="eyebrow">{tr(lang, "tagline")}</p>
-          <h1 className="text-[32px] font-semibold leading-tight tracking-[-0.03em]">{tr(lang, "consentTitle")}, {me.name.split(" ")[0]}</h1>
-          <p className="text-[18px] leading-relaxed text-muted">{tr(lang, "consentBody")}</p>
-          <p className="text-[14px] text-muted">{me.clinic.name} · {me.clinic.surgeon}</p>
-          <Button size="lg" onClick={consent}>{tr(lang, "consentAgree")}</Button>
-        </main>
+        <motion.main variants={stagger} initial="hidden" animate="show" className="relative flex flex-1 flex-col justify-center gap-6 overflow-hidden px-5 py-10">
+          <div aria-hidden className="pointer-events-none absolute -right-12 -top-2 h-52 w-52">
+            <div className="sphere sphere-blue float absolute right-4 top-0 h-32 w-32" />
+            <div className="sphere sphere-red float absolute right-36 top-6 h-11 w-11" style={{ animationDelay: "-2s" }} />
+            <div className="sphere sphere-yellow float absolute right-10 top-36 h-8 w-8" style={{ animationDelay: "-4s" }} />
+          </div>
+          <motion.div variants={item} className="relative mt-24 self-start">
+            <div className="bubble bubble-light bubble-l text-[16px]">{tr(lang, "consentTitle")}, {me.name.split(" ")[0]} 👋</div>
+          </motion.div>
+          <motion.h1 variants={item} className="display relative mt-4 text-[44px]">DrishtiSaathi<br /><span className="text-muted">{tr(lang, "tagline")}</span></motion.h1>
+          <motion.div variants={item}><Card className="relative text-[17px] leading-relaxed text-muted">{tr(lang, "consentBody")}</Card></motion.div>
+          <motion.p variants={item} className="text-[14px] text-muted">{me.clinic.name} · {me.clinic.surgeon}</motion.p>
+          <motion.div variants={item}><Button size="lg" arrow className="w-full" onClick={consent}>{tr(lang, "consentAgree")}</Button></motion.div>
+        </motion.main>
       ) : (
         <>
-          <main className="flex-1 px-4 pb-32 pt-5">
-            {tab === "talk" && <TalkTab me={me} msgs={intakeMsgs} busy={busy} showEn={showEn} onSend={sendIntake} meta={meta} />}
-            {tab === "lens" && <LensTab me={me} meta={meta} />}
-            {tab === "recovery" && me.recovery && <RecoveryTab me={me} code={code} onChange={(r) => setMe({ ...me, recovery: r })} onCheckin={(m) => { setAskMsgs((x) => [...x, ...m]); say(m); }} />}
-            {tab === "test" && <VisionTest code={code} lang={lang} clinic={me.clinic} operatedEye={me.stage === "post_op" ? me.eye : null} onSafety={(m) => { setAskMsgs((x) => [...x, ...m]); say(m); }} />}
-            {tab === "ask" && (
-              <div className="flex flex-col gap-5">
-                <div>
-                  <h2 className="text-[22px] font-semibold tracking-[-0.02em]">{tr(lang, "askTitle")}</h2>
-                  <p className="mt-1 text-[14px] text-muted">{tr(lang, "askHint")}</p>
-                </div>
-                {askMsgs.length === 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {tr(lang, "askExamples").split("|").map((q) => <Button key={q} variant="soft" onClick={() => sendAsk(q)}>{q}</Button>)}
+          <main className="flex-1 px-4 pb-36 pt-5">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div key={tab} initial={{ opacity: 0, y: 14, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -8, filter: "blur(4px)" }} transition={{ type: "spring", stiffness: 320, damping: 30 }}>
+                {tab === "talk" && <TalkTab me={me} msgs={intakeMsgs} busy={busy} showEn={showEn} onSend={sendIntake} meta={meta} />}
+                {tab === "lens" && <LensTab me={me} meta={meta} />}
+                {tab === "recovery" && me.recovery && <RecoveryTab me={me} code={code} onChange={(r) => setMe({ ...me, recovery: r })} onCheckin={(m) => { setAskMsgs((x) => [...x, ...m]); say(m); }} />}
+                {tab === "test" && <VisionTest code={code} lang={lang} clinic={me.clinic} operatedEye={me.stage === "post_op" ? me.eye : null} onSafety={(m) => { setAskMsgs((x) => [...x, ...m]); say(m); }} />}
+                {tab === "ask" && (
+                  <div className="flex flex-col gap-5">
+                    <div>
+                      <h2 className="display text-[30px]">{tr(lang, "askTitle")}</h2>
+                      <p className="mt-2 text-[14px] text-muted">{tr(lang, "askHint")}</p>
+                    </div>
+                    {askMsgs.length === 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {tr(lang, "askExamples").split("|").map((q, i) => (
+                          <motion.button key={q} type="button" onClick={() => sendAsk(q)} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.06 }}
+                            whileTap={{ scale: 0.96 }} className="bubble bubble-light bubble-l text-[15px]">{q}</motion.button>
+                        ))}
+                      </div>
+                    )}
+                    <MessageList messages={askMsgs} lang={lang} showEn={showEn} busy={busy} clinic={me.clinic} ttsServer={meta.tts} />
+                    <div className="sticky bottom-[104px]"><Composer lang={lang} onSend={(t) => t && sendAsk(t)} disabled={busy} /></div>
                   </div>
                 )}
-                <MessageList messages={askMsgs} lang={lang} showEn={showEn} busy={busy} clinic={me.clinic} ttsServer={meta.tts} />
-                <div className="sticky bottom-24 rounded-3xl bg-bg/95 py-2 backdrop-blur"><Composer lang={lang} onSend={(t) => t && sendAsk(t)} disabled={busy} /></div>
-              </div>
-            )}
+              </motion.div>
+            </AnimatePresence>
             <div className="mt-12 flex justify-center">
-              <button type="button" onClick={erase} className="inline-flex items-center gap-2 text-[13px] text-muted hover:text-danger"><Trash2 size={14} /> {tr(lang, "eraseData")}</button>
+              <button type="button" onClick={erase} className="inline-flex items-center gap-2 text-[13px] text-muted transition hover:text-danger"><Trash2 size={14} /> {tr(lang, "eraseData")}</button>
             </div>
           </main>
-          <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur" aria-label="Sections">
-            <div className="mx-auto flex max-w-2xl">
+          <nav className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(12px,env(safe-area-inset-bottom))]" aria-label="Sections">
+            <div className="dock mx-auto flex max-w-xl rounded-[24px] p-1.5 shadow-[0_24px_60px_-20px_rgba(0,0,0,.85)]">
               {tabs.map(({ id, label, Icon }) => (
                 <button key={id} type="button" onClick={() => setTab(id)} aria-current={tab === id}
-                  className={cx("flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5 text-center text-[12px] leading-tight", tab === id ? "text-accent-text" : "text-muted")}>
-                  <Icon size={22} />{label}
+                  className={cx("relative flex min-h-[60px] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[18px] px-0.5 text-center text-[11.5px] font-semibold leading-tight transition-colors", tab === id ? "text-white" : "text-muted hover:text-ink")}>
+                  {tab === id && <motion.span layoutId="tab-pill" className="btn-primary absolute inset-0 rounded-[18px]" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
+                  <Icon size={21} className="relative" />
+                  <span className="relative max-w-full truncate">{label}</span>
                 </button>
               ))}
             </div>
@@ -180,7 +198,7 @@ function TalkTab({ me, msgs, busy, showEn, onSend, meta }: { me: PatientView; ms
     <div className="flex flex-col gap-5">
       <MessageList messages={msgs} lang={lang} showEn={showEn} busy={busy} clinic={me.clinic} ttsServer={meta.tts} />
       {inIntake ? (
-        <div className="sticky bottom-24 rounded-3xl bg-bg/95 py-2 backdrop-blur">
+        <div className="sticky bottom-[104px]">
           <Composer lang={lang} onSend={onSend} options={me.intake?.options || []} disabled={busy || !me.intake?.started} />
         </div>
       ) : (

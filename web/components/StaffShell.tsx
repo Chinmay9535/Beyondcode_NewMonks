@@ -3,7 +3,9 @@
 import { LogOut, Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { motion } from "motion/react";
 import { ApiError, api, staffToken, type Alert, type Meta } from "@/lib/api";
+import { item, stagger } from "./motion";
 import { Badge, Button, Card, Logo, ThemeToggle, cx } from "./ui";
 
 export function StaffShell({ children }: { children: (meta: Meta) => React.ReactNode }) {
@@ -29,31 +31,47 @@ export function StaffShell({ children }: { children: (meta: Meta) => React.React
   if (state === "checking" || !meta) return <div className="grid min-h-dvh place-items-center text-muted">{err || "…"}</div>;
   if (state === "login") {
     return (
-      <div className="grid min-h-dvh place-items-center p-6">
-        <Card className="w-full max-w-sm p-7">
-          <Logo />
-          <h1 className="mt-6 flex items-center gap-2 text-[22px] font-semibold"><Stethoscope size={20} className="text-sky" /> Clinic sign-in</h1>
-          <p className="mt-1 text-[14px] text-muted">{meta.clinic.name}</p>
-          <form onSubmit={login} className="mt-6 flex flex-col gap-3">
-            <input type="password" inputMode="numeric" autoFocus value={pin} onChange={(e) => setPin(e.target.value)} placeholder="PIN" aria-label="PIN"
-              className="min-h-12 rounded-2xl border border-line bg-surface-2 px-4 font-mono text-[18px] tracking-[.3em] focus:border-sky focus:outline-none" />
-            {err && <p className="text-[14px] text-danger">{err}</p>}
-            <Button type="submit" size="lg">Sign in</Button>
-            <p className="text-center font-mono text-[12px] text-muted">Demo PIN 2468</p>
-          </form>
-        </Card>
+      <div className="relative grid min-h-dvh place-items-center overflow-hidden p-6">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="sphere sphere-blue float absolute left-[12%] top-[18%] h-40 w-40 opacity-90" />
+          <div className="sphere sphere-red float absolute right-[16%] top-[22%] h-20 w-20" style={{ animationDelay: "-2s" }} />
+          <div className="sphere sphere-yellow float absolute bottom-[18%] right-[26%] h-12 w-12" style={{ animationDelay: "-4s" }} />
+        </div>
+        <motion.div variants={stagger} initial="hidden" animate="show" className="relative w-full max-w-sm">
+          <motion.div variants={item} className="mb-5 self-start"><div className="bubble bubble-light bubble-l inline-block text-[15px]">Good to see you, {meta.clinic.surgeon} 👋</div></motion.div>
+          <motion.div variants={item}>
+            <Card className="p-7">
+              <Logo />
+              <h1 className="display mt-7 text-[34px]">Clinic sign-in</h1>
+              <p className="mt-2 flex items-center gap-2 text-[14px] text-muted"><Stethoscope size={15} className="text-accent-text" /> {meta.clinic.name}</p>
+              <form onSubmit={login} className="mt-6 flex flex-col gap-3">
+                <input type="password" inputMode="numeric" autoFocus value={pin} onChange={(e) => setPin(e.target.value)} placeholder="PIN" aria-label="PIN"
+                  className="min-h-14 rounded-2xl border border-line bg-surface-2 px-4 text-[20px] tracking-[.4em] focus:border-accent focus:outline-none" />
+                {err && <p className="text-[14px] text-danger">{err}</p>}
+                <Button type="submit" size="lg" arrow>Sign in</Button>
+                <p className="text-center text-[12.5px] text-muted">Demo PIN 2468</p>
+              </form>
+            </Card>
+          </motion.div>
+        </motion.div>
       </div>
     );
   }
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur">
+      <header className="glass-strong sticky top-0 z-30 border-x-0 border-t-0">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-5 py-3">
-          <Link href="/staff" className="flex items-center gap-3"><Logo size={24} /><span className="hidden font-mono text-[12px] text-muted sm:inline">/ {meta.clinic.surgeon}</span></Link>
+          <Link href="/staff" className="flex items-center gap-3"><Logo size={24} /></Link>
+          <nav className="glass ml-2 hidden items-center gap-1 rounded-xl p-1 md:flex">
+            <Link href="/staff" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-muted transition hover:bg-surface-2 hover:text-ink">Patients</Link>
+            <Link href="/safety" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-muted transition hover:bg-surface-2 hover:text-ink">Safety</Link>
+            <Link href="/" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-muted transition hover:bg-surface-2 hover:text-ink">Home</Link>
+          </nav>
+          <span className="hidden text-[13px] text-muted lg:inline">{meta.clinic.surgeon}</span>
           <div className="ml-auto flex items-center gap-2">
             <Badge tone={meta.ai === "offline" ? "neutral" : "sky"}>AI: {meta.ai}</Badge>
             <ThemeToggle />
-            <button type="button" onClick={() => { staffToken.clear(); location.reload(); }} aria-label="Sign out" className="grid h-10 w-10 place-items-center rounded-full border border-line text-muted hover:text-ink"><LogOut size={17} /></button>
+            <button type="button" onClick={() => { staffToken.clear(); location.reload(); }} aria-label="Sign out" className="glass grid h-10 w-10 place-items-center rounded-full text-muted transition hover:text-ink"><LogOut size={17} /></button>
           </div>
         </div>
       </header>
@@ -85,7 +103,7 @@ export function AlertItem({ a, onAck, showPatient = true }: { a: Alert; onAck: (
     <li className={cx("rounded-2xl border p-4", a.severity === "urgent" ? "border-danger/60 bg-danger-bg" : a.severity === "soon" ? "border-warn/40 bg-warn-bg" : "border-line bg-surface-2")}>
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone={SEVERITY_TONE[a.severity]}>{a.severity.toUpperCase()}</Badge>
-        <span className="font-mono text-[11px] text-muted">{a.category.replace(/_/g, " ")} · {ago(a.created_at)}</span>
+        <span className="text-[12px] text-muted">{a.category.replace(/_/g, " ")} · {ago(a.created_at)}</span>
         {showPatient && a.patient_name && <Link href={`/staff/${a.patient_id}`} className="ml-auto text-[14px] font-medium underline-offset-4 hover:underline">{a.patient_name}</Link>}
       </div>
       <p className="mt-2 text-[15px] leading-snug">&ldquo;{a.text}&rdquo;</p>

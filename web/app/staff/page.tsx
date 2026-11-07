@@ -4,7 +4,9 @@ import { BellRing, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AlertItem, STAGE, StaffShell } from "@/components/StaffShell";
-import { Badge, Button, Card, cx } from "@/components/ui";
+import { motion } from "motion/react";
+import { item, stagger } from "@/components/motion";
+import { Badge, Button, Card, Tag, cx } from "@/components/ui";
 import { api, type Alert, type Lang, type Meta, type StaffPatientRow } from "@/lib/api";
 import { LANG_NAMES } from "@/lib/i18n";
 
@@ -34,24 +36,25 @@ function Dashboard({ meta }: { meta: Meta }) {
       <section className="min-w-0">
         <div className="mb-5 flex flex-wrap items-end gap-3">
           <div>
-            <p className="eyebrow">Today</p>
-            <h1 className="text-[30px] font-semibold tracking-[-0.03em]">Patients</h1>
+            <Tag>Today</Tag>
+            <h1 className="display mt-3 text-[44px]">Patients <span className="text-muted">· {rows.length}</span></h1>
           </div>
-          <Button className="ml-auto" onClick={() => setAdding(true)}><Plus size={18} /> New patient</Button>
+          <Button className="ml-auto" arrow onClick={() => setAdding(true)}><Plus size={18} /> New patient</Button>
         </div>
         <div className="mb-4 flex flex-wrap gap-2">
           {[["all", "All", rows.length], ...Object.entries(STAGE).map(([k, v]) => [k, v.label, counts[k] || 0])].map(([k, l, n]) => (
             <button key={k as string} type="button" onClick={() => setFilter(k as string)}
-              className={cx("min-h-9 rounded-full border px-3.5 text-[13px]", filter === k ? "border-ink bg-ink text-bg" : "border-line text-muted hover:text-ink")}>
-              {l} <span className="ml-1 font-mono opacity-70">{n}</span>
+              className={cx("relative min-h-9 rounded-full border px-3.5 text-[13px] font-medium transition", filter === k ? "border-transparent text-white" : "border-line text-muted hover:text-ink")}>
+              {filter === k && <motion.span layoutId="filter-pill" className="btn-primary absolute inset-0 rounded-full" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
+              <span className="relative">{l} <span className="ml-1 opacity-70">{n}</span></span>
             </button>
           ))}
         </div>
         {adding && <NewPatient meta={meta} onClose={() => setAdding(false)} onCreated={load} />}
-        <ul className="flex flex-col gap-2.5">
+        <motion.ul key={filter + rows.length} variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-2.5">
           {shown.map((r) => (
-            <li key={r.id}>
-              <Link href={`/staff/${r.id}`} className={cx("grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 rounded-3xl border bg-surface px-5 py-4 transition hover:border-muted sm:grid-cols-[1.4fr_1fr_1fr_auto]", r.urgent_alerts ? "border-danger/60" : "border-line")}>
+            <motion.li key={r.id} variants={item} whileHover={{ y: -3 }} transition={{ type: "spring", stiffness: 380, damping: 28 }}>
+              <Link href={`/staff/${r.id}`} className={cx("glass hairline grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 rounded-[22px] px-5 py-4 transition hover:border-line-strong sm:grid-cols-[1.4fr_1fr_1fr_auto]", r.urgent_alerts ? "!border-danger/60 shadow-[0_0_0_1px_rgba(255,92,99,.25),0_20px_50px_-30px_rgba(255,92,99,.6)]" : "")}>
                 <div className="min-w-0">
                   <p className="truncate text-[16px] font-semibold">{r.name} <span className="font-normal text-muted">{r.age ? `· ${r.age}${r.sex || ""}` : ""}</span></p>
                   <p className="truncate text-[13px] text-muted">{[r.occupation, r.city, LANG_NAMES[r.language as Lang], `${r.eye} eye`].filter(Boolean).join(" · ")}</p>
@@ -67,9 +70,9 @@ function Dashboard({ meta }: { meta: Meta }) {
                   <span className="font-mono text-[12px] text-muted">{r.id}</span>
                 </div>
               </Link>
-            </li>
+            </motion.li>
           ))}
-        </ul>
+        </motion.ul>
       </section>
 
       <aside className="lg:sticky lg:top-20 lg:self-start">

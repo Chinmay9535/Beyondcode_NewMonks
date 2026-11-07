@@ -1,52 +1,64 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { ArrowRight, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
 }
 
-export function Logo({ size = 28 }: { size?: number }) {
+/** Brand mark: a speech-bubble chip with a glossy "lens". */
+export function Logo({ size = 28, compact = false }: { size?: number; compact?: boolean }) {
+  const s = size / 28;
   return (
-    <span className="inline-flex items-center gap-2.5">
-      <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
-        <circle cx="32" cy="32" r="22" fill="none" stroke="var(--accent)" strokeWidth="6" />
-        <circle cx="32" cy="32" r="9" fill="var(--sky)" />
-      </svg>
-      <span className="text-[17px] font-semibold tracking-[-0.02em]">
-        Drishti<span className="serif text-[19px] text-accent-text">Saathi</span>
-      </span>
+    <span className="relative inline-flex items-center gap-2 rounded-[10px] bg-white px-2.5 shadow-[0_10px_30px_-12px_rgba(47,123,255,.6)]" style={{ height: 30 * s }}>
+      <span className="sphere sphere-blue block shrink-0" style={{ width: 15 * s, height: 15 * s, boxShadow: "none" }} />
+      {!compact && <span className="font-bold tracking-[-0.02em] text-[#1f6bff]" style={{ fontSize: 15 * s }}>DrishtiSaathi</span>}
+      <span aria-hidden className="absolute -bottom-[5px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-[2px] bg-white" />
     </span>
   );
 }
 
 export function Card({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cx("rounded-3xl border border-line bg-surface p-5", className)} {...rest}>
+    <div className={cx("glass hairline rounded-[26px] p-5", className)} {...rest}>
       {children}
     </div>
   );
 }
 
-type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "soft" | "danger"; size?: "md" | "lg" | "sm" };
-export function Button({ variant = "primary", size = "md", className, ...rest }: BtnProps) {
+/** White circle with an arrow, used inside buttons (as in "Get started →"). */
+export function ArrowDot({ tone = "light", size = 22 }: { tone?: "light" | "blue"; size?: number }) {
+  return (
+    <span className={cx("grid shrink-0 place-items-center rounded-full", tone === "light" ? "bg-white text-[#1f6bff]" : "bg-accent text-white")} style={{ width: size, height: size }}>
+      <ArrowRight size={size * 0.62} strokeWidth={2.6} />
+    </span>
+  );
+}
+
+type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "soft" | "danger" | "outline"; size?: "md" | "lg" | "sm"; arrow?: boolean };
+export function Button({ variant = "primary", size = "md", arrow, className, children, ...rest }: BtnProps) {
   return (
     <button
       type="button"
       className={cx(
-        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50",
-        size === "lg" && "min-h-14 px-6 text-[17px]",
+        "inline-flex select-none items-center justify-center gap-2.5 rounded-full font-semibold tracking-[-0.01em] transition duration-200 ease-out active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-45",
+        size === "lg" && "min-h-14 px-6 text-[16.5px]",
         size === "md" && "min-h-11 px-5 text-[15px]",
         size === "sm" && "min-h-9 px-3.5 text-[13px]",
-        variant === "primary" && "bg-accent text-on-accent hover:brightness-110",
-        variant === "soft" && "border border-line bg-surface-2 text-ink hover:border-muted",
+        variant === "primary" && "btn-primary",
+        variant === "outline" && "border border-line-strong bg-transparent text-ink hover:bg-surface-2",
+        variant === "soft" && "glass text-ink hover:border-line-strong",
         variant === "ghost" && "text-muted hover:text-ink",
         variant === "danger" && "border border-danger/40 bg-danger-bg text-danger hover:border-danger",
+        arrow && size !== "sm" && "pr-2.5",
         className,
       )}
       {...rest}
-    />
+    >
+      {children}
+      {arrow && <ArrowDot tone={variant === "primary" ? "light" : "blue"} size={size === "lg" ? 28 : 24} />}
+    </button>
   );
 }
 
@@ -56,17 +68,21 @@ const TONES = {
   warn: "border-transparent bg-warn-bg text-warn",
   danger: "border-transparent bg-danger-bg text-danger",
   sky: "border-transparent bg-sky-bg text-sky",
-  accent: "border-transparent bg-accent text-on-accent",
+  accent: "border-transparent btn-primary",
 } as const;
 export function Badge({ tone = "neutral", className, children }: { tone?: keyof typeof TONES; className?: string; children: React.ReactNode }) {
-  return <span className={cx("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 font-mono text-[11px] leading-none", TONES[tone], className)}>{children}</span>;
+  return <span className={cx("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11.5px] font-semibold leading-none", TONES[tone], className)}>{children}</span>;
+}
+
+export function Tag({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <span className={cx("tag", className)}>{children}</span>;
 }
 
 export function ThemeToggle() {
   const [dark, setDark] = useState(true);
   useEffect(() => {
     const t = document.documentElement.dataset.theme;
-    setDark(t ? t === "dark" : !matchMedia("(prefers-color-scheme: light)").matches);
+    setDark(t !== "light");
   }, []);
   const flip = () => {
     const next = dark ? "light" : "dark";
@@ -75,8 +91,8 @@ export function ThemeToggle() {
     setDark(!dark);
   };
   return (
-    <button type="button" onClick={flip} aria-label={dark ? "Switch to light theme" : "Switch to dark theme"} className="grid h-10 w-10 place-items-center rounded-full border border-line text-muted hover:text-ink">
-      {dark ? <Sun size={18} /> : <Moon size={18} />}
+    <button type="button" onClick={flip} aria-label={dark ? "Switch to light theme" : "Switch to dark theme"} className="glass grid h-10 w-10 place-items-center rounded-full text-muted transition hover:text-ink">
+      {dark ? <Sun size={17} /> : <Moon size={17} />}
     </button>
   );
 }

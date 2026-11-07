@@ -12,7 +12,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0b0b0c",
+  themeColor: "#06080c",
 };
 
 // Restore the saved theme before paint to avoid a flash.
@@ -27,10 +27,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Noto+Sans+Kannada:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Tamil:wght@400;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300..800&family=Red+Hat+Mono:wght@400;500&family=Noto+Sans+Kannada:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Tamil:wght@400;600&display=swap"
         />
       </head>
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh" suppressHydrationWarning>{children}</body>
     </html>
   );
 }
