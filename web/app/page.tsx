@@ -21,7 +21,7 @@ const DEMOS = [
 
 // Three bubbles that tell the story (talk, answer, outcome), each in a fixed empty zone of the scene.
 const BUBBLES = [
-  { text: "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ದಿನದ ಬಗ್ಗೆ ಹೇಳಿ.", lang: "kn", tone: "light", pos: "left-[3%] top-[9%]", tail: "l" },
+  { text: "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ದಿನದ ಬಗ್ಗೆ ಹೇಳಿ.", lang: "kn", tone: "light", pos: "left-[2%] top-[4%]", tail: "l" },
   { text: "मैं दिन भर ऑटो चलाता हूँ", lang: "hi", tone: "blue", pos: "right-[0%] top-[72%]", tail: "r" },
   { text: "Approved by your doctor ✓", lang: "en", tone: "light", pos: "left-[4%] bottom-[6%]", tail: "l" },
 ] as const;
@@ -108,7 +108,7 @@ export default function Home() {
 
         <div className="relative h-[420px] sm:h-[520px] lg:h-[660px]">
           <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(47,123,255,.28),rgba(47,123,255,.06)_45%,transparent_70%)] blur-2xl" />
-          <LensScene className="absolute inset-[-8%_-14%_-8%_-18%]" />
+          <LensScene className="absolute inset-0 lg:inset-[-8%_-14%_-8%_-18%]" />
           {BUBBLES.map((b, i) => (
             <motion.div key={b.text} lang={b.lang} className={cx("pointer-events-none absolute z-10 hidden sm:block", b.pos)}
               initial={reduce ? false : { opacity: 0, scale: 0.6, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ ...spring, delay: 0.8 + i * 0.3 }}>
@@ -210,7 +210,7 @@ export default function Home() {
       <footer className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-4 border-t border-line px-5 py-8 text-[13px] text-muted">
         <Logo size={22} />
         <span>Decision support only. Never diagnoses. Every lens choice is approved by the surgeon.</span>
-        {meta && <span className="ml-auto">{meta.clinic.name}</span>}
+        <span className="ml-auto text-[12px]">3D glasses: “SunglassesKhronos” © 2024 Darmstadt Graphics Group GmbH, <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, materials modified</span>
       </footer>
       {!reduce && <motion.div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[2px] origin-left bg-accent" initial={{ scaleX: 0 }} animate={{ scaleX: 1, opacity: 0 }} transition={{ ...softSpring, opacity: { delay: 0.6, duration: 0.4 } }} />}
     </div>

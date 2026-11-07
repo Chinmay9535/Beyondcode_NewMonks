@@ -110,6 +110,10 @@ pitch/     the hackathon presentation site (Vite) and prebuilt files
 docs/      submission form answers and video script
 ```
 
+## Credits
+
+- Hero 3D model: "SunglassesKhronos" from the Khronos glTF Sample Assets, © 2024 Darmstadt Graphics Group GmbH, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Materials are modified at runtime and the logo texture is not rendered; see `web/public/3d/CREDITS.md`.
+
 ## Important limits
 
 This is decision support, not a medical device. The home vision test is a screening aid, not a clinical exam, and has not been validated against clinic charts. The safety cases were written by the build team and need a native-speaker and clinician review; a fresh held-out set written by others is the honest next measurement. The defocus curves, A-constants and clinic guides are illustrative samples, so replace them with the clinic's validated data. The Kannada, Hindi and Tamil text needs a native-speaker and clinical review before real patients use it.
