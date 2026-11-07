@@ -1,0 +1,20 @@
+# docker compose up --build   ->  http://localhost:3000
+services:
+  api:
+    build: ./backend
+    env_file:
+      - path: ./backend/.env
+        required: false
+    volumes:
+      - data:/data
+  web:
+    build:
+      context: ./web
+      args:
+        BACKEND_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+volumes:
+  data:

@@ -175,7 +175,8 @@ def rank(profile: dict[str, Any], biometry: dict[str, Any] | None, conditions: l
         if astig["toric"]:
             # Rough corneal-to-IOL-plane ratio; a toric calculator (with posterior cornea) decides the model.
             astig["iol_cyl_estimate"] = round_power(cyl * 1.46)
-    residual = (astig["cyl"] or 0.0) if not astig["toric"] else 0.0
+    # Up to ~0.75 D of corneal cylinder is routinely left uncorrected; only model blur beyond that.
+    residual = (astig["cyl"] or 0.0) if (not astig["toric"] and (astig["cyl"] or 0) >= cfg["rules"]["toric_consider_d"]) else 0.0
 
     # Not minding glasses softens the cost of "needs glasses" for an activity.
     floor = (3 - glasses_free) / 3 * 0.5
