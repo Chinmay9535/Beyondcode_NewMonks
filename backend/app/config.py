@@ -48,7 +48,14 @@ def get_settings() -> Settings:
 
 def local_now():
     """Clinic wall-clock time (naive), used for drop schedules."""
-    from datetime import datetime
-    from zoneinfo import ZoneInfo
+    from datetime import datetime, timedelta, timezone
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-    return datetime.now(ZoneInfo(get_settings().clinic_timezone)).replace(tzinfo=None)
+    name = get_settings().clinic_timezone
+    try:
+        tz = ZoneInfo(name)
+    except ZoneInfoNotFoundError:
+        # Windows has no system time-zone database (the `tzdata` package provides one).
+        # India has a fixed offset and no daylight saving, so this fallback is exact.
+        tz = timezone(timedelta(hours=5, minutes=30)) if name == "Asia/Kolkata" else timezone.utc
+    return datetime.now(tz).replace(tzinfo=None)
