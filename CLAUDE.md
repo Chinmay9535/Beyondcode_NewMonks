@@ -39,6 +39,8 @@ The patient never sees a ranking until the surgeon approves (`Recommendation.sta
 - Snellen values are shown as the nearest standard line (`lenses.snellen`, `lib/vision.ts`).
 - Landing hero: a pinned scroll story (`lib/story.ts`, section `#story`) drives `components/three/PillarField.tsx`, one pillar-field shape per chapter (lens, focus rings, two lenses, eye, then a camera dive into city blocks), then slow waves. Bodies and top caps are separate instanced meshes so only tops glow.
 - Design tokens are in `web/app/globals.css` (dark default, light theme, high contrast via `data-contrast="high"`, accent #2F7BFF, sky #7DD3FC).
+- Screens follow "summary first, details on demand": the surgeon patient page is tabbed (Overview · Lens plan · Eyes · Recovery · Conversation); plan details expand per row. Shared pieces live in `web/components/kit.tsx` (`Stat` tiles, `PillTabs`, `KV`, `CardTitle`); `.stat-accent` is the highlighted tile, `.card-solid` the calm card.
+- Third-party UI: `web/components/magicui/` (Magic UI, MIT: NumberTicker, BorderBeam) and `web/components/reactbits/` (React Bits SpotlightCard, MIT + Commons Clause). Copy them unmodified with their licences; Magic UI imports `cn` from `web/lib/utils.ts`; `.jsx` files get a `.d.ts` beside them.
 - Font sizes are `rem` (`text-[0.9375rem]`), never px: the patient text-size option (`components/Readability.tsx`) scales the root font size. Anything that must keep a physical size (the calibrated eye test) uses px in inline styles.
 
 ## Pitch materials

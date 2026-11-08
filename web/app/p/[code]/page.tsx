@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, Droplet, Eye, HeartPulse, Languages, MessageCircleQuestion, MessagesSquare, Share2, Trash2, Volume2, VolumeX, ScanEye } from "lucide-react";
+import { CalendarCheck, ChevronDown, Droplet, Eye, HeartPulse, Languages, MessageCircleQuestion, MessagesSquare, Share2, Trash2, Volume2, VolumeX, ScanEye } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -250,14 +250,17 @@ function LensTab({ me, meta }: { me: PatientView; meta: Meta }) {
   };
   return (
     <div className="flex flex-col gap-5">
-      <Card className="rise">
+      <div className="stat-accent rise rounded-[26px] p-5 text-white">
         <div className="flex items-start justify-between gap-3">
-        <p className="eyebrow">{tr(lang, "yourLens")}</p>
-        <ListenButton lang={lang} tts={!!meta.tts} className="-mr-1 -mt-1"
-          text={[`${tr(lang, "yourLens")}: ${planName(lens.key, lang, lens.name)}.`, `${tr(lang, "approvedBy", { doctor: me.clinic.surgeon })}.`, plan.note ? `${tr(lang, "doctorNote")}: ${plan.note}` : ""].filter(Boolean).join(" ")} />
+          <p className="text-[0.875rem] font-medium text-white/80">{tr(lang, "yourLens")}</p>
+          <ListenButton lang={lang} tts={!!meta.tts} className="-mr-1 -mt-1 !h-9 !w-9 !border-white/25 !bg-white/15 !text-white"
+            text={[`${tr(lang, "yourLens")}: ${planName(lens.key, lang, lens.name)}.`, `${tr(lang, "approvedBy", { doctor: me.clinic.surgeon })}.`, plan.note ? `${tr(lang, "doctorNote")}: ${plan.note}` : ""].filter(Boolean).join(" ")} />
         </div>
         <h2 className="mt-1 text-[1.875rem] font-semibold leading-tight tracking-[-0.03em]">{planName(lens.key, lang, lens.name)}</h2>
-        <p className="mt-1 text-[0.9375rem] text-ok">✓ {tr(lang, "approvedBy", { doctor: me.clinic.surgeon })}</p>
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[0.875rem]">✓ {tr(lang, "approvedBy", { doctor: me.clinic.surgeon })}</p>
+      </div>
+
+      <Card>
         <EyesLine lens={lens} lang={lang} />
         {plan.note && <blockquote className="mt-4 rounded-2xl border-l-4 border-accent bg-surface-2 px-4 py-3 text-[1rem]"><span className="eyebrow block">{tr(lang, "doctorNote")}</span>{plan.note}</blockquote>}
       </Card>
@@ -266,17 +269,23 @@ function LensTab({ me, meta }: { me: PatientView; meta: Meta }) {
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-[1.1875rem] font-semibold">{tr(lang, "dayWithLens")}</h3>
         </div>
+        {shown && (
+          <p className="mt-3 flex items-baseline gap-2">
+            <span className="text-[2.5rem] font-semibold leading-none tracking-[-0.03em] text-accent-text">{shown.hours_clear}</span>
+            <span className="text-[0.9375rem] text-muted">/ {shown.hours_total} h</span>
+          </p>
+        )}
+        {shown && <p className="mt-1 text-[0.9375rem] text-muted">{tr(lang, "hoursClear", { a: shown.hours_clear, b: shown.hours_total })}</p>}
         {plan.compare.length > 1 && (
-          <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label={tr(lang, "compare")}>
+          <div className="no-scrollbar -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1" role="tablist" aria-label={tr(lang, "compare")}>
             {plan.compare.map((o) => (
               <button key={o.key} type="button" role="tab" aria-selected={shown?.key === o.key} onClick={() => setView(o.key)}
-                className={cx("min-h-10 rounded-full border px-3.5 text-[0.875rem]", shown?.key === o.key ? "border-accent bg-accent text-on-accent" : "border-line")}>
+                className={cx("min-h-11 shrink-0 whitespace-nowrap rounded-full border px-4 text-[0.875rem]", shown?.key === o.key ? "border-accent bg-accent text-on-accent" : "border-line")}>
                 {planName(o.key, lang, o.name)}{o.key === lens.key ? " ✓" : ""}
               </button>
             ))}
           </div>
         )}
-        {shown && <p className="mt-3 text-[1rem] font-medium text-sky">{tr(lang, "hoursClear", { a: shown.hours_clear, b: shown.hours_total })}</p>}
         <PatientDayMap activities={plan.activities} option={shown} lang={lang} labels={me.local_labels as Record<string, string>} />
       </Card>
 
@@ -311,38 +320,73 @@ function RecoveryTab({ me, code, tts, onChange, onCheckin }: { me: PatientView; 
       ))}
     </div>
   );
+  // The one thing to do now: the first due or missed dose, else the next upcoming one.
+  const next = r.today.find((d) => d.status === "due") || r.today.find((d) => d.status === "missed") || r.today.find((d) => d.status === "upcoming");
+  const done = r.today.filter((d) => d.status === "taken").length;
+  const upcomingCheck = r.follow_ups.find((f) => !f.past);
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <p className="eyebrow">{me.clinic.surgeon} · {me.clinic.name}</p>
-        <h2 className="mt-1 text-[1.875rem] font-semibold tracking-[-0.03em]">{r.day !== null && r.day >= 0 ? tr(lang, "dayN", { n: r.day }) : tr(lang, "surgeryOn", { d: r.surgery_date || "" })}</h2>
+        <p className="text-[0.9375rem] text-muted">{tr(lang, "hello", { name: me.name.split(" ")[0] })}</p>
+        <h2 className="mt-0.5 text-[1.875rem] font-semibold leading-tight tracking-[-0.03em]">{r.day !== null && r.day >= 0 ? tr(lang, "dayN", { n: r.day }) : tr(lang, "surgeryOn", { d: r.surgery_date || "" })}</h2>
       </div>
 
-      <Card>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="flex items-center gap-2 text-[1.1875rem] font-semibold"><Droplet size={20} className="text-sky" /> {tr(lang, "todaysDrops")}</h3>
-          <div className="ml-auto flex items-center gap-2">
-            {r.adherence.pct !== null && <Badge tone={r.adherence.pct >= 90 ? "ok" : "warn"}>{tr(lang, "dosesTaken")}: {r.adherence.taken}/{r.adherence.due_so_far}</Badge>}
-            {r.today.length > 0 && <ListenButton lang={lang} tts={tts}
-              text={`${tr(lang, "todaysDrops")}. ` + r.today.filter((d) => d.status !== "taken").map((d) => `${fmt(d.due_at)}, ${d.drug}.`).join(" ")} />}
+      {r.today.length > 0 && (
+        <div className="grid grid-cols-[1.6fr_1fr] gap-3">
+          {/* Next drop: the single action that matters now. */}
+          <div className="stat-accent flex flex-col gap-3 rounded-[24px] p-4 text-white">
+            <div className="flex items-start justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-[0.875rem] font-medium text-white/85"><Droplet size={16} /> {next ? tr(lang, "nextDrop") : tr(lang, "todaysDrops")}</span>
+              <ListenButton lang={lang} tts={tts} className="!h-9 !w-9 !border-white/25 !bg-white/15 !text-white"
+                text={next ? `${tr(lang, "nextDrop")}: ${fmt(next.due_at)}, ${next.drug}.` : tr(lang, "allDropsDone")} />
+            </div>
+            {next ? (
+              <>
+                <div>
+                  <p className="font-mono text-[2.25rem] font-medium leading-none">{fmt(next.due_at)}</p>
+                  <p className="mt-1.5 text-[1rem] leading-snug text-white/90">{next.drug}</p>
+                </div>
+                <button type="button" onClick={() => mark(next.id, true)}
+                  className="mt-auto min-h-12 rounded-full bg-white px-4 text-[1rem] font-semibold text-[#1f3bd8] transition active:scale-[.97]">
+                  {next.status === "missed" ? `${tr(lang, "missed")} · ` : ""}{tr(lang, "markTaken")}
+                </button>
+              </>
+            ) : <p className="mt-auto text-[1.125rem] font-semibold leading-snug">✓ {tr(lang, "allDropsDone")}</p>}
+          </div>
+          <div className="card-solid flex flex-col justify-between gap-3 rounded-[24px] p-4">
+            <span className="text-[0.875rem] font-medium text-muted">{tr(lang, "todaysDrops")}</span>
+            <div>
+              <p className="text-[2.25rem] font-semibold leading-none tracking-[-0.03em]">{done}<span className="text-[1rem] font-medium text-muted"> / {r.today.length}</span></p>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2"><div className="h-full rounded-full bg-ok transition-all" style={{ width: `${(done / r.today.length) * 100}%` }} /></div>
+              <p className="mt-2 text-[0.8125rem] text-muted">{tr(lang, "dosesDone", { a: done, b: r.today.length })}</p>
+            </div>
           </div>
         </div>
-        {r.today.length === 0 ? <p className="text-muted">{tr(lang, "noDropsToday")}</p> : (
-          <ul className="flex flex-col gap-2">
-            {r.today.map((d) => (
-              <li key={d.id} className={cx("flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border px-3 py-2.5", d.status === "due" ? "border-accent" : d.status === "missed" ? "border-danger/50" : "border-line")}>
-                <b className="w-14 font-mono text-[1.0625rem] font-medium">{fmt(d.due_at)}</b>
-                <span className="min-w-[7rem] flex-1 text-[1rem]">{d.drug}</span>
-                {d.status === "taken" ? (
-                  <button type="button" onClick={() => mark(d.id, false)} className="ml-auto rounded-full bg-ok-bg px-3 py-2 text-[0.875rem] font-medium text-ok">✓ {tr(lang, "taken")}</button>
-                ) : (
-                  <Button size="sm" className="ml-auto" variant={d.status === "upcoming" ? "soft" : "primary"} onClick={() => mark(d.id, true)}>
-                    {d.status === "missed" ? `${tr(lang, "missed")} · ` : ""}{tr(lang, "markTaken")}
-                  </Button>
-                )}
-              </li>
-            ))}
-          </ul>
+      )}
+
+      <Card className="!p-2">
+        {r.today.length === 0 ? <p className="px-3 py-3 text-muted">{tr(lang, "noDropsToday")}</p> : (
+          <details className="group">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 rounded-2xl px-3 text-[1rem] font-medium">
+              <CalendarCheck size={19} className="text-accent-text" /> {tr(lang, "seeSchedule")}
+              <ChevronDown size={18} className="ml-auto text-muted transition group-open:rotate-180" />
+            </summary>
+            <ul className="flex flex-col gap-2 px-1 pb-1 pt-2">
+              {r.today.map((d) => (
+                <li key={d.id} className={cx("flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border px-3 py-2.5", d.status === "due" ? "border-accent" : d.status === "missed" ? "border-danger/50" : "border-line")}>
+                  <b className="w-14 font-mono text-[1.0625rem] font-medium">{fmt(d.due_at)}</b>
+                  <span className="min-w-[7rem] flex-1 text-[1rem]">{d.drug}</span>
+                  {d.status === "taken" ? (
+                    <button type="button" onClick={() => mark(d.id, false)} className="ml-auto rounded-full bg-ok-bg px-3 py-2 text-[0.875rem] font-medium text-ok">✓ {tr(lang, "taken")}</button>
+                  ) : (
+                    <Button size="sm" className="ml-auto" variant={d.status === "upcoming" ? "soft" : "primary"} onClick={() => mark(d.id, true)}>
+                      {d.status === "missed" ? `${tr(lang, "missed")} · ` : ""}{tr(lang, "markTaken")}
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
       </Card>
 
@@ -357,16 +401,32 @@ function RecoveryTab({ me, code, tts, onChange, onCheckin }: { me: PatientView; 
         </div>
       </Card>
 
-      <Card>
-        <h3 className="mb-3 flex items-center gap-2 text-[1.1875rem] font-semibold"><CalendarCheck size={20} className="text-accent-text" /> {tr(lang, "checkups")}</h3>
-        <ul className="flex flex-col gap-2">
-          {r.follow_ups.map((f) => (
-            <li key={f.day} className={cx("flex items-center justify-between rounded-2xl bg-surface-2 px-4 py-3", f.past && "opacity-55")}>
-              <span className="text-[0.9375rem]">{f.label}</span><b className="font-mono text-[0.9375rem] font-medium">{f.date}</b>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      {r.follow_ups.length > 0 && (
+        <Card className="!p-2">
+          {upcomingCheck && (
+            <div className="flex items-center gap-3 px-3 py-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-text"><CalendarCheck size={20} /></span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[0.8125rem] text-muted">{tr(lang, "nextCheckup")}</p>
+                <p className="truncate text-[1rem] font-medium">{upcomingCheck.label}</p>
+              </div>
+              <b className="font-mono text-[1rem] font-medium">{upcomingCheck.date}</b>
+            </div>
+          )}
+          <details className="group">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-2xl px-3 text-[0.9375rem] text-muted">
+              {tr(lang, "allCheckups")} <ChevronDown size={17} className="ml-auto transition group-open:rotate-180" />
+            </summary>
+            <ul className="flex flex-col gap-2 px-1 pb-1 pt-1">
+              {r.follow_ups.map((f) => (
+                <li key={f.day} className={cx("flex items-center justify-between rounded-2xl bg-surface-2 px-4 py-3", f.past && "opacity-55")}>
+                  <span className="text-[0.9375rem]">{f.label}</span><b className="font-mono text-[0.9375rem] font-medium">{f.date}</b>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </Card>
+      )}
     </div>
   );
 }
@@ -384,7 +444,7 @@ function EyesLine({ lens, lang }: { lens: LensOption; lang: Lang }) {
     );
   };
   return (
-    <div className="mt-4 flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       <ul className="flex flex-col gap-2">{eye("right")}{eye("left")}</ul>
       {lens.strategy === "blended" && <p className="rounded-2xl bg-sky-bg px-4 py-3 text-[0.9375rem] leading-relaxed text-sky">{tr(lang, "blendedExplain")}</p>}
     </div>

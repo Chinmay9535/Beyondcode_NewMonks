@@ -257,3 +257,17 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ------------------------------------------------------------------ dashboard tiles */
+/* Highlighted stat tile: the electric-blue gradient of the landing hero's lit pillars. */
+.stat-accent {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 255, 255, 0.22), transparent 55%),
+    linear-gradient(155deg, #6f86ff 0%, #3346ff 46%, #1d2be0 100%);
+  box-shadow: 0 24px 50px -24px rgba(36, 60, 255, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+/* Solid card (less glass): used where dense data needs a calm background. */
+.card-solid {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+}

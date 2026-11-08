@@ -46,7 +46,7 @@ const shot = (pg, name, full) => OUT ? pg.screenshot({ path: OUT + '/' + name, f
   await s.waitForTimeout(600);
   await shot(s, '6-staff-dashboard.png', true);
   await s.goto(BASE + '/staff/RAMESH');
-  await s.waitForSelector('text=Lens shortlist');
+  await s.waitForSelector('text=Recommended plan');
   await s.waitForTimeout(800);
   await shot(s, '7-staff-ramesh.png', true);
   await s.getByRole('button', { name: /^Approve / }).click(); await s.waitForTimeout(800);
@@ -77,8 +77,9 @@ const shot = (pg, name, full) => OUT ? pg.screenshot({ path: OUT + '/' + name, f
   console.log('eye test drop alert ok');
 
   // Second eye: plan Abdul's left eye from the right eye's real outcome
-  await s.goto(BASE + '/staff/ABDUL'); await s.waitForSelector('text=Plan second eye');
+  await s.goto(BASE + '/staff/ABDUL'); await s.getByRole('tab', { name: /Eyes/ }).click(); await s.waitForSelector('text=Plan second eye');
   await s.getByPlaceholder('e.g. -0.50').fill('-0.50'); await s.getByRole('button', { name: 'Plan second eye' }).click();
+  await s.waitForTimeout(800); await s.getByRole('tab', { name: /Overview/ }).click();
   await s.waitForSelector('text=Second-eye refinement');
   await s.waitForSelector('text=vision drop');
   await shot(s, '11-abdul-second-eye.png', true);

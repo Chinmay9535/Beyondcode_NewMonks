@@ -111,6 +111,10 @@ pitch/     the hackathon presentation site (Vite) and prebuilt files
 docs/      submission form answers and video script
 ```
 
+## Credits
+
+- UI components: [Magic UI](https://magicui.design) NumberTicker and BorderBeam (MIT) in `web/components/magicui/`, and [React Bits](https://reactbits.dev) SpotlightCard (MIT + Commons Clause) in `web/components/reactbits/`, copied unmodified with their licences. The landing page and pitch site credit their own components in `pitch/`.
+
 ## Important limits
 
 This is decision support, not a medical device. The home vision test is a screening aid, not a clinical exam, and has not been validated against clinic charts. The safety cases were written by the build team and need a native-speaker and clinician review; a fresh held-out set written by others is the honest next measurement. The defocus curves are anchored to published summary figures (see `sources` in `clinic.json`) but are not full published tables; the A-constants and clinic guides are illustrative samples. Replace all of them with the clinic's validated data. The Kannada, Hindi and Tamil text needs a native-speaker and clinical review before real patients use it.

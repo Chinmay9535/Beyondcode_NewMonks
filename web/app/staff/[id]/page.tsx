@@ -1,18 +1,42 @@
 "use client";
 
-import { ArrowLeft, Check, ExternalLink, FileUp, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
+// Surgeon view of one patient. Summary first, details on demand:
+//   Overview      four numbers, the recommended plan with its approval, what needs attention, the patient's day
+//   Lens plan     every plan as a compact row (click for the reasons), the Vision Day Map, the curves
+//   Eyes          planning eye, dominance, fellow eye, biometry, ocular conditions, data
+//   Recovery      surgery date, drops, home vision tests
+//   Conversation  the transcript, before surgery and after
+
+import {
+  Activity as ActivityIco, AlertTriangle, ArrowLeft, BellRing, Check, ChevronDown, CircleGauge, ClipboardList, Droplet, ExternalLink, Eye, FileUp,
+  HeartPulse, MessagesSquare, Pencil, Plus, RotateCcw, ScanEye, Sparkles, Trash2,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import DefocusChart from "@/components/DefocusChart";
-import { DayMatrix } from "@/components/DayMap";
+import { ActivityIcon, DayMatrix, distanceLabel } from "@/components/DayMap";
+import { CardTitle, KV, PillTabs, Stat, type TabDef } from "@/components/kit";
+import { BorderBeam } from "@/components/magicui/border-beam";
 import { AlertItem, STAGE, StaffShell } from "@/components/StaffShell";
-import { Badge, Button, Card, Spinner, cx } from "@/components/ui";
-import { api, type Activity, type LensOption, type Meta, type StaffPatientDetail, type VisionResult } from "@/lib/api";
+import { Badge, Button, Spinner, cx } from "@/components/ui";
+import { api, type Activity, type LensOption, type Meta, type Recommendation, type StaffPatientDetail, type VisionResult } from "@/lib/api";
 import { LANG_NAMES } from "@/lib/i18n";
 
 export default function StaffPatient() {
   return <StaffShell>{(meta) => <Detail meta={meta} />}</StaffShell>;
+}
+
+type Tab = "overview" | "plan" | "eyes" | "recovery" | "chat";
+const EYE = { right: "OD", left: "OS" } as const;
+const pct = (v: number) => `${(v * 100).toFixed(0)}`;
+const signed = (v: number, d = 2) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(d)}`;
+const cost = (n: number) => "₹".repeat(Math.max(1, n));
+const eyeName = (ep: LensOption["eyes"]["right"]) => (ep.toric && !/toric/i.test(ep.name) ? `${ep.name} toric` : ep.name);
+
+function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
+  return <section className={cx("card-solid rounded-[24px] p-5", className)}>{children}</section>;
 }
 
 function Detail({ meta }: { meta: Meta }) {
@@ -20,221 +44,434 @@ function Detail({ meta }: { meta: Meta }) {
   const router = useRouter();
   const [d, setD] = useState<StaffPatientDetail | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("overview");
+  const [sel, setSel] = useState<string | null>(null);
+  const [note, setNote] = useState("");
   const load = useCallback(() => api<StaffPatientDetail>(`/staff/patients/${id}`, { staff: true }).then(setD).catch((e) => setErr(String(e))), [id]);
   useEffect(() => { load(); const t = setInterval(load, 10000); return () => clearInterval(t); }, [load]);
 
+  const rec = d?.recommendation ?? null;
+  // Default selection: the approved plan, else the best suitable one. Keep the surgeon's pick across refreshes.
+  useEffect(() => {
+    if (!rec) return;
+    setSel((s) => (s && rec.options.some((o) => o.key === s && !o.excluded) && rec.status !== "approved" ? s : rec.approved_lens || rec.options.find((o) => !o.excluded)?.key || null));
+    setNote((n) => n || rec.surgeon_note || "");
+  }, [rec]);
+
   const patch = async (body: object) => setD(await api<StaffPatientDetail>(`/staff/patients/${id}`, { method: "PATCH", json: body, staff: true }));
   const post = async (path: string, body?: object) => setD(await api<StaffPatientDetail>(`/staff/patients/${id}${path}`, { method: "POST", json: body ?? {}, staff: true }));
-  const ack = async (aid: number, note: string) => { await api(`/staff/alerts/${aid}/ack`, { method: "POST", json: { note }, staff: true }); load(); };
+  const ack = async (aid: number, n: string) => { await api(`/staff/alerts/${aid}/ack`, { method: "POST", json: { note: n }, staff: true }); load(); };
 
   if (err) return <p className="text-danger">{err}</p>;
   if (!d) return <Spinner label="Loading record" />;
-  const p = d.patient, rec = d.recommendation;
+  const p = d.patient;
   const open = d.alerts.filter((a) => a.status === "open");
+  const urgent = open.filter((a) => a.severity === "urgent").length;
   const activities = rec?.activities || p.profile.activities || [];
+  const chosen = rec?.options.find((o) => o.key === sel) || rec?.options[0] || null;
+  const approve = () => sel && post("/approve", { lens_key: sel, note });
+
+  const tabs: TabDef<Tab>[] = [
+    { id: "overview", label: "Overview", icon: CircleGauge, count: open.length, alert: urgent > 0 },
+    { id: "plan", label: "Lens plan", icon: ScanEye, count: rec?.options.length },
+    { id: "eyes", label: "Eyes", icon: Eye },
+    { id: "recovery", label: "Recovery", icon: HeartPulse },
+    { id: "chat", label: "Conversation", icon: MessagesSquare, count: d.messages.length },
+  ];
+  const initials = p.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start gap-4">
-        <Link href="/staff" className="mt-1 grid h-10 w-10 place-items-center rounded-full border border-line text-muted hover:text-ink" aria-label="Back"><ArrowLeft size={18} /></Link>
+      {/* ------------------------------------------------ header */}
+      <div className="flex flex-wrap items-center gap-4">
+        <Link href="/staff" className="grid h-10 w-10 place-items-center rounded-full border border-line text-muted transition hover:text-ink" aria-label="Back to patients"><ArrowLeft size={18} /></Link>
+        <span className="stat-accent grid h-12 w-12 place-items-center rounded-2xl text-[1.0625rem] font-semibold text-white">{initials}</span>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-[1.875rem] font-semibold tracking-[-0.03em]">{p.name}</h1>
+            <h1 className="text-[1.625rem] font-semibold tracking-[-0.03em]">{p.name}</h1>
             <Badge tone={STAGE[p.stage].tone}>{STAGE[p.stage].label}</Badge>
           </div>
           <p className="text-[0.875rem] text-muted">
-            {[p.age && `${p.age}${p.sex || ""}`, p.occupation, p.city, LANG_NAMES[p.language], `${p.eye} eye (${p.eye === "right" ? "OD" : "OS"})`, p.phone].filter(Boolean).join(" · ")}
+            {[p.age && `${p.age}${p.sex || ""}`, p.occupation, p.city, LANG_NAMES[p.language], `${p.eye} eye (${EYE[p.eye]})`].filter(Boolean).join(" · ")}
           </p>
         </div>
-        <div className="ml-auto flex flex-wrap gap-2">
-          <span className="inline-flex min-h-10 items-center rounded-full bg-surface-2 px-4 font-mono text-[0.875rem] tracking-[.1em]">{p.id}</span>
-          <a href={`/p/${p.id}`} target="_blank" rel="noopener" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-4 text-[0.875rem] hover:border-muted">Patient app <ExternalLink size={14} /></a>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <span className="inline-flex min-h-10 items-center rounded-full bg-surface-2 px-4 font-mono text-[0.8125rem] tracking-[.1em]">{p.id}</span>
+          <a href={`/p/${p.id}`} target="_blank" rel="noopener" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-4 text-[0.875rem] transition hover:border-line-strong">Patient app <ExternalLink size={14} /></a>
         </div>
       </div>
 
-      {open.length > 0 && (
-        <ul className="grid gap-3 md:grid-cols-2">{open.map((a) => <AlertItem key={a.id} a={a} onAck={ack} showPatient={false} />)}</ul>
-      )}
+      <PillTabs id="patient" tabs={tabs} value={tab} onChange={setTab} className="self-start" />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="flex min-w-0 flex-col gap-6">
-          {rec ? <Shortlist rec={rec} onApprove={(k, note) => post("/approve", { lens_key: k, note })} onReopen={() => post("/reopen")} /> : (
-            <Card>
-              <h2 className="text-[1.25rem] font-semibold">Lens shortlist</h2>
-              <p className="mt-2 text-muted">The patient is still talking to the assistant. The shortlist appears when the conversation ends, or you can rank now with what is known.</p>
-              <Button className="mt-4" variant="soft" onClick={() => post("/recommend")}>Rank now</Button>
-            </Card>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ type: "spring", stiffness: 380, damping: 34 }}>
+          {tab === "overview" && (
+            <Overview d={d} rec={rec} chosen={chosen} activities={activities} open={open} onAck={ack} note={note} setNote={setNote}
+              onApprove={approve} onReopen={() => post("/reopen")} onRank={() => post("/recommend")} goPlan={() => setTab("plan")} goChat={() => setTab("chat")} />
           )}
-          {rec && (
-            <Card>
-              <div className="mb-4 flex flex-wrap items-baseline gap-3">
-                <h2 className="text-[1.25rem] font-semibold">Vision Day Map</h2>
-                <p className="text-[0.8125rem] text-muted">Predicted acuity (Snellen) for each of the patient&apos;s activities, from each lens&apos;s defocus curve at that working distance.</p>
-              </div>
-              <DayMatrix activities={activities} options={rec.options} />
-              <ActivityEditor activities={activities} prefs={{ glasses_free: p.profile.glasses_free ?? 2, budget: p.profile.budget ?? 1 }} onSave={(acts, prefs) => patch({ activities: acts, ...prefs })} />
-            </Card>
+          {tab === "plan" && (
+            rec ? <PlanTab rec={rec} sel={sel} setSel={setSel} note={note} setNote={setNote} onApprove={approve} onReopen={() => post("/reopen")}
+              activities={activities} prefs={{ glasses_free: p.profile.glasses_free ?? 2, budget: p.profile.budget ?? 1 }}
+              onSaveActivities={(acts, prefs) => patch({ activities: acts, ...prefs })} /> : <NoPlan onRank={() => post("/recommend")} />
           )}
-          <Card>
-            <h2 className="mb-1 text-[1.25rem] font-semibold">Both-eyes defocus curves × this patient</h2>
-            <p className="mb-4 text-[0.8125rem] text-muted">Dashed lines mark the patient&apos;s activities at their vergence; ticks show the acuity each one needs.</p>
-            <DefocusChart
-              curves={rec ? rec.options.filter((o) => !o.excluded).map((o) => ({ key: o.key, name: o.name, curve: o.binocular_curve, family: o.family })) : Object.entries(meta.curves).map(([k, c]) => ({ key: k, name: c.name, curve: c.curve, family: k }))}
-              activities={activities} highlight={rec?.approved_lens || rec?.options[0]?.key} />
-          </Card>
-          <Transcript d={d} />
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <EyesCard d={d} onPatch={patch} onSecondEye={(se) => post("/second-eye", { actual_se: se })} />
-          <BiometryCard d={d} onImport={async (file) => {
-            const fd = new FormData(); fd.append("file", file);
-            setD(await api<StaffPatientDetail>(`/staff/patients/${id}/biometry/import`, { method: "POST", body: fd, staff: true }));
-          }} onSave={(b) => post("/biometry", b)} />
-          <Card>
-            <h2 className="mb-3 text-[1.0625rem] font-semibold">Ocular conditions</h2>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(meta.conditions).map(([k, v]) => {
-                const on = p.conditions.includes(k);
-                return (
-                  <button key={k} type="button" aria-pressed={on} onClick={() => patch({ conditions: on ? p.conditions.filter((c) => c !== k) : [...p.conditions, k] })}
-                    className={cx("min-h-9 rounded-full border px-3 text-left text-[0.8125rem]", on ? "border-warn bg-warn-bg text-warn" : "border-line text-muted hover:text-ink")}>{v}</button>
-                );
-              })}
+          {tab === "eyes" && (
+            <div className="grid gap-5 lg:grid-cols-2">
+              <EyesCard d={d} onPatch={patch} onSecondEye={(se) => post("/second-eye", { actual_se: se })} />
+              <BiometryCard d={d} onImport={async (file) => {
+                const fd = new FormData(); fd.append("file", file);
+                setD(await api<StaffPatientDetail>(`/staff/patients/${id}/biometry/import`, { method: "POST", body: fd, staff: true }));
+              }} onSave={(b) => post("/biometry", b)} />
+              <Panel>
+                <CardTitle>Ocular conditions</CardTitle>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(meta.conditions).map(([k, v]) => {
+                    const on = p.conditions.includes(k);
+                    return (
+                      <button key={k} type="button" aria-pressed={on} onClick={() => patch({ conditions: on ? p.conditions.filter((c) => c !== k) : [...p.conditions, k] })}
+                        className={cx("min-h-9 rounded-full border px-3 text-left text-[0.8125rem] transition", on ? "border-warn bg-warn-bg text-warn" : "border-line text-muted hover:text-ink")}>{v}</button>
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-[0.75rem] text-muted">Changes re-rank the plans immediately.</p>
+              </Panel>
+              <Panel>
+                <CardTitle>Data &amp; consent</CardTitle>
+                <KV rows={[["Consent", p.consent_at ? new Date(p.consent_at).toLocaleString() : "Not yet given"], ["Phone", p.phone || "—"], ["Registered", new Date(p.created_at).toLocaleDateString()]]} />
+                <Button variant="danger" size="sm" className="mt-4" onClick={async () => { if (confirm(`Delete all data for ${p.name}?`)) { await api(`/staff/patients/${id}`, { method: "DELETE", staff: true }); router.push("/staff"); } }}><Trash2 size={14} /> Delete patient (right to erasure)</Button>
+              </Panel>
             </div>
-            <p className="mt-3 text-[0.75rem] text-muted">Changing conditions re-ranks the shortlist immediately.</p>
-          </Card>
-          <VisionCard tests={d.vision_tests || []} operatedEye={d.patient.stage === "post_op" ? d.patient.eye : null} />
-          <SurgeryCard d={d} onDate={(date) => patch(date ? { surgery_date: date } : { clear_surgery_date: true })} />
-          <Card>
-            <h2 className="mb-2 text-[1.0625rem] font-semibold">Data</h2>
-            <p className="mb-3 text-[0.8125rem] text-muted">Consent {p.consent_at ? `given ${new Date(p.consent_at).toLocaleString()}` : "not yet given"}. Deleting removes every record (DPDP right to erasure).</p>
-            <Button variant="danger" size="sm" onClick={async () => { if (confirm(`Delete all data for ${p.name}?`)) { await api(`/staff/patients/${id}`, { method: "DELETE", staff: true }); router.push("/staff"); } }}><Trash2 size={14} /> Delete patient</Button>
-          </Card>
+          )}
+          {tab === "recovery" && (
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+              <SurgeryCard d={d} onDate={(date) => patch(date ? { surgery_date: date } : { clear_surgery_date: true })} />
+              <VisionCard tests={d.vision_tests || []} operatedEye={p.stage === "post_op" ? p.eye : null} />
+            </div>
+          )}
+          {tab === "chat" && <Transcript d={d} />}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ================================================================ Overview */
+
+function Overview({ d, rec, chosen, activities, open, onAck, note, setNote, onApprove, onReopen, onRank, goPlan, goChat }: {
+  d: StaffPatientDetail; rec: Recommendation | null; chosen: LensOption | null; activities: Activity[]; open: StaffPatientDetail["alerts"];
+  onAck: (id: number, note: string) => void; note: string; setNote: (s: string) => void; onApprove: () => void; onReopen: () => void; onRank: () => void; goPlan: () => void; goChat: () => void;
+}) {
+  const p = d.patient, r = d.recovery;
+  const primary = chosen?.eyes?.[p.eye];
+  const urgent = open.filter((a) => a.severity === "urgent").length;
+  const attention = [
+    ...(rec?.biometry_notes || []).map((n) => ({ tone: "warn" as const, text: n.text })),
+    ...(chosen?.flags || []).filter((f) => f.level !== "info").map((f) => ({ tone: f.level === "contraindicated" ? "danger" as const : "warn" as const, text: f.text })),
+  ];
+  const lastTest = (d.vision_tests || []).filter((t) => t.kind === "distance" && t.logmar != null).at(-1);
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat tone="accent" label="Clear without glasses" icon={Sparkles} value={chosen ? chosen.hours_clear : "—"} decimals={chosen && chosen.hours_clear % 1 ? 1 : 0}
+          unit={chosen ? `of ${chosen.hours_total} h a day` : undefined} hint={chosen ? chosen.name : "No plan yet"} />
+        <Stat spotlight label="Plan fit" icon={CircleGauge} value={chosen && !chosen.excluded ? Number(pct(chosen.score)) : "—"} unit={chosen ? "/ 100" : undefined}
+          hint={rec ? `${rec.options.filter((o) => !o.excluded).length} suitable plans` : "Waiting for the conversation"} />
+        {p.stage === "post_op" && r ? (
+          <Stat spotlight label="Drops taken" icon={Droplet} value={r.adherence.pct ?? "—"} unit={r.adherence.pct != null ? "%" : undefined}
+            tone={(r.adherence.pct ?? 100) < 85 ? "danger" : "plain"} hint={`Day ${r.day ?? "—"} · ${r.adherence.missed} missed`} />
+        ) : (
+          <Stat spotlight label={`IOL power ${EYE[p.eye]}`} icon={ScanEye} value={primary?.iol_power_d != null ? signed(primary.iol_power_d, 1) : "—"} unit={primary?.iol_power_d != null ? "D" : undefined}
+            hint={primary?.iol_power_d != null ? `SRK/T · target ${signed(primary.power_target ?? primary.target)} D` : "Add biometry in Eyes"} />
+        )}
+        <Stat spotlight label="Open alerts" icon={BellRing} value={open.length} tone={urgent ? "danger" : open.length ? "plain" : "ok"}
+          hint={urgent ? `${urgent} urgent` : lastTest ? `Last eye test ${lastTest.snellen}` : "Nothing waiting"} />
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+        {rec && chosen ? (
+          <RecommendationCard rec={rec} o={chosen} note={note} setNote={setNote} onApprove={onApprove} onReopen={onReopen} goPlan={goPlan} />
+        ) : <NoPlan onRank={onRank} />}
+
+        <div className="flex flex-col gap-5">
+          {(open.length > 0 || attention.length > 0) && (
+            <Panel>
+              <CardTitle action={<Badge tone={urgent ? "danger" : "warn"}>{open.length + attention.length}</Badge>}>Needs your attention</CardTitle>
+              {open.length > 0 && <ul className="mb-3 flex flex-col gap-2.5">{open.map((a) => <AlertItem key={a.id} a={a} onAck={onAck} showPatient={false} />)}</ul>}
+              {attention.length > 0 && (
+                <ul className="flex flex-col gap-2">
+                  {attention.slice(0, 4).map((a) => (
+                    <li key={a.text} className={cx("flex gap-2.5 rounded-xl px-3 py-2.5 text-[0.8125rem] leading-snug", a.tone === "danger" ? "bg-danger-bg text-danger" : "bg-warn-bg text-warn")}>
+                      <AlertTriangle size={15} className="mt-px shrink-0" /> {a.text}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+          )}
+          <Panel>
+            <CardTitle action={<button type="button" onClick={goChat} className="text-[0.8125rem] text-muted transition hover:text-ink">Conversation →</button>}>Their day</CardTitle>
+            {activities.length === 0 ? <p className="text-[0.875rem] text-muted">Still talking to the assistant.</p> : (
+              <ul className="flex flex-col gap-1">
+                {activities.map((a) => {
+                  const row = chosen?.day_map.find((r) => r.activity === a.id);
+                  return (
+                    <li key={a.id + a.label} className="flex items-center gap-3 rounded-xl px-1 py-2">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface-2 text-muted"><ActivityIcon id={a.id} size={17} /></span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[0.875rem] font-medium">{a.label}</p>
+                        <p className="text-[0.75rem] text-muted">{a.hours} h · {distanceLabel(a.distance_cm)}{a.night ? " · night" : ""}</p>
+                      </div>
+                      {row && <span className={cx("rounded-full px-2.5 py-1 font-mono text-[0.75rem]", row.status === "clear" ? "bg-ok-bg text-ok" : row.status === "strain" ? "bg-warn-bg text-warn" : "bg-danger-bg text-danger")}>{row.snellen}</span>}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
         </div>
       </div>
     </div>
   );
 }
 
-const pct = (v: number) => `${(v * 100).toFixed(0)}`;
-
-function Shortlist({ rec, onApprove, onReopen }: { rec: NonNullable<StaffPatientDetail["recommendation"]>; onApprove: (k: string, note: string) => void; onReopen: () => void }) {
-  const [sel, setSel] = useState<string>(rec.approved_lens || rec.options.find((o) => !o.excluded)?.key || "");
-  const [note, setNote] = useState(rec.surgeon_note || "");
-  const approved = rec.status === "approved";
+function NoPlan({ onRank }: { onRank: () => void }) {
   return (
-    <Card className="p-6">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h2 className="text-[1.25rem] font-semibold">Lens shortlist</h2>
-        {approved ? <Badge tone="ok"><Check size={12} /> Approved</Badge> : <Badge tone="warn">Awaiting your approval</Badge>}
-        <span className="ml-auto font-mono text-[0.6875rem] text-muted">glasses-free wish {rec.preferences.glasses_free}/3 · cost sensitivity {rec.preferences.budget}/3</span>
-      </div>
-      {rec.refinement && (
-        <p className="mb-3 rounded-2xl border border-sky/40 bg-sky-bg px-4 py-3 text-[0.8438rem] text-sky"><b>Second-eye refinement.</b> {rec.refinement.text}</p>
-      )}
-      <div className="mb-4 flex flex-col gap-1.5 rounded-2xl bg-surface-2 px-4 py-3 text-[0.8438rem]">
-        {(["right", "left"] as const).map((e) => {
-          const a = rec.astigmatism_by_eye?.[e];
-          if (!a || a.cyl == null) return null;
-          return (
-            <p key={e}><b className="font-mono">{e === "right" ? "OD" : "OS"}</b>{rec.dominant_eye === e ? " (dominant)" : ""}: corneal astigmatism <b>{a.cyl} D</b>{a.axis != null ? ` @ ${a.axis}°` : ""} ·{" "}
-              {a.toric ? <span className="text-warn">toric indicated (≈ {a.iol_cyl_estimate} D at IOL plane; confirm with a toric calculator)</span> : a.borderline ? "borderline, consider toric" : "no toric needed"}</p>
-          );
-        })}
-        {rec.biometry_notes.map((n) => <p key={n.text} className="text-warn">⚠ {n.text}</p>)}
-      </div>
-      <ol className="flex flex-col gap-3">
-        {rec.options.map((o, i) => (
-          <OptionCard key={o.key} o={o} rank={i + 1} selected={sel === o.key} onSelect={() => !approved && !o.excluded && setSel(o.key)} approved={rec.approved_lens === o.key} locked={approved} />
-        ))}
-      </ol>
-      <div className="mt-5 flex flex-col gap-3 border-t border-line pt-5">
-        {approved ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-[0.875rem]">Approved <b>{rec.options.find((o) => o.key === rec.approved_lens)?.name}</b>{rec.surgeon_note ? ` · “${rec.surgeon_note}”` : ""}. The patient now sees it in their app.</p>
-            <Button variant="soft" size="sm" className="ml-auto" onClick={onReopen}><RotateCcw size={14} /> Revise</Button>
-          </div>
-        ) : (
-          <>
-            <label className="text-[0.8125rem] text-muted" htmlFor="note">Note to the patient (shown in their app, in plain words)</label>
-            <textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="e.g. We discussed halos at night; you'll need light reading glasses for fine print."
-              className="rounded-2xl border border-line bg-surface-2 px-4 py-3 text-[0.9375rem] focus:border-sky focus:outline-none" />
-            <Button size="lg" disabled={!sel} onClick={() => onApprove(sel, note)}>Approve {rec.options.find((o) => o.key === sel)?.name}</Button>
-          </>
-        )}
-        <p className="text-[0.7188rem] leading-relaxed text-muted">{rec.disclaimer}</p>
-      </div>
-    </Card>
+    <Panel className="flex flex-col items-start gap-3">
+      <span className="grid h-11 w-11 place-items-center rounded-2xl bg-surface-2 text-muted"><MessagesSquare size={20} /></span>
+      <h2 className="text-[1.25rem] font-semibold">No plan yet</h2>
+      <p className="max-w-[46ch] text-[0.9375rem] text-muted">The patient is still talking to the assistant. Plans appear when the conversation ends, or rank now with what is known.</p>
+      <Button variant="soft" onClick={onRank}>Rank now</Button>
+    </Panel>
   );
 }
 
-function OptionCard({ o, rank, selected, onSelect, approved, locked }: { o: LensOption; rank: number; selected: boolean; onSelect: () => void; approved: boolean; locked: boolean }) {
+/** The selected plan, its key numbers, the top reasons, and the approval. */
+function RecommendationCard({ rec, o, note, setNote, onApprove, onReopen, goPlan }: {
+  rec: Recommendation; o: LensOption; note: string; setNote: (s: string) => void; onApprove: () => void; onReopen: () => void; goPlan: () => void;
+}) {
+  const approved = rec.status === "approved";
+  const reasons = [...o.contributions.filter((c) => Math.abs(c.value) >= 0.01).map((c) => ({ label: c.label, value: c.value })), ...o.adjustments.map((a) => ({ label: a.reason.split(":")[0], value: a.value }))]
+    .sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 4);
+  const rank = rec.options.findIndex((x) => x.key === o.key) + 1;
+  return (
+    <section className="card-solid relative flex flex-col gap-5 overflow-hidden rounded-[24px] p-6">
+      {!approved && <BorderBeam size={120} duration={9} colorFrom="#7aa2ff" colorTo="#3346ff" borderWidth={1.5} />}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[0.8125rem] font-medium text-muted">{approved ? "Approved plan" : "Recommended plan"}</span>
+        {approved ? <Badge tone="ok"><Check size={12} /> Approved</Badge> : <Badge tone="warn">Awaiting your approval</Badge>}
+        {rank > 1 && !approved && <Badge>Rank {rank} of {rec.options.length}</Badge>}
+        <button type="button" onClick={goPlan} className="ml-auto text-[0.8125rem] text-muted transition hover:text-ink">Compare all {rec.options.length} plans →</button>
+      </div>
+
+      <div>
+        <h2 className="text-[1.75rem] font-semibold leading-tight tracking-[-0.03em]">{o.name}</h2>
+        <p className="mt-1.5 text-[0.9375rem] text-muted">Glasses {o.glasses_after.toLowerCase()} · cost {cost(o.cost_tier)}{o.strategy === "blended" ? ` · eyes ${o.anisometropia_d.toFixed(2)} D apart` : ""}</p>
+      </div>
+
+      {rec.refinement && <p className="rounded-xl border border-sky/40 bg-sky-bg px-4 py-3 text-[0.8125rem] text-sky"><b>Second-eye refinement.</b> {rec.refinement.text}</p>}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {(["right", "left"] as const).map((e) => {
+          const ep = o.eyes?.[e];
+          if (!ep) return null;
+          return (
+            <div key={e} className="rounded-2xl bg-surface-2 px-4 py-3">
+              <p className="flex items-center justify-between text-[0.75rem] text-muted"><span className="font-mono">{EYE[e]}{rec.dominant_eye === e ? " · dominant" : ""}</span><span>{ep.fixed ? "implanted" : `target ${signed(ep.target)} D`}</span></p>
+              <p className="mt-1 flex items-baseline justify-between gap-2"><span className="text-[1rem] font-medium">{eyeName(ep)}</span>
+                <span className="font-mono text-[1.0625rem]">{ep.iol_power_d != null ? `${signed(ep.iol_power_d, 1)} D` : ep.fixed ? null : <span className="text-[0.8125rem] text-muted">needs biometry</span>}</span></p>
+            </div>
+          );
+        })}
+      </div>
+
+      {reasons.length > 0 && (
+        <div>
+          <p className="mb-2 text-[0.75rem] text-muted">Why, compared with an average lens</p>
+          <div className="flex flex-wrap gap-2">
+            {reasons.map((r) => (
+              <span key={r.label} className={cx("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8125rem]", r.value >= 0 ? "bg-ok-bg text-ok" : "bg-danger-bg text-danger")}>
+                <b className="font-mono font-medium">{r.value >= 0 ? "+" : "−"}{pct(Math.abs(r.value))}</b> {r.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <ApproveBar rec={rec} o={o} note={note} setNote={setNote} onApprove={onApprove} onReopen={onReopen} />
+    </section>
+  );
+}
+
+function ApproveBar({ rec, o, note, setNote, onApprove, onReopen }: { rec: Recommendation; o: LensOption | null; note: string; setNote: (s: string) => void; onApprove: () => void; onReopen: () => void }) {
+  const [noteOpen, setNoteOpen] = useState(!!note);
+  if (rec.status === "approved") {
+    const ap = rec.options.find((x) => x.key === rec.approved_lens);
+    return (
+      <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
+        <p className="text-[0.875rem]"><Check size={15} className="mr-1 inline text-ok" />Approved <b>{ap?.name}</b>{rec.surgeon_note ? ` · “${rec.surgeon_note}”` : ""}. The patient now sees it in their app.</p>
+        <Button variant="soft" size="sm" className="ml-auto" onClick={onReopen}><RotateCcw size={14} /> Revise</Button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-3 border-t border-line pt-4">
+      {noteOpen ? (
+        <textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} rows={2} autoFocus aria-label="Note to the patient"
+          placeholder="Note to the patient, in plain words. e.g. We discussed halos at night; you'll need light reading glasses for fine print."
+          className="rounded-2xl border border-line bg-surface-2 px-4 py-3 text-[0.9375rem] focus:border-accent focus:outline-none" />
+      ) : (
+        <button type="button" onClick={() => setNoteOpen(true)} className="flex items-center gap-2 self-start text-[0.875rem] text-muted transition hover:text-ink"><Pencil size={14} /> Add a note for the patient</button>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button size="lg" disabled={!o || o.excluded} onClick={onApprove} arrow className="flex-1 sm:flex-none">Approve {o?.name}</Button>
+        <p className="min-w-[200px] flex-1 text-[0.6875rem] leading-relaxed text-muted">{rec.disclaimer}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================ Lens plan */
+
+function PlanTab({ rec, sel, setSel, note, setNote, onApprove, onReopen, activities, prefs, onSaveActivities }: {
+  rec: Recommendation; sel: string | null; setSel: (k: string) => void; note: string; setNote: (s: string) => void; onApprove: () => void; onReopen: () => void;
+  activities: Activity[]; prefs: { glasses_free: number; budget: number }; onSaveActivities: (a: Activity[], p: { glasses_free: number; budget: number }) => Promise<void>;
+}) {
+  const [view, setView] = useState<"plans" | "day" | "curves">("plans");
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const approved = rec.status === "approved";
+  const chosen = rec.options.find((o) => o.key === sel) || null;
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <PillTabs id="planview" size="sm" value={view} onChange={setView} tabs={[{ id: "plans", label: "Plans" }, { id: "day", label: "Vision Day Map" }, { id: "curves", label: "Defocus curves" }]} />
+        <span className="ml-auto text-[0.75rem] text-muted">Wants to avoid glasses {rec.preferences.glasses_free}/3 · cost sensitivity {rec.preferences.budget}/3</span>
+      </div>
+
+      {view === "plans" && (
+        <Panel className="p-2 sm:p-3">
+          <AstigLine rec={rec} />
+          <ol className="flex flex-col">
+            {rec.options.map((o, i) => (
+              <PlanRow key={o.key} o={o} rank={i + 1} selected={sel === o.key} approved={rec.approved_lens === o.key} locked={approved}
+                open={openKey === o.key} onToggle={() => { setOpenKey(openKey === o.key ? null : o.key); if (!approved && !o.excluded) setSel(o.key); }} />
+            ))}
+          </ol>
+          <div className="px-3 pb-2"><ApproveBar rec={rec} o={chosen} note={note} setNote={setNote} onApprove={onApprove} onReopen={onReopen} /></div>
+        </Panel>
+      )}
+
+      {view === "day" && (
+        <Panel>
+          <CardTitle>Vision Day Map</CardTitle>
+          <p className="-mt-2 mb-4 text-[0.8125rem] text-muted">Predicted acuity for each activity, from each plan&apos;s curve at that working distance.</p>
+          <DayMatrix activities={activities} options={rec.options} />
+          <ActivityEditor activities={activities} prefs={prefs} onSave={onSaveActivities} />
+        </Panel>
+      )}
+
+      {view === "curves" && (
+        <Panel>
+          <CardTitle>Both-eyes defocus curves</CardTitle>
+          <p className="-mt-2 mb-4 text-[0.8125rem] text-muted">Dashed lines mark the patient&apos;s activities; ticks show the acuity each one needs.</p>
+          <DefocusChart
+            curves={rec.options.filter((o) => !o.excluded).map((o) => ({ key: o.key, name: o.name, curve: o.binocular_curve, family: o.family }))}
+            activities={activities} highlight={rec.approved_lens || sel || rec.options[0]?.key} />
+        </Panel>
+      )}
+    </div>
+  );
+}
+
+function AstigLine({ rec }: { rec: Recommendation }) {
+  const parts = (["right", "left"] as const).flatMap((e) => {
+    const a = rec.astigmatism_by_eye?.[e];
+    if (!a || a.cyl == null) return [];
+    return [`${EYE[e]} ${a.cyl} D${a.axis != null ? ` @${a.axis}°` : ""} · ${a.toric ? `toric (≈${a.iol_cyl_estimate} D at IOL)` : a.borderline ? "borderline toric" : "no toric"}`];
+  });
+  if (!parts.length) return null;
+  return <p className="mx-3 mb-2 mt-1 font-mono text-[0.75rem] text-muted">Corneal astigmatism: {parts.join("   ·   ")}</p>;
+}
+
+function PlanRow({ o, rank, selected, approved, locked, open, onToggle }: { o: LensOption; rank: number; selected: boolean; approved: boolean; locked: boolean; open: boolean; onToggle: () => void }) {
+  const share = o.hours_total ? o.hours_clear / o.hours_total : 0;
+  return (
+    <li className={cx("rounded-2xl transition", open && "bg-surface-2")}>
+      <button type="button" onClick={onToggle} aria-expanded={open} aria-pressed={selected && !locked}
+        className={cx("grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl px-3 py-3.5 text-left transition sm:grid-cols-[28px_minmax(0,1.6fr)_minmax(0,1fr)_64px_56px_20px]",
+          !open && "hover:bg-surface-2", o.excluded && "opacity-55")}>
+        <span className={cx("grid h-7 w-7 place-items-center rounded-full text-[0.75rem] font-semibold", selected && !o.excluded ? "bg-accent text-white" : "bg-surface-2 text-muted")}>{selected && !o.excluded ? <Check size={14} /> : rank}</span>
+        <span className="min-w-0">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="truncate text-[0.9375rem] font-medium">{o.name}</span>
+            {approved && <Badge tone="ok">Approved</Badge>}
+            {o.excluded && <Badge tone="danger">Not suitable</Badge>}
+            {o.strategy === "blended" && !o.excluded && <Badge tone="sky">Blended</Badge>}
+          </span>
+          <span className="mt-0.5 block truncate text-[0.75rem] text-muted">Glasses {o.glasses_after.toLowerCase()}</span>
+        </span>
+        <span className="hidden items-center gap-2 sm:flex" title="Hours a day clear without glasses">
+          <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2"><span className="block h-full rounded-full bg-accent" style={{ width: `${share * 100}%` }} /></span>
+          <span className="w-12 text-right font-mono text-[0.75rem] text-muted">{o.hours_clear}/{o.hours_total} h</span>
+        </span>
+        <span className="hidden font-mono text-[0.8125rem] text-muted sm:block">{cost(o.cost_tier)}</span>
+        <span className="text-right font-mono text-[1.0625rem]">{o.excluded ? "—" : pct(o.score)}</span>
+        <ChevronDown size={16} className={cx("hidden text-muted transition sm:block", open && "rotate-180")} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 32 }} className="overflow-hidden">
+            <PlanDetail o={o} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </li>
+  );
+}
+
+function PlanDetail({ o }: { o: LensOption }) {
   const max = Math.max(0.05, ...o.contributions.map((c) => Math.abs(c.value)), ...o.adjustments.map((a) => Math.abs(a.value)));
   const bars = [...o.contributions.filter((c) => Math.abs(c.value) >= 0.003).slice(0, 6).map((c) => ({ label: c.label, value: c.value })), ...o.adjustments.map((a) => ({ label: a.reason.split(":")[0], value: a.value }))];
   return (
-    <li>
-      <div role="radio" aria-checked={selected} tabIndex={o.excluded || locked ? -1 : 0} onClick={onSelect} onKeyDown={(e) => (e.key === " " || e.key === "Enter") && onSelect()}
-        className={cx("rounded-2xl border p-4 transition", o.excluded ? "border-line opacity-60" : "cursor-pointer", selected && !o.excluded ? "border-accent bg-accent/5" : "border-line hover:border-muted", approved && "border-ok")}>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="font-mono text-[0.75rem] text-muted">#{rank}</span>
-          <h3 className="text-[1.125rem] font-semibold">{o.name}</h3>
-          {o.excluded && <Badge tone="danger">Not suitable</Badge>}
-          {approved && <Badge tone="ok">Approved</Badge>}
-          <span className="ml-auto font-mono text-[1.375rem] font-medium">{o.excluded ? "—" : o.score.toFixed(2)}</span>
-        </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2"><div className={cx("h-full rounded-full", o.excluded ? "bg-muted" : "bg-accent")} style={{ width: `${o.excluded ? 0 : o.score * 100}%` }} /></div>
-        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[0.75rem] text-muted">
-          <span><b className="font-medium text-ink">{o.hours_clear}/{o.hours_total} h</b> clear w/o glasses (both eyes)</span>
-          <span>cost {"₹".repeat(Math.max(1, o.cost_tier))}</span>
-          <span>glasses: {o.glasses_after.toLowerCase()}</span>
-          {o.strategy === "blended" && <Badge tone="sky">blended · {o.anisometropia_d.toFixed(2)} D apart</Badge>}
-        </div>
-        <table className="mt-3 w-full font-mono text-[0.75rem]">
-          <tbody>
-            {(["right", "left"] as const).map((e) => {
-              const p = o.eyes?.[e];
-              if (!p) return null;
-              return (
-                <tr key={e} className="border-t border-line">
-                  <td className="w-10 py-1.5 text-muted">{e === "right" ? "OD" : "OS"}</td>
-                  <td className="py-1.5 pr-2 font-sans text-[0.8125rem]">{p.name}</td>
-                  <td className="py-1.5 pr-2 text-muted">{p.fixed ? "implanted" : `target ${p.target > 0 ? "+" : ""}${p.target.toFixed(2)} D`}</td>
-                  <td className="py-1.5 text-right">{p.iol_power_d != null ? <><b className="font-medium">{p.iol_power_d > 0 ? "+" : ""}{p.iol_power_d.toFixed(1)} D</b><span className="text-muted"> SRK/T{p.refined ? " · refined" : ""}</span></> : <span className="text-muted">—</span>}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {!o.excluded && (
-          <div className="mt-3 grid gap-1">
-            <p className="font-mono text-[0.6562rem] uppercase tracking-[.1em] text-muted">Why (vs. average lens = {pct(o.baseline)})</p>
-            {bars.map((b) => (
-              <div key={b.label} className="grid grid-cols-[minmax(0,150px)_1fr_48px] items-center gap-2 text-[0.7812rem]">
-                <span className="truncate text-muted" title={b.label}>{b.label}</span>
-                <div className="relative h-2.5">
-                  <div className="absolute inset-y-0 left-1/2 w-px bg-line" />
-                  <div className={cx("absolute inset-y-0 rounded-sm", b.value >= 0 ? "left-1/2 bg-ok" : "right-1/2 bg-danger")} style={{ width: `${(Math.abs(b.value) / max) * 50}%` }} />
-                </div>
-                <span className={cx("text-right font-mono", b.value >= 0 ? "text-ok" : "text-danger")}>{b.value >= 0 ? "+" : "−"}{pct(Math.abs(b.value))}</span>
-              </div>
-            ))}
-          </div>
-        )}
+    <div className="grid gap-5 px-4 pb-5 pt-1 md:grid-cols-2">
+      <div>
+        <p className="mb-2 text-[0.75rem] text-muted">Per eye</p>
+        <KV rows={(["right", "left"] as const).filter((e) => o.eyes?.[e]).map((e) => {
+          const ep = o.eyes[e];
+          return [`${EYE[e]} · ${eyeName(ep)}`, <span key={e} className="font-mono">{ep.fixed ? "implanted" : `target ${signed(ep.target)} D · `}{ep.iol_power_d != null ? `${signed(ep.iol_power_d, 1)} D SRK/T${ep.refined ? " · refined" : ""}` : ep.fixed ? "" : "—"}</span>];
+        })} />
         {o.flags.length > 0 && (
-          <ul className="mt-3 flex flex-col gap-1 text-[0.7812rem]">
+          <ul className="mt-3 flex flex-col gap-1.5 text-[0.8125rem]">
             {o.flags.map((f) => <li key={f.text} className={f.level === "contraindicated" ? "text-danger" : f.level === "caution" ? "text-warn" : "text-sky"}>• {f.text}</li>)}
           </ul>
         )}
-        {o.example_models && <p className="mt-2 font-mono text-[0.6875rem] text-muted">{o.example_models}</p>}
+        {o.example_models && <p className="mt-3 font-mono text-[0.6875rem] text-muted">{o.example_models}</p>}
+      </div>
+      <div>
+        {!o.excluded && (
+          <>
+            <p className="mb-2 text-[0.75rem] text-muted">Why (vs. average lens = {pct(o.baseline)})</p>
+            <div className="grid gap-1.5">
+              {bars.map((b) => (
+                <div key={b.label} className="grid grid-cols-[minmax(0,150px)_1fr_40px] items-center gap-2 text-[0.75rem]">
+                  <span className="truncate text-muted" title={b.label}>{b.label}</span>
+                  <div className="relative h-2">
+                    <div className="absolute inset-y-0 left-1/2 w-px bg-line" />
+                    <div className={cx("absolute inset-y-0 rounded-sm", b.value >= 0 ? "left-1/2 bg-ok" : "right-1/2 bg-danger")} style={{ width: `${(Math.abs(b.value) / max) * 50}%` }} />
+                  </div>
+                  <span className={cx("text-right font-mono", b.value >= 0 ? "text-ok" : "text-danger")}>{b.value >= 0 ? "+" : "−"}{pct(Math.abs(b.value))}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
         {o.curve_sources && o.curve_sources.length > 0 && (
-          <details className="mt-2 text-[0.75rem] text-muted">
+          <details className="mt-4 text-[0.75rem] text-muted">
             <summary className="cursor-pointer select-none font-medium hover:text-ink">Curve sources ({o.curve_sources.length})</summary>
             <ul className="mt-1.5 flex flex-col gap-1 pl-3">{o.curve_sources.map((s) => <li key={s} className="list-disc">{s}</li>)}</ul>
           </details>
         )}
       </div>
-    </li>
+    </div>
   );
 }
 
@@ -279,6 +516,8 @@ function ActivityEditor({ activities, prefs, onSave }: { activities: Activity[];
   );
 }
 
+/* ================================================================ Eyes */
+
 function BiometryCard({ d, onImport, onSave }: { d: StaffPatientDetail; onImport: (f: File) => Promise<void>; onSave: (b: object) => Promise<void> }) {
   const file = useRef<HTMLInputElement>(null);
   const [edit, setEdit] = useState(false);
@@ -292,27 +531,26 @@ function BiometryCard({ d, onImport, onSave }: { d: StaffPatientDetail; onImport
   const B = d.biometry_by_eye || { right: null, left: null };
   const fmt = (v: number | null | undefined, n = 2) => (v == null ? "—" : v.toFixed(n));
   const rows: [string, (b: NonNullable<typeof B.right>) => string][] = [
-    ["AL mm", (b) => fmt(b.axial_length)], ["K1 D", (b) => fmt(b.k1)], ["K2 D", (b) => fmt(b.k2)],
-    ["Cyl D", (b) => `${Math.abs(b.k2 - b.k1).toFixed(2)}${b.k2_axis != null ? ` @${b.k2_axis}°` : ""}`], ["ACD mm", (b) => fmt(b.acd)], ["WTW mm", (b) => fmt(b.wtw, 1)],
+    ["Axial length (mm)", (b) => fmt(b.axial_length)], ["K1 (D)", (b) => fmt(b.k1)], ["K2 (D)", (b) => fmt(b.k2)],
+    ["Corneal cyl (D)", (b) => `${Math.abs(b.k2 - b.k1).toFixed(2)}${b.k2_axis != null ? ` @${b.k2_axis}°` : ""}`], ["ACD (mm)", (b) => fmt(b.acd)], ["WTW (mm)", (b) => fmt(b.wtw, 1)],
   ];
   const inp = "min-h-9 w-full rounded-lg border border-line bg-surface-2 px-2 font-mono text-[0.8125rem]";
   return (
-    <Card>
-      <h2 className="mb-3 text-[1.0625rem] font-semibold">Biometry</h2>
-      <table className="w-full font-mono text-[0.8125rem]">
-        <thead><tr><th /><th className={cx("pb-1 text-right font-normal", d.patient.eye === "right" ? "text-accent-text" : "text-muted")}>OD{d.patient.eye === "right" ? " ●" : ""}</th><th className={cx("pb-1 text-right font-normal", d.patient.eye === "left" ? "text-accent-text" : "text-muted")}>OS{d.patient.eye === "left" ? " ●" : ""}</th></tr></thead>
+    <Panel>
+      <CardTitle action={<span className="font-mono text-[0.6875rem] text-muted">{d.biometry?.source || ""}</span>}>Biometry</CardTitle>
+      <table className="w-full text-[0.875rem]">
+        <thead><tr><th />{(["right", "left"] as const).map((e) => <th key={e} className={cx("pb-2 text-right font-mono text-[0.75rem] font-medium", d.patient.eye === e ? "text-accent-text" : "text-muted")}>{EYE[e]}{d.patient.eye === e ? " · planning" : ""}</th>)}</tr></thead>
         <tbody>{rows.map(([k, fn]) => (
-          <tr key={k} className="border-t border-line"><td className="py-1 text-muted">{k}</td><td className="py-1 text-right">{B.right ? fn(B.right) : "—"}</td><td className="py-1 text-right">{B.left ? fn(B.left) : "—"}</td></tr>
+          <tr key={k} className="border-t border-line"><td className="py-2 text-muted">{k}</td><td className="py-2 text-right font-mono">{B.right ? fn(B.right) : "—"}</td><td className="py-2 text-right font-mono">{B.left ? fn(B.left) : "—"}</td></tr>
         ))}</tbody>
       </table>
-      <p className="mt-2 font-mono text-[0.6875rem] text-muted">● eye being planned now{d.biometry?.source ? ` · ${d.biometry.source}` : ""}</p>
       {edit && (
         <form className="mt-3 grid grid-cols-3 gap-2" onSubmit={async (e) => { e.preventDefault(); try { await onSave({ eye, ...Object.fromEntries(Object.entries(f).filter(([, v]) => v !== "").map(([k, v]) => [k, Number(v)])) }); setEdit(false); setErr(null); } catch (x) { setErr(String(x)); } }}>
-          <div className="col-span-3 flex gap-2">{(["right", "left"] as const).map((e) => <button key={e} type="button" onClick={() => setEye(e)} className={cx("min-h-8 rounded-full border px-3 text-[0.75rem]", eye === e ? "border-sky text-sky" : "border-line text-muted")}>{e === "right" ? "OD (right)" : "OS (left)"}</button>)}</div>
+          <div className="col-span-3 flex gap-2">{(["right", "left"] as const).map((e) => <button key={e} type="button" onClick={() => setEye(e)} className={cx("min-h-8 rounded-full border px-3 text-[0.75rem]", eye === e ? "border-accent text-accent-text" : "border-line text-muted")}>{e === "right" ? "OD (right)" : "OS (left)"}</button>)}</div>
           {(Object.keys(f) as (keyof typeof f)[]).map((k) => (
             <label key={k} className="text-[0.6875rem] text-muted">{k.replace("_", " ")}<input className={inp} inputMode="decimal" value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></label>
           ))}
-          <Button type="submit" size="sm" className="col-span-3">Save {eye === "right" ? "OD" : "OS"}</Button>
+          <Button type="submit" size="sm" className="col-span-3">Save {EYE[eye]}</Button>
         </form>
       )}
       {err && <p className="mt-2 text-[0.8125rem] text-danger">{err}</p>}
@@ -321,7 +559,7 @@ function BiometryCard({ d, onImport, onSave }: { d: StaffPatientDetail; onImport
         <Button size="sm" variant="soft" onClick={() => file.current?.click()}><FileUp size={14} /> Import biometer export</Button>
         <Button size="sm" variant="ghost" onClick={() => setEdit(!edit)}><Pencil size={14} /> Enter manually</Button>
       </div>
-    </Card>
+    </Panel>
   );
 }
 
@@ -330,30 +568,35 @@ function EyesCard({ d, onPatch, onSecondEye }: { d: StaffPatientDetail; onPatch:
   const [se, setSe] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const canSecond = (p.stage === "approved" || p.stage === "post_op") && (p.fellow_status || "planned") === "planned";
-  const sel = "min-h-9 rounded-lg border border-line bg-surface-2 px-2 text-[0.8125rem]";
+  const sel = "min-h-10 w-full rounded-xl border border-line bg-surface-2 px-3 text-[0.875rem]";
   return (
-    <Card>
-      <h2 className="mb-3 text-[1.0625rem] font-semibold">Both eyes</h2>
+    <Panel>
+      <CardTitle>Both eyes</CardTitle>
       <div className="grid grid-cols-2 gap-3 text-[0.8125rem]">
-        <label className="text-muted">Planning now
-          <select className={cx(sel, "mt-1 w-full")} value={p.eye} onChange={(e) => onPatch({ eye: e.target.value })}><option value="right">Right (OD)</option><option value="left">Left (OS)</option></select>
+        <label className="flex flex-col gap-1.5 text-muted">Planning now
+          <select className={sel} value={p.eye} onChange={(e) => onPatch({ eye: e.target.value })}><option value="right">Right (OD)</option><option value="left">Left (OS)</option></select>
         </label>
-        <label className="text-muted">Dominant eye
-          <select className={cx(sel, "mt-1 w-full")} value={p.dominant_eye || "unknown"} onChange={(e) => onPatch({ dominant_eye: e.target.value })}><option value="unknown">Not tested</option><option value="right">Right</option><option value="left">Left</option></select>
+        <label className="flex flex-col gap-1.5 text-muted">Dominant eye
+          <select className={sel} value={p.dominant_eye || "unknown"} onChange={(e) => onPatch({ dominant_eye: e.target.value })}><option value="unknown">Not tested</option><option value="right">Right</option><option value="left">Left</option></select>
         </label>
-        <label className="col-span-2 text-muted">Other eye
-          <select className={cx(sel, "mt-1 w-full")} value={p.fellow_status || "planned"} onChange={(e) => onPatch({ fellow_status: e.target.value })}>
+        <label className="col-span-2 flex flex-col gap-1.5 text-muted">Other eye
+          <select className={sel} value={p.fellow_status || "planned"} onChange={(e) => onPatch({ fellow_status: e.target.value })}>
             <option value="planned">Also needs surgery (plan both)</option><option value="operated">Already has an IOL</option><option value="natural">Not for surgery</option>
           </select>
         </label>
       </div>
-      {!p.dominant_eye && <p className="mt-2 text-[0.75rem] text-muted">Dominance test: patient makes a small triangle with both hands, frames a distant object, then closes each eye. The eye that keeps the object in the frame is dominant.</p>}
+      {!p.dominant_eye && (
+        <details className="mt-3 text-[0.75rem] text-muted">
+          <summary className="cursor-pointer select-none hover:text-ink">How to test dominance</summary>
+          <p className="mt-1.5">The patient makes a small triangle with both hands, frames a distant object, then closes each eye. The eye that keeps the object in the frame is dominant.</p>
+        </details>
+      )}
       {p.fellow_status === "operated" && p.fellow?.lens && (
         <p className="mt-3 rounded-xl bg-surface-2 px-3 py-2 font-mono text-[0.75rem]">{p.fellow.eye === "right" ? "OD" : "OS"}: {p.fellow.lens} · ended {Number(p.fellow.actual_se).toFixed(2)} D (predicted {Number(p.fellow.predicted_se).toFixed(2)} D){p.fellow.date ? ` · ${p.fellow.date}` : ""}</p>
       )}
       {canSecond && (
         <form className="mt-4 flex flex-col gap-2 border-t border-line pt-4" onSubmit={async (e) => { e.preventDefault(); try { await onSecondEye(Number(se)); setErr(null); } catch (x) { setErr(String(x)); } }}>
-          <p className="text-[0.8125rem] text-muted">First eye done? Enter its post-op refraction (spherical equivalent) to plan the other eye around the real result.</p>
+          <p className="text-[0.8125rem] text-muted">First eye done? Enter its post-op spherical equivalent to plan the other eye around the real result.</p>
           <div className="flex gap-2">
             <input value={se} onChange={(e) => setSe(e.target.value)} inputMode="decimal" placeholder="e.g. -0.50" aria-label="Spherical equivalent in dioptres" className="min-h-10 min-w-0 flex-1 rounded-xl border border-line bg-surface-2 px-3 font-mono text-[0.875rem]" />
             <Button size="sm" type="submit" disabled={se.trim() === "" || isNaN(Number(se))}>Plan second eye</Button>
@@ -361,72 +604,43 @@ function EyesCard({ d, onPatch, onSecondEye }: { d: StaffPatientDetail; onPatch:
           {err && <p className="text-[0.75rem] text-danger">{err}</p>}
         </form>
       )}
-    </Card>
+    </Panel>
   );
 }
+
+/* ================================================================ Recovery */
 
 function SurgeryCard({ d, onDate }: { d: StaffPatientDetail; onDate: (date: string | null) => void }) {
   const [date, setDate] = useState(d.patient.surgery_date || "");
   const r = d.recovery;
   const canSchedule = d.patient.stage === "approved" || d.patient.stage === "post_op";
   return (
-    <Card>
-      <h2 className="mb-3 text-[1.0625rem] font-semibold">Surgery &amp; recovery</h2>
+    <Panel>
+      <CardTitle>Surgery &amp; drops</CardTitle>
       <div className="flex gap-2">
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="min-h-10 flex-1 rounded-xl border border-line bg-surface-2 px-3 font-mono text-[0.875rem]" aria-label="Surgery date" />
-        <Button size="sm" disabled={!date || !canSchedule} onClick={() => onDate(date)}>Set</Button>
+        <Button size="sm" disabled={!date || !canSchedule} onClick={() => onDate(date)}>Set date</Button>
       </div>
-      {!canSchedule && <p className="mt-2 text-[0.75rem] text-muted">Approve a lens first; setting the date then builds the drop schedule from the clinic protocol.</p>}
+      {!canSchedule && <p className="mt-2 text-[0.75rem] text-muted">Approve a plan first; the date then builds the drop schedule from the clinic protocol.</p>}
       {r && (
-        <div className="mt-4 flex flex-col gap-3">
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-2xl bg-surface-2 p-3"><p className="font-mono text-[1.375rem]">{r.day ?? "—"}</p><p className="text-[0.6875rem] text-muted">post-op day</p></div>
-            <div className="rounded-2xl bg-surface-2 p-3"><p className={cx("font-mono text-[1.375rem]", (r.adherence.pct ?? 100) < 85 && "text-warn")}>{r.adherence.pct ?? "—"}%</p><p className="text-[0.6875rem] text-muted">drops taken</p></div>
-            <div className="rounded-2xl bg-surface-2 p-3"><p className={cx("font-mono text-[1.375rem]", r.adherence.missed > 0 && "text-danger")}>{r.adherence.missed}</p><p className="text-[0.6875rem] text-muted">missed</p></div>
+        <div className="mt-5 flex flex-col gap-4">
+          <div className="grid grid-cols-3 gap-2">
+            <Stat label="Post-op day" value={r.day ?? "—"} className="!min-h-0 !p-3" />
+            <Stat label="Drops taken" value={r.adherence.pct ?? "—"} unit={r.adherence.pct != null ? "%" : undefined} tone={(r.adherence.pct ?? 100) < 85 ? "danger" : "plain"} className="!p-3" />
+            <Stat label="Missed" value={r.adherence.missed} tone={r.adherence.missed > 0 ? "danger" : "ok"} className="!p-3" />
           </div>
           {r.today.length > 0 && (
-            <ul className="flex flex-col gap-1 font-mono text-[0.7812rem]">
-              {r.today.map((x) => <li key={x.id} className="flex justify-between"><span>{x.due_at.slice(11, 16)} {x.drug}</span><span className={x.status === "taken" ? "text-ok" : x.status === "missed" ? "text-danger" : "text-muted"}>{x.status}</span></li>)}
-            </ul>
+            <details className="text-[0.8125rem]">
+              <summary className="cursor-pointer select-none text-muted hover:text-ink">Today&apos;s doses ({r.today.filter((x) => x.status === "taken").length}/{r.today.length} taken)</summary>
+              <ul className="mt-2 divide-y divide-line">
+                {r.today.map((x) => <li key={x.id} className="flex justify-between py-1.5 font-mono text-[0.75rem]"><span>{x.due_at.slice(11, 16)} {x.drug}</span><span className={x.status === "taken" ? "text-ok" : x.status === "missed" ? "text-danger" : "text-muted"}>{x.status}</span></li>)}
+              </ul>
+            </details>
           )}
-          <p className="font-mono text-[0.6875rem] text-muted">Follow-ups: {r.follow_ups.map((f) => f.date).join(" · ")}</p>
+          <KV rows={r.follow_ups.map((f) => [f.label, <span key={f.date} className={cx("font-mono", f.past && "text-muted")}>{f.date}</span>])} />
         </div>
       )}
-    </Card>
-  );
-}
-
-function Transcript({ d }: { d: StaffPatientDetail }) {
-  const [ch, setCh] = useState<"intake" | "recovery">("intake");
-  const msgs = d.messages.filter((m) => m.channel === ch);
-  return (
-    <Card>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <h2 className="text-[1.25rem] font-semibold">Conversation</h2>
-        <div className="ml-auto flex gap-1.5">
-          {(["intake", "recovery"] as const).map((c) => (
-            <button key={c} type="button" onClick={() => setCh(c)} className={cx("min-h-9 rounded-full border px-3 text-[0.8125rem]", ch === c ? "border-ink bg-ink text-bg" : "border-line text-muted")}>
-              {c === "intake" ? "Before surgery" : "Questions & recovery"} <span className="font-mono opacity-70">{d.messages.filter((m) => m.channel === c).length}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-      {msgs.length === 0 ? <p className="text-[0.875rem] text-muted">No messages yet.</p> : (
-        <ol className="flex flex-col gap-3">
-          {msgs.map((m) => (
-            <li key={m.id} className={cx("grid grid-cols-[72px_1fr] gap-3 text-[0.875rem]", m.meta.kind === "safety" && "rounded-xl bg-danger-bg p-2")}>
-              <span className={cx("font-mono text-[0.6875rem] uppercase", m.role === "patient" ? "text-accent-text" : "text-muted")}>{m.role === "patient" ? "Patient" : "Assistant"}</span>
-              <div>
-                <p lang={m.lang}>{m.text}</p>
-                {m.text_en && m.text_en !== m.text && <p className="text-[0.8125rem] text-muted">{m.text_en}</p>}
-                {!!m.meta.extracted?.length && <p className="mt-1 font-mono text-[0.6875rem] text-sky">→ understood: {m.meta.extracted.join(", ")}</p>}
-                {!!m.meta.citations?.length && <p className="mt-1 font-mono text-[0.6875rem] text-sky">cites {m.meta.citations.map((c) => c.id).join(", ")}</p>}
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
-    </Card>
+    </Panel>
   );
 }
 
@@ -439,21 +653,21 @@ function VisionCard({ tests, operatedEye }: { tests: VisionResult[]; operatedEye
   const COL = { right: "var(--accent)", left: "var(--sky)" } as const;
   const sn = (lm: number) => (lm >= 1 ? "6/60" : lm >= 0.6 ? "6/24" : lm >= 0.3 ? "6/12" : "6/6");
   const pred = acu.find((t) => t.predicted_logmar != null);
+  const last = acu.at(-1);
   return (
-    <Card>
-      <h2 className="mb-1 text-[1.0625rem] font-semibold">Home vision tests</h2>
-      <p className="mb-3 text-[0.75rem] text-muted">Tumbling E at 2 m (helper), card-calibrated. Higher is better.</p>
-      {acu.length === 0 ? <p className="text-[0.8125rem] text-muted">No results yet. The patient can test from the Eye test tab.</p> : (
+    <Panel>
+      <CardTitle action={<span className="text-[0.75rem] text-muted">Tumbling E at 2 m · card-calibrated</span>}>Home vision tests</CardTitle>
+      {acu.length === 0 ? <p className="text-[0.875rem] text-muted">No results yet. The patient can test from the Eye test tab.</p> : (
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Distance acuity over time">
           {[0, 0.3, 0.6, 1.0].map((v) => <g key={v}><line x1={m.l} x2={W - m.r} y1={y(v)} y2={y(v)} stroke="var(--line)" /><text x={m.l - 6} y={y(v) + 3} fontSize="9" textAnchor="end" fill="var(--muted)" fontFamily="var(--font-mono)">{sn(v)}</text></g>)}
           {pred && <line x1={m.l} x2={W - m.r} y1={y(pred.predicted_logmar!)} y2={y(pred.predicted_logmar!)} stroke="var(--ok)" strokeDasharray="4 4" />}
           {(["right", "left"] as const).map((e) => {
-            const pts = acu.map((t, i) => ({ t, i })).filter((p) => p.t.eye === e);
+            const pts = acu.map((t, i) => ({ t, i })).filter((q) => q.t.eye === e);
             if (!pts.length) return null;
             return (
               <g key={e}>
-                <polyline points={pts.map((p) => `${x(p.i, acu.length)},${y(p.t.logmar!)}`).join(" ")} fill="none" stroke={COL[e]} strokeWidth={2} />
-                {pts.map((p) => <circle key={p.t.id} cx={x(p.i, acu.length)} cy={y(p.t.logmar!)} r={p.t.day === null ? 3 : 4} fill={p.t.day === null ? "var(--surface)" : COL[e]} stroke={COL[e]} strokeWidth={1.5}><title>{`${e} · ${p.t.day === null ? "pre-op" : "day " + p.t.day} · ${p.t.snellen}`}</title></circle>)}
+                <polyline points={pts.map((q) => `${x(q.i, acu.length)},${y(q.t.logmar!)}`).join(" ")} fill="none" stroke={COL[e]} strokeWidth={2} />
+                {pts.map((q) => <circle key={q.t.id} cx={x(q.i, acu.length)} cy={y(q.t.logmar!)} r={q.t.day === null ? 3 : 4} fill={q.t.day === null ? "var(--surface-solid)" : COL[e]} stroke={COL[e]} strokeWidth={1.5}><title>{`${e} · ${q.t.day === null ? "pre-op" : "day " + q.t.day} · ${q.t.snellen}`}</title></circle>)}
               </g>
             );
           })}
@@ -463,22 +677,51 @@ function VisionCard({ tests, operatedEye }: { tests: VisionResult[]; operatedEye
         <span style={{ color: "var(--accent)" }}>● OD{operatedEye === "right" ? " (operated)" : ""}</span>
         <span style={{ color: "var(--sky)" }}>● OS{operatedEye === "left" ? " (operated)" : ""}</span>
         <span>○ pre-op</span>
-        {pred && <span className="text-ok">--- expected with approved lens {pred.predicted_snellen}</span>}
+        {pred && <span className="text-ok">--- expected {pred.predicted_snellen}</span>}
       </div>
-      {acu.length > 0 && (() => {
-        const last = acu[acu.length - 1];
-        return (
-          <p className="mt-3 text-[0.8125rem]">Latest {last.eye === "right" ? "OD" : "OS"}: <b className="font-mono">{last.snellen}</b>{last.day != null ? ` on day ${last.day}` : " (pre-op)"}
-            {last.vs_baseline_lines != null && ` · ${last.vs_baseline_lines > 0 ? "+" : ""}${last.vs_baseline_lines} lines vs pre-op`}
-            {last.vs_predicted_lines != null && ` · ${last.vs_predicted_lines >= 0 ? "on or above" : `${Math.abs(last.vs_predicted_lines)} lines below`} expected`}
-            {last.day != null && last.day < 7 && last.vs_predicted_lines != null && last.vs_predicted_lines < 0 && <span className="text-muted"> (early: vision usually keeps improving through the first weeks)</span>}</p>
-        );
-      })()}
+      {last && (
+        <p className="mt-3 text-[0.8125rem]">Latest {EYE[last.eye as "right" | "left"] ?? last.eye}: <b className="font-mono">{last.snellen}</b>{last.day != null ? ` on day ${last.day}` : " (pre-op)"}
+          {last.vs_baseline_lines != null && ` · ${last.vs_baseline_lines > 0 ? "+" : ""}${last.vs_baseline_lines} lines vs pre-op`}
+          {last.vs_predicted_lines != null && ` · ${last.vs_predicted_lines >= 0 ? "on or above" : `${Math.abs(last.vs_predicted_lines)} lines below`} expected`}
+          {last.day != null && last.day < 7 && last.vs_predicted_lines != null && last.vs_predicted_lines < 0 && <span className="text-muted"> (early: vision usually keeps improving)</span>}</p>
+      )}
       {amsler.map((a) => (
         <p key={a.id} className={cx("mt-2 rounded-xl px-3 py-2 text-[0.8125rem]", a.amsler_abnormal ? "bg-warn-bg text-warn" : "bg-ok-bg text-ok")}>
           Amsler {a.eye === "right" ? "OD" : "OS"} {a.day == null ? "pre-op" : `day ${a.day}`}: {a.amsler_abnormal ? `distortion in ${a.amsler_cells.length} areas${a.day == null ? " · check the macula (OCT) before a multifocal lens" : ""}` : "normal"}
         </p>
       ))}
-    </Card>
+    </Panel>
+  );
+}
+
+/* ================================================================ Conversation */
+
+function Transcript({ d }: { d: StaffPatientDetail }) {
+  const [ch, setCh] = useState<"intake" | "recovery">("intake");
+  const msgs = d.messages.filter((m) => m.channel === ch);
+  return (
+    <Panel className="mx-auto w-full max-w-3xl">
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <h2 className="text-[1.0625rem] font-semibold">Conversation</h2>
+        <PillTabs id="chat" size="sm" className="ml-auto" value={ch} onChange={setCh} tabs={[
+          { id: "intake", label: "Before surgery", count: d.messages.filter((m) => m.channel === "intake").length },
+          { id: "recovery", label: "Questions & recovery", count: d.messages.filter((m) => m.channel === "recovery").length },
+        ]} />
+      </div>
+      {msgs.length === 0 ? <p className="text-[0.875rem] text-muted">No messages yet.</p> : (
+        <ol className="flex flex-col gap-3">
+          {msgs.map((m) => (
+            <li key={m.id} className={cx("flex", m.role === "patient" ? "justify-end" : "justify-start")}>
+              <div className={cx("max-w-[78%] rounded-2xl px-4 py-3 text-[0.875rem]", m.meta.kind === "safety" ? "bg-danger-bg" : m.role === "patient" ? "bg-accent/15" : "bg-surface-2")}>
+                <p lang={m.lang}>{m.text}</p>
+                {m.text_en && m.text_en !== m.text && <p className="mt-1 text-[0.8125rem] text-muted">{m.text_en}</p>}
+                {!!m.meta.extracted?.length && <p className="mt-1.5 flex items-center gap-1.5 font-mono text-[0.6875rem] text-sky"><ActivityIco size={12} /> understood: {m.meta.extracted.join(", ")}</p>}
+                {!!m.meta.citations?.length && <p className="mt-1.5 flex items-center gap-1.5 font-mono text-[0.6875rem] text-sky"><ClipboardList size={12} /> cites {m.meta.citations.map((c) => c.id).join(", ")}</p>}
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Panel>
   );
 }

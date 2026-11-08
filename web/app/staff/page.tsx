@@ -1,14 +1,20 @@
 "use client";
 
-import { BellRing, Plus, X } from "lucide-react";
+import { BellRing, HeartPulse, ListChecks, Plus, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AlertItem, STAGE, StaffShell } from "@/components/StaffShell";
 import { motion } from "motion/react";
 import { item, stagger } from "@/components/motion";
-import { Badge, Button, Card, Tag, cx } from "@/components/ui";
+import { Stat } from "@/components/kit";
+import { Badge, Button, Card, cx } from "@/components/ui";
 import { api, type Alert, type Lang, type Meta, type StaffPatientRow } from "@/lib/api";
 import { LANG_NAMES } from "@/lib/i18n";
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
 
 export default function StaffHome() {
   return <StaffShell>{(meta) => <Dashboard meta={meta} />}</StaffShell>;
@@ -34,12 +40,18 @@ function Dashboard({ meta }: { meta: Meta }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <section className="min-w-0">
-        <div className="mb-5 flex flex-wrap items-end gap-3">
+        <div className="mb-6 flex flex-wrap items-end gap-3">
           <div>
-            <Tag>Today</Tag>
-            <h1 className="display mt-3 text-[2.75rem]">Patients <span className="text-muted">· {rows.length}</span></h1>
+            <h1 className="text-[2rem] font-semibold tracking-[-0.03em]">{greeting()}, {meta.clinic.surgeon}</h1>
+            <p className="mt-1 text-[1rem] text-muted">{counts.review ? `${counts.review} ${counts.review === 1 ? "plan needs" : "plans need"} your review` : "No plans waiting for review"}{urgent ? ` · ${urgent} urgent ${urgent === 1 ? "alert" : "alerts"}` : ""}</p>
           </div>
           <Button className="ml-auto" arrow onClick={() => setAdding(true)}><Plus size={18} /> New patient</Button>
+        </div>
+        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat tone="accent" label="Needs your review" icon={ListChecks} value={counts.review || 0} hint="Plans awaiting approval" />
+          <Stat spotlight label="Patients" icon={Users} value={rows.length} hint={`${counts.intake || 0} still talking to the assistant`} />
+          <Stat spotlight label="Recovering" icon={HeartPulse} value={counts.post_op || 0} hint={`${counts.approved || 0} approved, awaiting surgery`} />
+          <Stat spotlight label="Urgent alerts" icon={BellRing} value={urgent} tone={urgent ? "danger" : "ok"} hint={`${alerts.length} open in total`} />
         </div>
         <div className="mb-4 flex flex-wrap gap-2">
           {[["all", "All", rows.length], ...Object.entries(STAGE).map(([k, v]) => [k, v.label, counts[k] || 0])].map(([k, l, n]) => (
