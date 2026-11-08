@@ -37,13 +37,12 @@ set HF_TOKEN=hf_your_token_here
 ```
 
 The first start downloads the model (~3.8 GB) and prints `Loaded ... on cuda:0`.
-Then add this line to `backend\.env` and restart the backend:
+That's it: the backend finds this server on its own (no setting needed) and the patient app's
+speaker buttons use these voices. Check it at http://127.0.0.1:8010/health; each spoken
+sentence prints a line like `[kn] 40 chars in 6.2s` here.
 
-```
-LOCAL_TTS_URL=http://127.0.0.1:8010
-```
-
-Check it: open http://127.0.0.1:8010/health. The patient app's speaker buttons now use these voices.
+(Only if you run it on another port or machine: set `LOCAL_TTS_URL=http://host:port` in
+`backend\.env`. `LOCAL_TTS_URL=` with nothing after it turns the local voice off.)
 If this server is not running, the app falls back to Azure (if configured) or the browser's voice.
 
 ## If something goes wrong

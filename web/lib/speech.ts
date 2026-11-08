@@ -138,14 +138,16 @@ function playServer(text: string, lang: Lang, token: number): Promise<boolean> {
 }
 
 /** Text-to-speech: natural voice from the backend (local GPU, Azure or Sarvam) if configured, else the browser's best voice. */
+// `useServer` is what /api/meta said when the page loaded; we still ask the server every time
+// (it answers 204 instantly when it has no voice), so a voice server started later just works.
 export async function speak(text: string, lang: Lang, useServer: boolean): Promise<boolean> {
   if (typeof window === "undefined") return false;
   const token = ++playToken;
   window.speechSynthesis?.cancel();
   currentAudio?.pause();
+  if (await playServer(text, lang, token)) return true;
   if (useServer) {
-    if (await playServer(text, lang, token)) return true;
-    // Developer hint: the server voice (local GPU / Azure / Sarvam) did not answer, so we fall back.
+    // Developer hint: a server voice was configured but did not answer, so we fall back.
     console.warn("DrishtiSaathi: server voice unavailable, using the browser voice. Check /api/meta (tts_provider), tts-local/server.py and the backend log.");
   }
   if (token !== playToken) return true;

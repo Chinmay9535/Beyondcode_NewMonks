@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import base64
 import html
+import time
 from collections import OrderedDict
 
 import httpx
@@ -43,10 +44,30 @@ class TTSError(Exception):
     pass
 
 
+DEFAULT_LOCAL = "http://127.0.0.1:8010"
+_probe = {"at": 0.0, "ok": False}
+
+
+def local_url() -> str:
+    """URL of the local GPU voice server, or "" if there is none. With the default "auto",
+    the server is detected on 127.0.0.1:8010 (checked at most every 15 s), so no setup is needed."""
+    v = get_settings().local_tts_url.strip()
+    if v.lower() != "auto":
+        return v
+    now = time.monotonic()
+    if now - _probe["at"] > 15:
+        try:
+            _probe["ok"] = httpx.get(DEFAULT_LOCAL + "/health", timeout=0.4).json().get("ready") is True
+        except (httpx.HTTPError, ValueError):
+            _probe["ok"] = False
+        _probe["at"] = now
+    return DEFAULT_LOCAL if _probe["ok"] else ""
+
+
 def providers() -> list[str]:
     s = get_settings()
     out = []
-    if s.local_tts_url:
+    if local_url():
         out.append("local")
     if s.azure_speech_key and s.azure_speech_region:
         out.append("azure")
@@ -108,7 +129,7 @@ def synthesize(text: str, lang: str) -> tuple[bytes, str] | None:
 
 
 def _local(text: str, lang: str) -> tuple[bytes, str]:
-    url = get_settings().local_tts_url.rstrip("/") + "/tts"
+    url = (local_url() or DEFAULT_LOCAL).rstrip("/") + "/tts"
     try:
         r = httpx.post(url, json={"text": text, "lang": lang}, timeout=120)
         r.raise_for_status()

@@ -124,3 +124,16 @@ def test_all_providers_failing_is_502(settings, monkeypatch, client):
     monkeypatch.setattr(tts.httpx, "post", down)
     r = client.post("/api/tts", json={"text": "hello", "lang": "en"})
     assert r.status_code == 502 and "Local TTS failed" in r.json()["detail"]
+
+
+def test_local_server_auto_detected(settings, monkeypatch):
+    monkeypatch.setattr(settings, "local_tts_url", "auto")
+    tts._probe.update(at=0.0, ok=False)
+    monkeypatch.setattr(tts.httpx, "get", lambda url, timeout=None: httpx.Response(200, json={"ready": True}, request=httpx.Request("GET", url)))
+    assert tts.providers() == ["local"] and tts.local_url() == "http://127.0.0.1:8010"
+
+    tts._probe.update(at=0.0, ok=False)
+    def down(url, timeout=None):
+        raise httpx.ConnectError("refused", request=httpx.Request("GET", url))
+    monkeypatch.setattr(tts.httpx, "get", down)
+    assert tts.providers() == []                                    # nothing running -> browser voice

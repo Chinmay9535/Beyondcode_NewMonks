@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # Optional natural voices, tried in order: a local GPU server (tts-local/, free and offline),
     # Azure AI Speech (free F0 tier), Sarvam AI (paid); with none, the browser's most natural voice.
-    local_tts_url: str = ""      # e.g. http://127.0.0.1:8010
+    local_tts_url: str = "auto"  # "auto": use tts-local/server.py if it runs on 127.0.0.1:8010; "" disables; or a URL
     azure_speech_key: str = ""
     azure_speech_region: str = ""
     azure_voices: str = ""       # optional overrides, e.g. "hi=hi-IN-MadhurNeural"
