@@ -6,7 +6,7 @@ ZEISS hackathon, stream *AI-Powered Digital Experiences*. Team from BMSIT&M, Ben
 
 A voice-first assistant for cataract patients (Kannada, Hindi, Tamil, English) plus a surgeon dashboard.
 1. **Intake** (`backend/app/services/intake.py`): the conversation is topic-driven by code (day → near → mid → night → glasses → budget). Topics already covered are skipped. Patient words become *activities* (distance_cm, detail, night, hours, importance) via the LLM, or offline via a multilingual lexicon (substring match for Indic words, whole-word match for English).
-2. **Ranking** (`services/lenses.py`): per-activity predicted logMAR from each lens's defocus curve gives the "Vision Day Map". The score is additive, so contributions are exact Shapley values vs. the average lens. Clinical rules come from `clinic.json`, plus a toric check and SRK/T IOL power.
+2. **Ranking** (`services/lenses.py`): per-activity predicted logMAR from each lens's defocus curve (monocular, anchored to the published figures in each family's `sources`) gives the "Vision Day Map". The score is additive, so contributions are exact Shapley values vs. the average lens. Clinical rules come from `clinic.json`, plus a toric check and SRK/T IOL power.
 3. **Q&A** (`services/rag.py`): BM25 plus multilingual keywords over `backend/knowledge/*.md`. Sections carry `> kn:/hi:/ta:` curated translations. Every answer cites; "not found" creates an info alert.
 4. **Red flags** (`services/redflag.py`): rules run on every patient message. The LLM may only raise severity. Daily check-in rules live here too.
 5. **Recovery** (`services/recovery.py`): dose schedule from `clinic.json`, using naive clinic-local times (`config.local_now`).
@@ -38,7 +38,8 @@ The patient never sees a ranking until the surgeon approves (`Recommendation.sta
 - Playwright in this sandbox needs `proxy: { server: process.env.HTTPS_PROXY, bypass: 'localhost,127.0.0.1' }` to reach the model CDN.
 - Snellen values are shown as the nearest standard line (`lenses.snellen`, `lib/vision.ts`).
 - Landing hero: a pinned scroll story (`lib/story.ts`, section `#story`) drives `components/three/PillarField.tsx`, one pillar-field shape per chapter (lens, focus rings, two lenses, eye, then a camera dive into city blocks), then slow waves. Bodies and top caps are separate instanced meshes so only tops glow.
-- Design tokens are in `web/app/globals.css` (dark default, light theme, accent #FF6F37, sky #7DD3FC).
+- Design tokens are in `web/app/globals.css` (dark default, light theme, high contrast via `data-contrast="high"`, accent #2F7BFF, sky #7DD3FC).
+- Font sizes are `rem` (`text-[0.9375rem]`), never px: the patient text-size option (`components/Readability.tsx`) scales the root font size. Anything that must keep a physical size (the calibrated eye test) uses px in inline styles.
 
 ## Pitch materials
 

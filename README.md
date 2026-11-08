@@ -9,6 +9,7 @@
 - **Home vision test.** A card-calibrated tumbling-E test (distance with a helper, as in Peek Acuity, and near), plus an Amsler grid. Recovery is **measured**, not guessed. A 2-line drop raises an urgent alert, and distortion on the grid before surgery tells the surgeon to check the macula before a multifocal lens.
 - **Recovery.** Drop schedule and adherence, a 3-tap daily check-in, and answers only from the clinic's own guides, with citations. When the guides don't cover a question, it says so and passes it to the clinic.
 - **Measured safety.** Every message passes a rule-based multilingual red-flag detector. It is scored on 175 labelled messages, including romanised and code-mixed typing, with a held-out test set written before tuning. The **[/safety](http://localhost:3000/safety)** page shows the numbers and lets anyone try a message. The AI can only raise an alert, never clear one, and the build fails if any emergency in the set is missed.
+- **Built for older eyes.** Voice in and out, an **Aa** menu with three text sizes, high contrast and light/dark, and read-aloud buttons on the main cards. The calibrated eye test is unaffected by text size.
 - **Works with or without AI.** Azure OpenAI, any OpenAI-compatible endpoint (incl. Ollama) or Anthropic for open-ended understanding. Without a key, it runs fully offline on curated rules and text, so the demo never breaks.
 - **DPDP Act 2023 aware.** Consent before the first question, deletion of all data, on-device photo processing.
 
@@ -75,7 +76,7 @@ Copy `backend/.env.example` to `backend/.env`. Everything is optional. Key setti
 | `DATABASE_URL` | SQLite by default; any SQLAlchemy URL (Postgres/Supabase) |
 
 Clinic-specific content is plain files a clinic can edit:
-- `backend/clinic.json`: lens catalogue, defocus curves, A-constants, drop protocol, follow-ups, contacts
+- `backend/clinic.json`: lens catalogue, defocus curves (each with its published `sources`, shown to the surgeon), A-constants, drop protocol, follow-ups, contacts
 - `backend/knowledge/*.md`: post-op and lens guides with Kannada/Hindi/Tamil versions (what the Q&A answers from)
 - `backend/evals/*.json`: the labelled safety and Q&A cases behind the scorecard
 
@@ -112,4 +113,4 @@ docs/      submission form answers and video script
 
 ## Important limits
 
-This is decision support, not a medical device. The home vision test is a screening aid, not a clinical exam, and has not been validated against clinic charts. The safety cases were written by the build team and need a native-speaker and clinician review; a fresh held-out set written by others is the honest next measurement. The defocus curves, A-constants and clinic guides are illustrative samples, so replace them with the clinic's validated data. The Kannada, Hindi and Tamil text needs a native-speaker and clinical review before real patients use it.
+This is decision support, not a medical device. The home vision test is a screening aid, not a clinical exam, and has not been validated against clinic charts. The safety cases were written by the build team and need a native-speaker and clinician review; a fresh held-out set written by others is the honest next measurement. The defocus curves are anchored to published summary figures (see `sources` in `clinic.json`) but are not full published tables; the A-constants and clinic guides are illustrative samples. Replace all of them with the clinic's validated data. The Kannada, Hindi and Tamil text needs a native-speaker and clinical review before real patients use it.
