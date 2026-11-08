@@ -14,12 +14,10 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { STAGES, storyProgress } from "@/lib/story";
+import { STAGES, STORY_ID, storyProgress } from "@/lib/story";
 
-const N = 56;                 // pillars per side
 const GAP = 1;                // centre spacing (world units)
 const BASE = 4;               // pillars extend this far below y = 0 and fade into the page
-const HALF = ((N - 1) * GAP) / 2;
 const CAM = new THREE.Vector3(30, 25, 30);   // a little below true isometric, so heights read
 const DIVE = 2.4;             // extra zoom at the bottom of the story
 
@@ -28,8 +26,9 @@ const hash = (x: number, y: number) => { const s = Math.sin(x * 127.1 + y * 311.
 
 type Shared = { p: number; q: number; px: number; py: number; moved: number; reduce: boolean; dark: boolean };
 
-/** Per-pillar constants, computed once. */
-function layout() {
+/** Per-pillar constants for an N x N grid, computed once. */
+function layout(N: number) {
+  const HALF = ((N - 1) * GAP) / 2;
   const n = N * N;
   const x = new Float32Array(n), z = new Float32Array(n), u = new Float32Array(n), v = new Float32Array(n);
   const r = new Float32Array(n), th = new Float32Array(n), city = new Float32Array(n), lit = new Float32Array(n);
@@ -75,7 +74,8 @@ function pillarGeometry(dark: boolean) {
   return g;
 }
 
-function Field({ shared }: { shared: React.RefObject<Shared> }) {
+function Field({ shared, n: N }: { shared: React.RefObject<Shared>; n: number }) {
+  const HALF = ((N - 1) * GAP) / 2;
   const mesh = useRef<THREE.InstancedMesh>(null);
   const group = useRef<THREE.Group>(null);
   const { camera, size } = useThree();
@@ -86,7 +86,7 @@ function Field({ shared }: { shared: React.RefObject<Shared> }) {
   const capGeometry = useMemo(() => new THREE.PlaneGeometry(0.64 * GAP, 0.64 * GAP).rotateX(-Math.PI / 2), []);
   const capMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: "#4652ff" }), []);
   const caps = useRef<THREE.InstancedMesh>(null);
-  const L = useMemo(layout, []);
+  const L = useMemo(() => layout(N), [N]);
   const st = useRef({ p: 0, q: 0, t: 0, intro: 0, bx: 0, bz: 0, bump: 0, zoom: 0 });
   const tmp = useMemo(() => ({ m: new THREE.Matrix4(), c: new THREE.Color(), v: new THREE.Vector3(), ray: new THREE.Ray(), plane: new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.6), hit: new THREE.Vector3() }), []);
   const axes = useMemo(() => ({ right: new THREE.Vector3(), up: new THREE.Vector3() }), []);
@@ -212,6 +212,15 @@ export default function PillarField({ className }: { className?: string }) {
   const shared = useRef<Shared>({ p: 0, q: 0, px: 0, py: 0, moved: 0, reduce: false, dark: true });
   const [darkNow, setDark] = useState(true);
   shared.current.dark = darkNow;
+  // Phones and low-end devices get a smaller grid and a lower pixel ratio.
+  const [lite, setLite] = useState(false);
+  // Stop rendering once the field is well behind the page; the last frame stays on screen.
+  const [active, setActive] = useState(true);
+
+  useEffect(() => {
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    setLite(window.innerWidth < 768 || (nav.hardwareConcurrency || 8) <= 4 || (nav.deviceMemory || 8) <= 4);
+  }, []);
 
   useEffect(() => {
     const el = document.documentElement, read = () => setDark(el.dataset.theme !== "light");
@@ -224,7 +233,12 @@ export default function PillarField({ className }: { className?: string }) {
   useEffect(() => {
     const sh = shared.current;
     sh.reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const onScroll = () => { const s = storyProgress(); sh.p = s.p; sh.q = s.q; };
+    const onScroll = () => {
+      const s = storyProgress(); sh.p = s.p; sh.q = s.q;
+      const el = document.getElementById(STORY_ID);
+      const end = el ? el.getBoundingClientRect().bottom : 0;   // story end, relative to the viewport
+      setActive(end > -window.innerHeight * 1.5);
+    };
     const onMove = (e: PointerEvent) => {
       sh.px = (e.clientX / window.innerWidth) * 2 - 1;
       sh.py = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -239,9 +253,10 @@ export default function PillarField({ className }: { className?: string }) {
 
   return (
     <div className={className} aria-hidden>
-      <Canvas key={darkNow ? "d" : "l"} orthographic dpr={[1, 1.75]} gl={{ antialias: true, alpha: true }}
+      <Canvas key={`${darkNow ? "d" : "l"}${lite ? "s" : "m"}`} orthographic frameloop={active ? "always" : "never"} dpr={lite ? [1, 1.5] : [1, 1.75]}
+        gl={{ antialias: !lite, alpha: true, powerPreference: lite ? "low-power" : "high-performance" }}
         camera={{ position: [CAM.x, CAM.y, CAM.z], zoom: 20, near: -200, far: 400 }}>
-        <Field shared={shared} />
+        <Field shared={shared} n={lite ? 44 : 56} />
       </Canvas>
     </div>
   );
