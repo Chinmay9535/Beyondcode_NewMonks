@@ -143,7 +143,11 @@ export async function speak(text: string, lang: Lang, useServer: boolean): Promi
   const token = ++playToken;
   window.speechSynthesis?.cancel();
   currentAudio?.pause();
-  if (useServer && (await playServer(text, lang, token))) return true;
+  if (useServer) {
+    if (await playServer(text, lang, token)) return true;
+    // Developer hint: the server voice (local GPU / Azure / Sarvam) did not answer, so we fall back.
+    console.warn("DrishtiSaathi: server voice unavailable, using the browser voice. Check /api/meta (tts_provider), tts-local/server.py and the backend log.");
+  }
   if (token !== playToken) return true;
   const synth = window.speechSynthesis;
   if (!synth) return false;
