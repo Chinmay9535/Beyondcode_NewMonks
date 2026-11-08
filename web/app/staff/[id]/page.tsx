@@ -227,6 +227,12 @@ function OptionCard({ o, rank, selected, onSelect, approved, locked }: { o: Lens
           </ul>
         )}
         {o.example_models && <p className="mt-2 font-mono text-[11px] text-muted">{o.example_models}</p>}
+        {o.curve_sources && o.curve_sources.length > 0 && (
+          <details className="mt-2 text-[12px] text-muted">
+            <summary className="cursor-pointer select-none font-medium hover:text-ink">Curve sources ({o.curve_sources.length})</summary>
+            <ul className="mt-1.5 flex flex-col gap-1 pl-3">{o.curve_sources.map((s) => <li key={s} className="list-disc">{s}</li>)}</ul>
+          </details>
+        )}
       </div>
     </li>
   );

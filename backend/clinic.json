@@ -18,6 +18,9 @@
     "monofocal": {
       "name": "Monofocal",
       "defocus_curve": [[2.0, 0.6], [1.5, 0.45], [1.0, 0.3], [0.5, 0.12], [0, 0.0], [-0.5, 0.06], [-1.0, 0.2], [-1.5, 0.34], [-2.0, 0.48], [-2.5, 0.62], [-3.0, 0.75], [-4.0, 0.95]],
+      "sources": [
+        "Standard aspheric monofocal: uncorrected intermediate acuity 0.32 logMAR at 66 cm (-1.5 D). Eom Y et al., Sci Rep 2025, doi:10.1038/s41598-025-89547-3 (TECNIS ZCB00 arm)."
+      ],
       "halo": 0.05,
       "affordability": 1.0,
       "cost_tier": 1,
@@ -29,7 +32,12 @@
     },
     "edof": {
       "name": "EDOF",
-      "defocus_curve": [[2.0, 0.55], [1.5, 0.42], [1.0, 0.28], [0.5, 0.12], [0, 0.0], [-0.5, 0.02], [-1.0, 0.05], [-1.5, 0.1], [-2.0, 0.2], [-2.5, 0.3], [-3.0, 0.42], [-4.0, 0.65]],
+      "defocus_curve": [[2.0, 0.55], [1.5, 0.42], [1.0, 0.28], [0.5, 0.12], [0, 0.0], [-0.5, 0.02], [-1.0, 0.04], [-1.5, 0.08], [-2.0, 0.17], [-2.5, 0.32], [-3.0, 0.45], [-4.0, 0.65]],
+      "sources": [
+        "ZEISS AT LARA family brochure (manufacturer, 14 eyes, 3 months): better than 0.1 logMAR to about 55 cm and better than 0.2 logMAR to about 45 cm.",
+        "Independent single-centre series (monocular, distance-corrected, n=17): about 0.12 logMAR at 60 cm and 0.40 logMAR at 40 cm.",
+        "Reinhard T et al., Graefes Arch Clin Exp Ophthalmol 2021, doi:10.1007/s00417-020-04868-5: randomised trial; AT LARA 829MP had the widest monocular depth of focus vs TECNIS Symfony and a monofocal."
+      ],
       "halo": 0.25,
       "affordability": 0.55,
       "cost_tier": 2,
@@ -62,7 +70,12 @@
     },
     "trifocal": {
       "name": "Trifocal",
-      "defocus_curve": [[2.0, 0.58], [1.5, 0.45], [1.0, 0.3], [0.5, 0.14], [0, 0.02], [-0.5, 0.1], [-1.0, 0.12], [-1.5, 0.08], [-2.0, 0.12], [-2.5, 0.08], [-3.0, 0.14], [-4.0, 0.4]],
+      "defocus_curve": [[2.0, 0.58], [1.5, 0.45], [1.0, 0.3], [0.5, 0.14], [0, 0.02], [-0.5, 0.08], [-1.0, 0.11], [-1.5, 0.09], [-2.0, 0.08], [-2.5, 0.08], [-3.0, 0.16], [-4.0, 0.4]],
+      "sources": [
+        "ZEISS AT LISA tri clinical leaflet (manufacturer): visual acuity better than 0.10 logMAR from distance to 40 cm (2.5 D).",
+        "AT LISA tri 839MP 6-month study, Fernandez-Vega Institute (102 patients): binocular distance-corrected intermediate acuity 0.07-0.11 logMAR at 50-70 cm.",
+        "AT LISA tri 839MP vs AcrySof PanOptix comparisons: mean defocus curve between 0.0 and 0.1 logMAR from 0 to -3.00 D."
+      ],
       "halo": 0.55,
       "affordability": 0.25,
       "cost_tier": 3,
@@ -156,7 +169,7 @@
       "label": "Final check and glasses prescription"
     }
   ],
-  "_defocus_note": "defocus_curve: [vergence D, logMAR] points, illustrative shapes. Replace with published curves for the lenses the clinic stocks. halo: 0-1 relative night halo/glare noticeability.",
+  "_defocus_note": "defocus_curve: [vergence D, monocular logMAR] points. Shapes are anchored to the published summary figures in each family's 'sources' (manufacturer leaflets and peer-reviewed studies); full per-step tables were not available, so points between the anchors are interpolated. Replace with the published curves for the exact lenses the clinic stocks. halo: 0-1 relative night halo/glare noticeability.",
   "strategies": [
     {
       "key": "mono",

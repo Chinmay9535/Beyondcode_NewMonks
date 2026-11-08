@@ -379,6 +379,7 @@ def rank(profile: dict[str, Any], biometry: dict[str, Any] | None, conditions: l
             "halo": pp["halo"], "binocular_curve": curve,
             "cost_tier": cost, "glasses_after": "; ".join(glasses),
             "example_models": " · ".join(sorted({eyes_out[e]["example_models"] for e in EYES if not eyes_out[e]["fixed"]})),
+            "curve_sources": list(dict.fromkeys(s for e in pl["eyes"].values() for s in families[e["family"]].get("sources", []))),
             "a_constant": main["a_constant"], "iol_power_d": main["iol_power_d"],
         })
 

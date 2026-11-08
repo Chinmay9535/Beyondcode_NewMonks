@@ -59,6 +59,7 @@ export type LensOption = {
   cost_tier: number;
   glasses_after: string;
   example_models: string;
+  curve_sources?: string[];
   a_constant: number;
   iol_power_d: number | null;
 };
