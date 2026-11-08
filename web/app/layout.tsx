@@ -15,8 +15,8 @@ export const viewport: Viewport = {
   themeColor: "#06080c",
 };
 
-// Restore the saved theme before paint to avoid a flash.
-const themeScript = `try{var t=localStorage.getItem('ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}`;
+// Restore the saved theme and contrast before paint to avoid a flash.
+const themeScript = `try{var t=localStorage.getItem('ds-theme');if(t)document.documentElement.dataset.theme=t;if(JSON.parse(localStorage.getItem('ds-read')||'{}').contrast)document.documentElement.dataset.contrast='high'}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

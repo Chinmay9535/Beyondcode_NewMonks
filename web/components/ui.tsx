@@ -43,9 +43,9 @@ export function Button({ variant = "primary", size = "md", arrow, className, chi
       type="button"
       className={cx(
         "inline-flex select-none items-center justify-center gap-2.5 rounded-full font-semibold tracking-[-0.01em] transition duration-200 ease-out active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-45",
-        size === "lg" && "min-h-14 px-6 text-[16.5px]",
-        size === "md" && "min-h-11 px-5 text-[15px]",
-        size === "sm" && "min-h-9 px-3.5 text-[13px]",
+        size === "lg" && "min-h-14 px-6 text-[1.0312rem]",
+        size === "md" && "min-h-11 px-5 text-[0.9375rem]",
+        size === "sm" && "min-h-9 px-3.5 text-[0.8125rem]",
         variant === "primary" && "btn-primary",
         variant === "outline" && "border border-line-strong bg-transparent text-ink hover:bg-surface-2",
         variant === "soft" && "glass text-ink hover:border-line-strong",
@@ -71,7 +71,7 @@ const TONES = {
   accent: "border-transparent btn-primary",
 } as const;
 export function Badge({ tone = "neutral", className, children }: { tone?: keyof typeof TONES; className?: string; children: React.ReactNode }) {
-  return <span className={cx("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11.5px] font-semibold leading-none", TONES[tone], className)}>{children}</span>;
+  return <span className={cx("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[0.7188rem] font-semibold leading-none", TONES[tone], className)}>{children}</span>;
 }
 
 export function Tag({ children, className }: { children: React.ReactNode; className?: string }) {

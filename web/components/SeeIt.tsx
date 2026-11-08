@@ -15,7 +15,7 @@ export default function SeeIt({ looks, initial, lang, nearCm }: { looks: Look[];
   const [mode, setMode] = useState<"scene" | "photo">("photo");
   const tab = (m: "scene" | "photo", label: string, Icon: React.ComponentType<{ size?: number }>) => (
     <button type="button" role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
-      className={cx("inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-medium", mode === m ? "bg-ink text-bg" : "text-muted")}>
+      className={cx("inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full text-[0.875rem] font-medium", mode === m ? "bg-ink text-bg" : "text-muted")}>
       <Icon size={16} /> {label}
     </button>
   );

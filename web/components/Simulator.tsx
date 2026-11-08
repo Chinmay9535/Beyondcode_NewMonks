@@ -154,23 +154,23 @@ export default function Simulator({ looks, initial, lang, nearCm = 40 }: { looks
       <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Lens type">
         {looks.map((l) => (
           <button key={l.key} type="button" role="tab" aria-selected={curve?.key === l.key} onClick={() => setFam(l.key)}
-            className={cx("min-h-11 rounded-full border px-4 text-left text-[15px] font-medium transition", curve?.key === l.key ? "border-accent bg-accent text-on-accent" : "border-line bg-surface hover:border-muted")}>
+            className={cx("min-h-11 rounded-full border px-4 text-left text-[0.9375rem] font-medium transition", curve?.key === l.key ? "border-accent bg-accent text-on-accent" : "border-line bg-surface hover:border-muted")}>
             {l.name}
           </button>
         ))}
-        <button type="button" onClick={() => setCam(!cam)} className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-full border border-line px-4 text-[14px] text-muted hover:text-ink">
+        <button type="button" onClick={() => setCam(!cam)} className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-full border border-line px-4 text-[0.875rem] text-muted hover:text-ink">
           {cam ? <ImageIcon size={16} /> : <Camera size={16} />} {cam ? tr(lang, "useScene") : tr(lang, "useCamera")}
         </button>
       </div>
       {cam && (
-        <div className="flex flex-wrap items-center gap-2 text-[14px]">
+        <div className="flex flex-wrap items-center gap-2 text-[0.875rem]">
           <span className="text-muted">{tr(lang, "cameraAt")}</span>
           {(Object.keys(DISTANCES) as (keyof typeof DISTANCES)[]).map((d) => (
             <button key={d} type="button" onClick={() => setCamDist(d)} className={cx("min-h-9 rounded-full border px-3", camDist === d ? "border-sky text-sky" : "border-line text-muted")}>{tr(lang, d)}</button>
           ))}
         </div>
       )}
-      {camErr && <p className="text-[13px] text-danger">{camErr}</p>}
+      {camErr && <p className="text-[0.8125rem] text-danger">{camErr}</p>}
       <div
         ref={box}
         className="relative aspect-video w-full cursor-ew-resize touch-none select-none overflow-hidden rounded-3xl border border-line bg-black"
@@ -192,8 +192,8 @@ export default function Simulator({ looks, initial, lang, nearCm = 40 }: { looks
             </div>
           </>
         )}
-        <span className="absolute left-3 top-3 rounded-lg bg-black/70 px-2.5 py-1.5 text-[12px] font-medium text-white">{tr(lang, "today")}</span>
-        <span className="absolute right-3 top-3 max-w-[58%] truncate rounded-lg bg-black/70 px-2.5 py-1.5 text-[12px] font-medium text-[#FF8A5B]">{tr(lang, "afterSurgery")} · {curve?.name}</span>
+        <span className="absolute left-3 top-3 rounded-lg bg-black/70 px-2.5 py-1.5 text-[0.75rem] font-medium text-white">{tr(lang, "today")}</span>
+        <span className="absolute right-3 top-3 max-w-[58%] truncate rounded-lg bg-black/70 px-2.5 py-1.5 text-[0.75rem] font-medium text-[#FF8A5B]">{tr(lang, "afterSurgery")} · {curve?.name}</span>
         <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white/90" style={{ left: `${pos}%` }}>
           <button
             type="button"
@@ -205,7 +205,7 @@ export default function Simulator({ looks, initial, lang, nearCm = 40 }: { looks
           </button>
         </div>
       </div>
-      <p className="text-[12.5px] leading-relaxed text-muted">{tr(lang, "dragCompare")}. {tr(lang, "illustrative")}</p>
+      <p className="text-[0.7812rem] leading-relaxed text-muted">{tr(lang, "dragCompare")}. {tr(lang, "illustrative")}</p>
     </div>
   );
 }

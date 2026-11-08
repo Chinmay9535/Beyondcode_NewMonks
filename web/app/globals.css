@@ -32,6 +32,17 @@
   --glow: rgba(47, 123, 255, 0.22);
   color-scheme: dark;
 }
+/* High contrast (patient reading options): solid surfaces, brighter secondary text, firmer lines. */
+:root[data-contrast="high"] {
+  --surface: #111620;
+  --surface-solid: #111620;
+  --surface-2: #1b2230;
+  --line: rgba(255, 255, 255, 0.34);
+  --line-strong: rgba(255, 255, 255, 0.55);
+  --text: #ffffff;
+  --muted: #dce2ec;
+  --accent-text: #a9c8ff;
+}
 /* Dark is the default look; light only when the user chooses it (theme toggle). */
 :root[data-theme="light"] {
   --bg: #f2f4f8;
@@ -59,6 +70,18 @@
   --glow: rgba(31, 107, 255, 0.14);
   color-scheme: light;
 }
+:root[data-theme="light"][data-contrast="high"] {
+  --surface: #ffffff;
+  --surface-solid: #ffffff;
+  --surface-2: #eef1f6;
+  --line: rgba(0, 0, 0, 0.38);
+  --line-strong: rgba(0, 0, 0, 0.6);
+  --text: #000000;
+  --muted: #262c36;
+  --accent-text: #0f4fcc;
+}
+:root[data-contrast="high"] .glass,
+:root[data-contrast="high"] .glass-strong { -webkit-backdrop-filter: none; backdrop-filter: none; }
 
 @theme inline {
   --color-bg: var(--bg);

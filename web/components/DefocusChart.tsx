@@ -51,7 +51,7 @@ export default function DefocusChart({ curves, activities, highlight }: { curves
             strokeDasharray={c.key.includes("blend") || c.key.includes("micro") ? "7 5" : DASH[c.key]} opacity={highlight && highlight !== c.key ? 0.45 : 1} strokeLinecap="round" />
         ))}
       </svg>
-      <figcaption className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-muted">
+      <figcaption className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.6875rem] text-muted">
         {curves.map((c) => (
           <span key={c.key} className={cx("inline-flex items-center gap-1.5", highlight === c.key && "text-ink")}><i className="inline-block h-0.5 w-4" style={{ background: COLORS[c.family || c.key] }} />{c.name}</span>
         ))}

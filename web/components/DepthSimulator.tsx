@@ -122,7 +122,7 @@ export default function DepthSimulator({ looks, initial, lang }: { looks: Look[]
 
   const clamp = (p: number) => Math.max(3, Math.min(97, p));
   const fromEvt = (e: React.PointerEvent) => { const r = box.current!.getBoundingClientRect(); setPos(clamp(((e.clientX - r.left) / r.width) * 100)); };
-  const chip = (on: boolean) => cx("min-h-9 rounded-full border px-3 text-[13px]", on ? "border-sky bg-sky-bg text-sky" : "border-line text-muted");
+  const chip = (on: boolean) => cx("min-h-9 rounded-full border px-3 text-[0.8125rem]", on ? "border-sky bg-sky-bg text-sky" : "border-line text-muted");
 
   const pickers = (
     <div className="flex flex-wrap gap-2">
@@ -136,9 +136,9 @@ export default function DepthSimulator({ looks, initial, lang }: { looks: Look[]
   if (!photo) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-[16px] leading-relaxed text-muted">{tr(lang, "photoHint")}</p>
+        <p className="text-[1rem] leading-relaxed text-muted">{tr(lang, "photoHint")}</p>
         {pickers}
-        <p className="text-[12.5px] text-muted">🔒 {tr(lang, "photoPrivate")}</p>
+        <p className="text-[0.7812rem] text-muted">🔒 {tr(lang, "photoPrivate")}</p>
       </div>
     );
   }
@@ -149,7 +149,7 @@ export default function DepthSimulator({ looks, initial, lang }: { looks: Look[]
       <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Lens plan">
         {looks.map((l) => (
           <button key={l.key} type="button" role="tab" aria-selected={look?.key === l.key} onClick={() => setLookKey(l.key)}
-            className={cx("min-h-10 rounded-full border px-3.5 text-left text-[14px] font-medium", look?.key === l.key ? "border-accent bg-accent text-on-accent" : "border-line bg-surface")}>{l.name}</button>
+            className={cx("min-h-10 rounded-full border px-3.5 text-left text-[0.875rem] font-medium", look?.key === l.key ? "border-accent bg-accent text-on-accent" : "border-line bg-surface")}>{l.name}</button>
         ))}
       </div>
 
@@ -164,8 +164,8 @@ export default function DepthSimulator({ looks, initial, lang }: { looks: Look[]
         {showDepth && <canvas ref={depthC} width={photo.w} height={photo.h} className="absolute inset-0 h-full w-full opacity-90" />}
         {ready && !showDepth && (
           <>
-            <span className="absolute left-3 top-3 rounded-lg bg-black/70 px-2.5 py-1.5 text-[12px] font-medium text-white">{tr(lang, "today")}</span>
-            <span className="absolute right-3 top-3 max-w-[58%] truncate rounded-lg bg-black/70 px-2.5 py-1.5 text-[12px] font-medium text-[#FF8A5B]">{tr(lang, "afterSurgery")} · {look?.name}</span>
+            <span className="absolute left-3 top-3 rounded-lg bg-black/70 px-2.5 py-1.5 text-[0.75rem] font-medium text-white">{tr(lang, "today")}</span>
+            <span className="absolute right-3 top-3 max-w-[58%] truncate rounded-lg bg-black/70 px-2.5 py-1.5 text-[0.75rem] font-medium text-[#FF8A5B]">{tr(lang, "afterSurgery")} · {look?.name}</span>
             <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white/90" style={{ left: `${pos}%` }}>
               <span className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-black shadow-lg">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6" /></svg>
@@ -175,7 +175,7 @@ export default function DepthSimulator({ looks, initial, lang }: { looks: Look[]
         )}
         {!ready && (
           <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-black/75 px-4 py-3 text-white">
-            <p className="flex items-center gap-2 text-[15px]"><ScanLine size={18} className="animate-pulse" /> {status.kind === "loading" && status.progress != null && status.progress < 100 ? tr(lang, "downloading", { p: status.progress }) : tr(lang, "measuring")}</p>
+            <p className="flex items-center gap-2 text-[0.9375rem]"><ScanLine size={18} className="animate-pulse" /> {status.kind === "loading" && status.progress != null && status.progress < 100 ? tr(lang, "downloading", { p: status.progress }) : tr(lang, "measuring")}</p>
             {status.kind === "loading" && <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/20"><div className="h-full bg-[#FF6F37] transition-all" style={{ width: `${status.progress || 3}%` }} /></div>}
           </div>
         )}
@@ -188,22 +188,22 @@ export default function DepthSimulator({ looks, initial, lang }: { looks: Look[]
             <button type="button" onClick={() => setNight(true)} className={chip(night)} aria-pressed={night}><Moon size={14} className="mr-1 inline" />{tr(lang, "nightLight")}</button>
             {status.kind === "ready" && <button type="button" onClick={() => setShowDepth(!showDepth)} className={cx(chip(showDepth), "ml-auto")} aria-pressed={showDepth}>{tr(lang, "showDepth")}</button>}
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-[13px]">
+          <div className="flex flex-wrap items-center gap-2 text-[0.8125rem]">
             <span className="text-muted">{tr(lang, "nearestIs")}:</span>
             {[33, 40, 66, 150].map((cm) => <button key={cm} type="button" onClick={() => setAnchors({ ...anchors, nearCm: cm })} className={chip(anchors.nearCm === cm)}>{cm < 100 ? `${cm} cm` : `${cm / 100} m`}</button>)}
           </div>
           {status.kind === "ready" && (
-            <div className="flex flex-wrap items-center gap-2 text-[13px]">
+            <div className="flex flex-wrap items-center gap-2 text-[0.8125rem]">
               <span className="text-muted">{tr(lang, "farthestIs")}:</span>
               {([[600, "farAway"], [300, "acrossRoom"], [90, "onTable"]] as const).map(([cm, k]) => <button key={cm} type="button" onClick={() => setAnchors({ ...anchors, farCm: cm })} className={chip(anchors.farCm === cm)}>{tr(lang, k)}</button>)}
             </div>
           )}
-          {status.kind === "fallback" && <p className="rounded-2xl bg-warn-bg px-4 py-3 text-[13px] text-warn">{tr(lang, "depthFailed")}</p>}
+          {status.kind === "fallback" && <p className="rounded-2xl bg-warn-bg px-4 py-3 text-[0.8125rem] text-warn">{tr(lang, "depthFailed")}</p>}
           <div className="flex flex-wrap items-center justify-between gap-2">
             {pickers}
-            {status.kind === "ready" && <span className="font-mono text-[11px] text-muted">Depth Anything V2 · {status.device} · {status.ms} ms</span>}
+            {status.kind === "ready" && <span className="font-mono text-[0.6875rem] text-muted">Depth Anything V2 · {status.device} · {status.ms} ms</span>}
           </div>
-          <p className="text-[12.5px] text-muted">🔒 {tr(lang, "photoPrivate")} {tr(lang, "illustrative")}</p>
+          <p className="text-[0.7812rem] text-muted">🔒 {tr(lang, "photoPrivate")} {tr(lang, "illustrative")}</p>
         </div>
       )}
     </div>

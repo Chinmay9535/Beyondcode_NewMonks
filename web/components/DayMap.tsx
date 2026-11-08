@@ -30,11 +30,11 @@ export function StatusChip({ row, lang, compact }: { row: DayRow; lang: Lang; co
   const s = STATUS[row.status];
   return (
     <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
-      <span className={cx("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-medium", s.tone)}>
+      <span className={cx("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.8125rem] font-medium", s.tone)}>
         <s.Icon size={14} /> {compact ? null : tr(lang, row.status)}
       </span>
       {row.halos && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-sky-bg px-2.5 py-1 text-[13px] text-sky" title={tr(lang, "halos")}>
+        <span className="inline-flex items-center gap-1 rounded-full bg-sky-bg px-2.5 py-1 text-[0.8125rem] text-sky" title={tr(lang, "halos")}>
           <Sparkle size={13} /> {compact ? null : tr(lang, "halos")}
         </span>
       )}
@@ -53,8 +53,8 @@ export function PatientDayMap({ activities, option, lang, labels }: { activities
           <li key={a.id} className="flex items-center gap-3 py-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-text"><ActivityIcon id={a.id} /></span>
             <div className="min-w-0 flex-1">
-              <p lang={lang} className="text-[16px] font-medium leading-snug">{labels?.[a.id] || a.label_local || a.label}</p>
-              <p className="text-[13px] text-muted">
+              <p lang={lang} className="text-[1rem] font-medium leading-snug">{labels?.[a.id] || a.label_local || a.label}</p>
+              <p className="text-[0.8125rem] text-muted">
                 {tr(lang, "hoursDay", { h: a.hours })}{a.night ? ` · ${tr(lang, "atNight")}` : ""} · {distanceLabel(a.distance_cm, lang)}
               </p>
             </div>
@@ -70,12 +70,12 @@ export function PatientDayMap({ activities, option, lang, labels }: { activities
 export function DayMatrix({ activities, options }: { activities: Activity[]; options: LensOption[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] border-collapse text-[14px]">
+      <table className="w-full min-w-[560px] border-collapse text-[0.875rem]">
         <thead>
           <tr>
             <th className="eyebrow pb-3 text-left font-normal">Activity</th>
             {options.map((o) => (
-              <th key={o.key} className={cx("pb-3 text-left text-[13px] font-semibold", o.excluded && "text-muted line-through")}>{o.name}</th>
+              <th key={o.key} className={cx("pb-3 text-left text-[0.8125rem] font-semibold", o.excluded && "text-muted line-through")}>{o.name}</th>
             ))}
           </tr>
         </thead>
@@ -87,7 +87,7 @@ export function DayMatrix({ activities, options }: { activities: Activity[]; opt
                   <ActivityIcon id={a.id} size={16} className="mt-0.5 shrink-0 text-accent-text" />
                   <div>
                     <p className="font-medium leading-tight">{a.label}</p>
-                    <p className="font-mono text-[11px] text-muted">{a.hours} h · {distanceLabel(a.distance_cm)} · {a.detail}{a.night ? " · night" : ""} · ★{a.importance}</p>
+                    <p className="font-mono text-[0.6875rem] text-muted">{a.hours} h · {distanceLabel(a.distance_cm)} · {a.detail}{a.night ? " · night" : ""} · ★{a.importance}</p>
                   </div>
                 </div>
               </td>
@@ -95,7 +95,7 @@ export function DayMatrix({ activities, options }: { activities: Activity[]; opt
                 const r = o.day_map[i];
                 return (
                   <td key={o.key} className={cx("py-2.5 pr-3", o.excluded && "opacity-45")}>
-                    <span className={cx("inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-mono text-[12px]", STATUS[r.status].tone)}>
+                    <span className={cx("inline-flex items-center gap-1.5 rounded-lg px-2 py-1 font-mono text-[0.75rem]", STATUS[r.status].tone)}>
                       {(() => { const I = STATUS[r.status].Icon; return <I size={13} />; })()}
                       {r.snellen}
                     </span>
@@ -106,9 +106,9 @@ export function DayMatrix({ activities, options }: { activities: Activity[]; opt
             </tr>
           ))}
           <tr className="border-t border-line">
-            <td className="pt-3 font-mono text-[11px] uppercase tracking-[.1em] text-muted">Clear without glasses</td>
+            <td className="pt-3 font-mono text-[0.6875rem] uppercase tracking-[.1em] text-muted">Clear without glasses</td>
             {options.map((o) => (
-              <td key={o.key} className="pt-3 font-mono text-[13px] font-medium">{o.hours_clear} / {o.hours_total} h</td>
+              <td key={o.key} className="pt-3 font-mono text-[0.8125rem] font-medium">{o.hours_clear} / {o.hours_total} h</td>
             ))}
           </tr>
         </tbody>

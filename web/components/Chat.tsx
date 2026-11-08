@@ -25,7 +25,7 @@ export function Bubble({ m, lang, showEn, clinic, ttsServer }: { m: Message; lan
       <div
         lang={m.lang}
         className={cx(
-          "bubble max-w-[88%] px-4 py-3 text-[17px] font-medium leading-relaxed",
+          "bubble max-w-[88%] px-4 py-3 text-[1.0625rem] font-medium leading-relaxed",
           me && "bubble-blue bubble-r",
           light && "bubble-light bubble-l",
           safety && "bubble-l border-2 font-normal",
@@ -33,26 +33,26 @@ export function Bubble({ m, lang, showEn, clinic, ttsServer }: { m: Message; lan
         )}
       >
         {safety && (
-          <p className={cx("mb-1.5 flex items-center gap-2 text-[13px] font-bold", urgent ? "text-danger" : "text-warn")}>
+          <p className={cx("mb-1.5 flex items-center gap-2 text-[0.8125rem] font-bold", urgent ? "text-danger" : "text-warn")}>
             <ShieldAlert size={15} /> {tr(lang, urgent ? "doctorAlerted" : "sharedDoctor")}
           </p>
         )}
         <p className="relative whitespace-pre-line">{m.text}</p>
-        {showEn && en && <p lang="en" className={cx("relative mt-1.5 text-[13.5px] font-normal leading-snug", me ? "text-white/75" : light ? "text-[#5b6474]" : "text-muted")}>{en}</p>}
+        {showEn && en && <p lang="en" className={cx("relative mt-1.5 text-[0.8438rem] font-normal leading-snug", me ? "text-white/75" : light ? "text-[#5b6474]" : "text-muted")}>{en}</p>}
         {!!m.meta.citations?.length && (
-          <p className={cx("relative mt-2 flex items-start gap-1.5 text-[11.5px] font-semibold leading-snug", light ? "text-[#1f6bff]" : "text-accent-text")}>
+          <p className={cx("relative mt-2 flex items-start gap-1.5 text-[0.7188rem] font-semibold leading-snug", light ? "text-[#1f6bff]" : "text-accent-text")}>
             <BookOpen size={13} className="mt-px shrink-0" />
             <span>{tr(lang, "source")} · {m.meta.citations.map((c) => `${c.source.split("(")[0].trim()} · ${c.title}`).join("; ")}</span>
           </p>
         )}
         {safety && clinic && (
           <div className="relative mt-3 flex flex-wrap gap-2">
-            <a href={`tel:${clinic.phone.replace(/\s/g, "")}`} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-ink px-4 text-[15px] font-semibold text-bg"><Phone size={16} /> {tr(lang, "callClinic")}</a>
-            {urgent && <a href={`tel:${clinic.emergency_number}`} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-danger px-4 text-[15px] font-semibold text-white">{tr(lang, "emergency")} {clinic.emergency_number}</a>}
+            <a href={`tel:${clinic.phone.replace(/\s/g, "")}`} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-bg"><Phone size={16} /> {tr(lang, "callClinic")}</a>
+            {urgent && <a href={`tel:${clinic.emergency_number}`} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-danger px-4 text-[0.9375rem] font-semibold text-white">{tr(lang, "emergency")} {clinic.emergency_number}</a>}
           </div>
         )}
         {!me && (
-          <button type="button" onClick={() => speak(m.text, lang, !!ttsServer)} className={cx("relative mt-1.5 -ml-1 inline-flex items-center gap-1 rounded-full px-1 py-0.5 text-[12px] transition", light ? "text-[#5b6474] hover:text-[#0f131b]" : "text-muted hover:text-ink")} aria-label={tr(lang, "readAloud")}>
+          <button type="button" onClick={() => speak(m.text, lang, !!ttsServer)} className={cx("relative mt-1.5 -ml-1 inline-flex items-center gap-1 rounded-full px-1 py-0.5 text-[0.75rem] transition", light ? "text-[#5b6474] hover:text-[#0f131b]" : "text-muted hover:text-ink")} aria-label={tr(lang, "readAloud")}>
             <Volume2 size={14} />
           </button>
         )}
@@ -94,14 +94,14 @@ export function Composer({ lang, onSend, options = [], disabled, placeholder }: 
               <motion.button key={o.value} type="button" disabled={disabled} onClick={() => onSend("", o.value)}
                 initial={{ opacity: 0, y: 8, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: "spring", stiffness: 380, damping: 26, delay: i * 0.05 }}
                 whileTap={{ scale: 0.95 }} whileHover={{ y: -2 }}
-                className="min-h-12 rounded-2xl border border-line-strong bg-surface-2 px-5 text-[16px] font-semibold text-ink transition-colors hover:border-transparent hover:bg-accent hover:text-white disabled:opacity-50">
+                className="min-h-12 rounded-2xl border border-line-strong bg-surface-2 px-5 text-[1rem] font-semibold text-ink transition-colors hover:border-transparent hover:bg-accent hover:text-white disabled:opacity-50">
                 {o.label}
               </motion.button>
             ))}
           </motion.div>
         )}
       </AnimatePresence>
-      {dict.listening && <p className="rounded-2xl bg-surface-2 px-4 py-3 text-[17px] text-muted">{dict.interim || tr(lang, "listening")}</p>}
+      {dict.listening && <p className="rounded-2xl bg-surface-2 px-4 py-3 text-[1.0625rem] text-muted">{dict.interim || tr(lang, "listening")}</p>}
       <div className="flex items-center gap-2.5">
         <motion.button
           type="button"
@@ -121,7 +121,7 @@ export function Composer({ lang, onSend, options = [], disabled, placeholder }: 
             disabled={disabled}
             placeholder={placeholder || tr(lang, "typeHere")}
             lang={lang}
-            className="min-h-14 min-w-0 flex-1 bg-transparent py-3 text-[17px] text-ink placeholder:text-muted focus:outline-none"
+            className="min-h-14 min-w-0 flex-1 bg-transparent py-3 text-[1.0625rem] text-ink placeholder:text-muted focus:outline-none"
             aria-label={placeholder || tr(lang, "typeHere")}
           />
           <motion.button type="submit" whileTap={{ scale: 0.9 }} disabled={disabled || !text.trim()} aria-label={tr(lang, "send")} className="grid h-11 w-11 place-items-center rounded-full bg-white text-[#1f6bff] transition disabled:bg-surface-2 disabled:text-muted">
@@ -129,7 +129,7 @@ export function Composer({ lang, onSend, options = [], disabled, placeholder }: 
           </motion.button>
         </form>
       </div>
-      {!dict.supported && <p className="px-2 pb-1 text-[13px] text-muted">{tr(lang, "noVoice")}</p>}
+      {!dict.supported && <p className="px-2 pb-1 text-[0.8125rem] text-muted">{tr(lang, "noVoice")}</p>}
     </div>
   );
 }

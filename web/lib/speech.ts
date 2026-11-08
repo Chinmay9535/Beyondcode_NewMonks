@@ -99,6 +99,12 @@ export async function speak(text: string, lang: Lang, useServer: boolean): Promi
   return true;
 }
 
+/** True while browser speech or server audio is playing. */
+export function isSpeaking() {
+  if (typeof window === "undefined") return false;
+  return !!window.speechSynthesis?.speaking || (!!currentAudio && !currentAudio.paused && !currentAudio.ended);
+}
+
 export function stopSpeaking() {
   if (typeof window === "undefined") return;
   window.speechSynthesis?.cancel();

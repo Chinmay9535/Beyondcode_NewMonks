@@ -38,18 +38,18 @@ export function StaffShell({ children }: { children: (meta: Meta) => React.React
           <div className="sphere sphere-yellow float absolute bottom-[18%] right-[26%] h-12 w-12" style={{ animationDelay: "-4s" }} />
         </div>
         <motion.div variants={stagger} initial="hidden" animate="show" className="relative w-full max-w-sm">
-          <motion.div variants={item} className="mb-5 self-start"><div className="bubble bubble-light bubble-l inline-block text-[15px]">Good to see you, {meta.clinic.surgeon} 👋</div></motion.div>
+          <motion.div variants={item} className="mb-5 self-start"><div className="bubble bubble-light bubble-l inline-block text-[0.9375rem]">Good to see you, {meta.clinic.surgeon} 👋</div></motion.div>
           <motion.div variants={item}>
             <Card className="p-7">
               <Logo />
-              <h1 className="display mt-7 text-[34px]">Clinic sign-in</h1>
-              <p className="mt-2 flex items-center gap-2 text-[14px] text-muted"><Stethoscope size={15} className="text-accent-text" /> {meta.clinic.name}</p>
+              <h1 className="display mt-7 text-[2.125rem]">Clinic sign-in</h1>
+              <p className="mt-2 flex items-center gap-2 text-[0.875rem] text-muted"><Stethoscope size={15} className="text-accent-text" /> {meta.clinic.name}</p>
               <form onSubmit={login} className="mt-6 flex flex-col gap-3">
                 <input type="password" inputMode="numeric" autoFocus value={pin} onChange={(e) => setPin(e.target.value)} placeholder="PIN" aria-label="PIN"
-                  className="min-h-14 rounded-2xl border border-line bg-surface-2 px-4 text-[20px] tracking-[.4em] focus:border-accent focus:outline-none" />
-                {err && <p className="text-[14px] text-danger">{err}</p>}
+                  className="min-h-14 rounded-2xl border border-line bg-surface-2 px-4 text-[1.25rem] tracking-[.4em] focus:border-accent focus:outline-none" />
+                {err && <p className="text-[0.875rem] text-danger">{err}</p>}
                 <Button type="submit" size="lg" arrow>Sign in</Button>
-                <p className="text-center text-[12.5px] text-muted">Demo PIN 2468</p>
+                <p className="text-center text-[0.7812rem] text-muted">Demo PIN 2468</p>
               </form>
             </Card>
           </motion.div>
@@ -63,11 +63,11 @@ export function StaffShell({ children }: { children: (meta: Meta) => React.React
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-5 py-3">
           <Link href="/staff" className="flex items-center gap-3"><Logo size={24} /></Link>
           <nav className="glass ml-2 hidden items-center gap-1 rounded-xl p-1 md:flex">
-            <Link href="/staff" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-muted transition hover:bg-surface-2 hover:text-ink">Patients</Link>
-            <Link href="/safety" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-muted transition hover:bg-surface-2 hover:text-ink">Safety</Link>
-            <Link href="/" className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-muted transition hover:bg-surface-2 hover:text-ink">Home</Link>
+            <Link href="/staff" className="rounded-lg px-3 py-1.5 text-[0.8125rem] font-medium text-muted transition hover:bg-surface-2 hover:text-ink">Patients</Link>
+            <Link href="/safety" className="rounded-lg px-3 py-1.5 text-[0.8125rem] font-medium text-muted transition hover:bg-surface-2 hover:text-ink">Safety</Link>
+            <Link href="/" className="rounded-lg px-3 py-1.5 text-[0.8125rem] font-medium text-muted transition hover:bg-surface-2 hover:text-ink">Home</Link>
           </nav>
-          <span className="hidden text-[13px] text-muted lg:inline">{meta.clinic.surgeon}</span>
+          <span className="hidden text-[0.8125rem] text-muted lg:inline">{meta.clinic.surgeon}</span>
           <div className="ml-auto flex items-center gap-2">
             <Badge tone={meta.ai === "offline" ? "neutral" : "sky"}>AI: {meta.ai}</Badge>
             <ThemeToggle />
@@ -103,19 +103,19 @@ export function AlertItem({ a, onAck, showPatient = true }: { a: Alert; onAck: (
     <li className={cx("rounded-2xl border p-4", a.severity === "urgent" ? "border-danger/60 bg-danger-bg" : a.severity === "soon" ? "border-warn/40 bg-warn-bg" : "border-line bg-surface-2")}>
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone={SEVERITY_TONE[a.severity]}>{a.severity.toUpperCase()}</Badge>
-        <span className="text-[12px] text-muted">{a.category.replace(/_/g, " ")} · {ago(a.created_at)}</span>
-        {showPatient && a.patient_name && <Link href={`/staff/${a.patient_id}`} className="ml-auto text-[14px] font-medium underline-offset-4 hover:underline">{a.patient_name}</Link>}
+        <span className="text-[0.75rem] text-muted">{a.category.replace(/_/g, " ")} · {ago(a.created_at)}</span>
+        {showPatient && a.patient_name && <Link href={`/staff/${a.patient_id}`} className="ml-auto text-[0.875rem] font-medium underline-offset-4 hover:underline">{a.patient_name}</Link>}
       </div>
-      <p className="mt-2 text-[15px] leading-snug">&ldquo;{a.text}&rdquo;</p>
-      {a.text_en && a.text_en !== a.text && <p className="mt-1 text-[13px] text-muted">{a.text_en}</p>}
+      <p className="mt-2 text-[0.9375rem] leading-snug">&ldquo;{a.text}&rdquo;</p>
+      {a.text_en && a.text_en !== a.text && <p className="mt-1 text-[0.8125rem] text-muted">{a.text_en}</p>}
       {a.status === "open" ? (
         open ? (
           <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); onAck(a.id, note); }}>
-            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Action taken (e.g. called, asked to come in)" className="min-h-10 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-[14px] focus:outline-none" />
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Action taken (e.g. called, asked to come in)" className="min-h-10 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-[0.875rem] focus:outline-none" />
             <Button size="sm" type="submit">Done</Button>
           </form>
         ) : <Button size="sm" variant="soft" className="mt-3" onClick={() => setOpen(true)}>Acknowledge</Button>
-      ) : <p className="mt-2 font-mono text-[11px] text-ok">✓ acknowledged{a.note ? ` · ${a.note}` : ""}</p>}
+      ) : <p className="mt-2 font-mono text-[0.6875rem] text-ok">✓ acknowledged{a.note ? ` · ${a.note}` : ""}</p>}
     </li>
   );
 }

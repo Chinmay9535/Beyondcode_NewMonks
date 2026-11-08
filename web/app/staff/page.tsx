@@ -37,14 +37,14 @@ function Dashboard({ meta }: { meta: Meta }) {
         <div className="mb-5 flex flex-wrap items-end gap-3">
           <div>
             <Tag>Today</Tag>
-            <h1 className="display mt-3 text-[44px]">Patients <span className="text-muted">· {rows.length}</span></h1>
+            <h1 className="display mt-3 text-[2.75rem]">Patients <span className="text-muted">· {rows.length}</span></h1>
           </div>
           <Button className="ml-auto" arrow onClick={() => setAdding(true)}><Plus size={18} /> New patient</Button>
         </div>
         <div className="mb-4 flex flex-wrap gap-2">
           {[["all", "All", rows.length], ...Object.entries(STAGE).map(([k, v]) => [k, v.label, counts[k] || 0])].map(([k, l, n]) => (
             <button key={k as string} type="button" onClick={() => setFilter(k as string)}
-              className={cx("relative min-h-9 rounded-full border px-3.5 text-[13px] font-medium transition", filter === k ? "border-transparent text-white" : "border-line text-muted hover:text-ink")}>
+              className={cx("relative min-h-9 rounded-full border px-3.5 text-[0.8125rem] font-medium transition", filter === k ? "border-transparent text-white" : "border-line text-muted hover:text-ink")}>
               {filter === k && <motion.span layoutId="filter-pill" className="btn-primary absolute inset-0 rounded-full" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
               <span className="relative">{l} <span className="ml-1 opacity-70">{n}</span></span>
             </button>
@@ -56,18 +56,18 @@ function Dashboard({ meta }: { meta: Meta }) {
             <motion.li key={r.id} variants={item} whileHover={{ y: -3 }} transition={{ type: "spring", stiffness: 380, damping: 28 }}>
               <Link href={`/staff/${r.id}`} className={cx("glass hairline grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 rounded-[22px] px-5 py-4 transition hover:border-line-strong sm:grid-cols-[1.4fr_1fr_1fr_auto]", r.urgent_alerts ? "!border-danger/60 shadow-[0_0_0_1px_rgba(255,92,99,.25),0_20px_50px_-30px_rgba(255,92,99,.6)]" : "")}>
                 <div className="min-w-0">
-                  <p className="truncate text-[16px] font-semibold">{r.name} <span className="font-normal text-muted">{r.age ? `· ${r.age}${r.sex || ""}` : ""}</span></p>
-                  <p className="truncate text-[13px] text-muted">{[r.occupation, r.city, LANG_NAMES[r.language as Lang], `${r.eye} eye`].filter(Boolean).join(" · ")}</p>
+                  <p className="truncate text-[1rem] font-semibold">{r.name} <span className="font-normal text-muted">{r.age ? `· ${r.age}${r.sex || ""}` : ""}</span></p>
+                  <p className="truncate text-[0.8125rem] text-muted">{[r.occupation, r.city, LANG_NAMES[r.language as Lang], `${r.eye} eye`].filter(Boolean).join(" · ")}</p>
                 </div>
                 <div className="order-last col-span-2 sm:order-none sm:col-span-1"><Badge tone={STAGE[r.stage].tone}>{STAGE[r.stage].label}</Badge></div>
-                <div className="hidden text-[14px] sm:block">
-                  {r.lens ? <><span className="font-medium">{r.lens.name}</span> <span className="font-mono text-[12px] text-muted">{r.lens.approved ? "approved" : r.lens.score.toFixed(2)}</span></> : <span className="text-muted">—</span>}
-                  {r.adherence?.pct != null && <p className="font-mono text-[12px] text-muted">Day {r.day} · drops {r.adherence.pct}%</p>}
+                <div className="hidden text-[0.875rem] sm:block">
+                  {r.lens ? <><span className="font-medium">{r.lens.name}</span> <span className="font-mono text-[0.75rem] text-muted">{r.lens.approved ? "approved" : r.lens.score.toFixed(2)}</span></> : <span className="text-muted">—</span>}
+                  {r.adherence?.pct != null && <p className="font-mono text-[0.75rem] text-muted">Day {r.day} · drops {r.adherence.pct}%</p>}
                 </div>
                 <div className="flex items-center gap-2 justify-self-end">
                   {r.urgent_alerts > 0 && <Badge tone="danger"><BellRing size={12} /> {r.urgent_alerts}</Badge>}
                   {r.open_alerts - r.urgent_alerts > 0 && <Badge tone="warn">{r.open_alerts - r.urgent_alerts}</Badge>}
-                  <span className="font-mono text-[12px] text-muted">{r.id}</span>
+                  <span className="font-mono text-[0.75rem] text-muted">{r.id}</span>
                 </div>
               </Link>
             </motion.li>
@@ -79,15 +79,15 @@ function Dashboard({ meta }: { meta: Meta }) {
         <Card className="p-5">
           <div className="mb-4 flex items-center gap-2">
             <BellRing size={18} className={urgent ? "text-danger" : "text-muted"} />
-            <h2 className="text-[18px] font-semibold">Alerts</h2>
+            <h2 className="text-[1.125rem] font-semibold">Alerts</h2>
             <Badge tone={urgent ? "danger" : "neutral"} className="ml-auto">{alerts.length} open</Badge>
           </div>
-          {alerts.length === 0 ? <p className="text-[14px] text-muted">Nothing waiting. Red-flag symptoms and unanswered questions appear here within seconds.</p> : (
+          {alerts.length === 0 ? <p className="text-[0.875rem] text-muted">Nothing waiting. Red-flag symptoms and unanswered questions appear here within seconds.</p> : (
             <ul className="flex max-h-[70vh] flex-col gap-3 overflow-y-auto pr-1">
               {alerts.map((a) => <AlertItem key={a.id} a={a} onAck={ack} />)}
             </ul>
           )}
-          <p className="mt-4 font-mono text-[11px] text-muted">Live · refreshes every 8 s</p>
+          <p className="mt-4 font-mono text-[0.6875rem] text-muted">Live · refreshes every 8 s</p>
         </Card>
       </aside>
     </div>
@@ -111,15 +111,15 @@ function NewPatient({ meta, onClose, onCreated }: { meta: Meta; onClose: () => v
       setCreated(r.id); onCreated();
     } catch (e) { setErr(String(e)); }
   };
-  const input = "min-h-11 w-full rounded-xl border border-line bg-surface-2 px-3 text-[15px] focus:border-sky focus:outline-none";
+  const input = "min-h-11 w-full rounded-xl border border-line bg-surface-2 px-3 text-[0.9375rem] focus:border-sky focus:outline-none";
   const link = created ? `${location.origin}/p/${created}` : "";
   return (
     <Card className="mb-5 p-6">
-      <div className="mb-4 flex items-center"><h2 className="text-[18px] font-semibold">New patient</h2><button type="button" onClick={onClose} className="ml-auto text-muted" aria-label="Close"><X /></button></div>
+      <div className="mb-4 flex items-center"><h2 className="text-[1.125rem] font-semibold">New patient</h2><button type="button" onClick={onClose} className="ml-auto text-muted" aria-label="Close"><X /></button></div>
       {created ? (
         <div className="flex flex-col gap-3">
-          <p className="text-[15px]">Created. Give the patient this code or link; the assistant takes over from there.</p>
-          <p className="rounded-2xl bg-surface-2 px-4 py-3 font-mono text-[22px] tracking-[.12em]">{created}</p>
+          <p className="text-[0.9375rem]">Created. Give the patient this code or link; the assistant takes over from there.</p>
+          <p className="rounded-2xl bg-surface-2 px-4 py-3 font-mono text-[1.375rem] tracking-[.12em]">{created}</p>
           <div className="flex flex-wrap gap-2">
             <Button variant="soft" onClick={() => navigator.clipboard?.writeText(link)}>Copy link</Button>
             <a className="inline-flex min-h-11 items-center rounded-full border border-line px-5" href={`https://wa.me/?text=${encodeURIComponent(`Your DrishtiSaathi link from ${meta.clinic.name}: ${link}`)}`} target="_blank" rel="noopener">Send on WhatsApp</a>
@@ -141,7 +141,7 @@ function NewPatient({ meta, onClose, onCreated }: { meta: Meta; onClose: () => v
             <div className="flex flex-wrap gap-2">
               {Object.entries(meta.conditions).map(([k, v]) => (
                 <button key={k} type="button" aria-pressed={conds.includes(k)} onClick={() => setConds(conds.includes(k) ? conds.filter((c) => c !== k) : [...conds, k])}
-                  className={cx("min-h-9 rounded-full border px-3 text-[13px]", conds.includes(k) ? "border-warn bg-warn-bg text-warn" : "border-line text-muted")}>{v}</button>
+                  className={cx("min-h-9 rounded-full border px-3 text-[0.8125rem]", conds.includes(k) ? "border-warn bg-warn-bg text-warn" : "border-line text-muted")}>{v}</button>
               ))}
             </div>
           </fieldset>
