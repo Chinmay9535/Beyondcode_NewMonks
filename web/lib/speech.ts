@@ -112,7 +112,11 @@ export async function speak(text: string, lang: Lang, useServer: boolean): Promi
     voices = synth.getVoices();
   }
   const voice = bestVoice(voices, locale, lang);
-  if (!voice && lang !== "en") return false;
+  if (!voice && lang !== "en") {
+    // No voice for this language in this browser: let the app suggest one that has it.
+    window.dispatchEvent(new CustomEvent("ds-novoice", { detail: lang }));
+    return false;
+  }
   const u = new SpeechSynthesisUtterance(text);
   u.lang = locale;
   if (voice) u.voice = voice;

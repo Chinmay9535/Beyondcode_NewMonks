@@ -1,10 +1,12 @@
 """Text-to-speech for the patient's language.
 
-Providers, best first (the first one configured is used):
-  1. Sarvam AI Bulbul: built for Indian languages, the most natural Kannada/Hindi/Tamil voices
-     we found. Warm female voices, one per language (override with SARVAM_VOICES).
-  2. Azure AI Speech neural voices.
-  3. None: the endpoint answers 204 and the browser uses its own voices.
+Providers (the first one configured is used):
+  1. Azure AI Speech neural voices: the best FREE option. The free (F0) tier includes 0.5 million
+     neural characters a month, and Azure for Students needs no credit card. Female voices:
+     Sapna (Kannada), Swara (Hindi), Pallavi (Tamil), Neerja (Indian English); override with AZURE_VOICES.
+  2. Sarvam AI Bulbul (paid, optional): built for Indian languages.
+  3. None: the endpoint answers 204 and the browser uses its most natural voice (in Microsoft Edge
+     these are the same Microsoft neural voices, free and with no key).
 
 Audio is cached in memory by (provider, language, text): replaying a message is instant
 and does not spend API credits.
@@ -41,11 +43,21 @@ class TTSError(Exception):
 
 def provider() -> str:
     s = get_settings()
-    if s.sarvam_api_key:
-        return "sarvam"
     if s.azure_speech_key and s.azure_speech_region:
         return "azure"
+    if s.sarvam_api_key:
+        return "sarvam"
     return "none"
+
+
+def azure_voices() -> dict[str, str]:
+    """Default voices, with optional overrides like AZURE_VOICES="hi=hi-IN-MadhurNeural,ta=ta-IN-ValluvarNeural"."""
+    voices = dict(AZURE_VOICES)
+    for part in filter(None, (p.strip() for p in get_settings().azure_voices.split(","))):
+        lang, _, name = part.partition("=")
+        if lang.strip() in LOCALE and name.strip().endswith("Neural"):
+            voices[lang.strip()] = name.strip()
+    return voices
 
 
 def sarvam_voices() -> dict[str, tuple[str, str]]:
@@ -105,7 +117,7 @@ def _sarvam(text: str, lang: str) -> tuple[bytes, str]:
 def _azure(text: str, lang: str) -> tuple[bytes, str]:
     s = get_settings()
     rate = f"{round((s.tts_pace - 1) * 100):+d}%"
-    ssml = (f"<speak version='1.0' xml:lang='{LOCALE[lang]}'><voice name='{AZURE_VOICES[lang]}'>"
+    ssml = (f"<speak version='1.0' xml:lang='{LOCALE[lang]}'><voice name='{azure_voices()[lang]}'>"
             f"<prosody rate='{rate}'>{html.escape(text)}</prosody></voice></speak>")
     try:
         r = httpx.post(
@@ -116,5 +128,6 @@ def _azure(text: str, lang: str) -> tuple[bytes, str]:
         )
         r.raise_for_status()
     except httpx.HTTPError as e:
-        raise TTSError(f"Azure TTS failed: {e}") from e
+        detail = f"{e.response.status_code} {e.response.text[:200]}" if isinstance(e, httpx.HTTPStatusError) else str(e)
+        raise TTSError(f"Azure TTS failed: {detail}") from e
     return r.content, "audio/mpeg"

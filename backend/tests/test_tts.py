@@ -11,7 +11,7 @@ from app.services import tts
 @pytest.fixture
 def settings(monkeypatch):
     s = get_settings()
-    for k, v in {"sarvam_api_key": "", "sarvam_voices": "", "azure_speech_key": "", "azure_speech_region": ""}.items():
+    for k, v in {"sarvam_api_key": "", "sarvam_voices": "", "azure_speech_key": "", "azure_speech_region": "", "azure_voices": ""}.items():
         monkeypatch.setattr(s, k, v)
     tts._cache.clear()
     return s
@@ -24,11 +24,29 @@ def test_no_provider_means_browser_voices(settings, client):
     assert client.get("/api/meta").json()["tts"] is False
 
 
-def test_sarvam_preferred_over_azure(settings, monkeypatch):
-    monkeypatch.setattr(settings, "azure_speech_key", "a"); monkeypatch.setattr(settings, "azure_speech_region", "centralindia")
-    assert tts.provider() == "azure"
+def test_free_azure_preferred_over_paid_sarvam(settings, monkeypatch):
     monkeypatch.setattr(settings, "sarvam_api_key", "s")
     assert tts.provider() == "sarvam"
+    monkeypatch.setattr(settings, "azure_speech_key", "a"); monkeypatch.setattr(settings, "azure_speech_region", "centralindia")
+    assert tts.provider() == "azure"
+
+
+def test_azure_request_and_voice_override(settings, monkeypatch):
+    monkeypatch.setattr(settings, "azure_speech_key", "k"); monkeypatch.setattr(settings, "azure_speech_region", "centralindia")
+    monkeypatch.setattr(settings, "azure_voices", "hi=hi-IN-MadhurNeural, ta=not-a-voice")
+    sent = []
+
+    def fake_post(url, headers=None, content=None, timeout=None, **_):
+        sent.append((url, headers, content.decode()))
+        return httpx.Response(200, content=b"ID3mp3", request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(tts.httpx, "post", fake_post)
+    assert tts.synthesize("नमस्ते <b>&", "hi") == (b"ID3mp3", "audio/mpeg")
+    url, headers, ssml = sent[0]
+    assert url == "https://centralindia.tts.speech.microsoft.com/cognitiveservices/v1" and headers["Ocp-Apim-Subscription-Key"] == "k"
+    assert "hi-IN-MadhurNeural" in ssml and "&lt;b&gt;&amp;" in ssml and "rate='-8%'" in ssml
+    tts.synthesize("வணக்கம்", "ta")
+    assert "ta-IN-PallaviNeural" in sent[1][2]                     # invalid override ignored
 
 
 def test_voice_overrides(settings, monkeypatch):

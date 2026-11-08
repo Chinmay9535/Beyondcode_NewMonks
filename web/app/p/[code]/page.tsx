@@ -30,6 +30,14 @@ export default function PatientApp() {
   const [showEn, setShowEn] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
   const reading = useReading();
+  // Shown once if the browser has no voice for the patient's language (and no server voice is set up).
+  const [voiceTip, setVoiceTip] = useState(false);
+  useEffect(() => {
+    let shown = false;
+    const on = () => { if (!shown) { shown = true; setVoiceTip(true); } };
+    window.addEventListener("ds-novoice", on);
+    return () => window.removeEventListener("ds-novoice", on);
+  }, []);
   const lang: Lang = me?.language || "en";
 
   const load = useCallback(async () => {
@@ -122,6 +130,17 @@ export default function PatientApp() {
           <ReadingButton lang={lang} reading={reading} />
         </div>
       </header>
+
+      <AnimatePresence>
+        {voiceTip && (
+          <motion.div role="status" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            className="card-solid sticky top-[68px] z-20 mx-4 mt-3 flex items-start gap-3 rounded-2xl px-4 py-3 text-[0.875rem] leading-snug shadow-[0_18px_40px_-20px_rgba(0,0,0,.8)]">
+            <VolumeX size={18} className="mt-0.5 shrink-0 text-warn" />
+            <span className="flex-1">{tr(lang, "noTtsVoice")}</span>
+            <button type="button" onClick={() => setVoiceTip(false)} aria-label="Close" className="text-muted hover:text-ink">✕</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {!me.consented ? (
         <motion.main variants={stagger} initial="hidden" animate="show" className="relative flex flex-1 flex-col justify-center gap-6 overflow-hidden px-5 py-10">

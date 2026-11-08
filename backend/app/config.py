@@ -33,12 +33,13 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str = ""
 
-    # Optional natural voices. Sarvam AI (Bulbul) is used first if set, then Azure AI Speech;
-    # with neither, the browser's own voices are used.
-    sarvam_api_key: str = ""
-    sarvam_voices: str = ""      # optional overrides, e.g. "ta=bulbul:v3/kavitha"
+    # Optional natural voices. Azure AI Speech (free F0 tier) is used first if set, then Sarvam AI
+    # (paid); with neither, the browser's most natural voice is used.
     azure_speech_key: str = ""
     azure_speech_region: str = ""
+    azure_voices: str = ""       # optional overrides, e.g. "hi=hi-IN-MadhurNeural"
+    sarvam_api_key: str = ""
+    sarvam_voices: str = ""      # optional overrides, e.g. "ta=bulbul:v3/kavitha"
     tts_pace: float = 0.92       # 0.5-2.0; slightly slower than normal for older listeners
 
     seed_demo_data: bool = True

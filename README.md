@@ -71,8 +71,8 @@ Copy `backend/.env.example` to `backend/.env`. Everything is optional. Key setti
 |---|---|
 | `LLM_PROVIDER` | `none` (default, offline), `azure`, `openai` (any compatible endpoint), `anthropic` |
 | `AZURE_OPENAI_*` / `OPENAI_*` / `ANTHROPIC_API_KEY`, `LLM_MODEL` | Provider credentials |
-| `SARVAM_API_KEY` | Natural Kannada/Hindi/Tamil/Indian-English voices from Sarvam AI Bulbul (recommended; [get a key](https://dashboard.sarvam.ai)). Optional `SARVAM_VOICES`, `TTS_PACE` |
-| `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` | Alternative: Azure neural voices. With neither key, the browser's most natural voice is used |
+| `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` | Natural Kannada/Hindi/Tamil/Indian-English voices, **free**: Azure AI Speech's Free (F0) tier includes 0.5M neural characters a month, and [Azure for Students](https://azure.microsoft.com/free/students) needs no credit card. Optional `AZURE_VOICES`, `TTS_PACE` |
+| `SARVAM_API_KEY` | Paid alternative: Sarvam AI Bulbul voices. With no key at all, the browser's most natural voice is used (Microsoft Edge has the same neural voices built in) |
 | `SURGEON_PIN`, `SECRET_KEY` | Staff login |
 | `DATABASE_URL` | SQLite by default; any SQLAlchemy URL (Postgres/Supabase) |
 

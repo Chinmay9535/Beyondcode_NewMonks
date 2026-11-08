@@ -20,6 +20,12 @@ const S = {
   typeHere: { en: "Or type here", kn: "ಅಥವಾ ಇಲ್ಲಿ ಬರೆಯಿರಿ", hi: "या यहाँ लिखें", ta: "அல்லது இங்கே எழுதுங்கள்" },
   send: { en: "Send", kn: "ಕಳುಹಿಸಿ", hi: "भेजें", ta: "அனுப்பு" },
   showEnglish: { en: "Show English", kn: "ಇಂಗ್ಲಿಷ್ ತೋರಿಸಿ", hi: "अंग्रेज़ी दिखाएँ", ta: "ஆங்கிலம் காட்டு" },
+  noTtsVoice: {
+    en: "This browser has no voice for your language. Open this page in Microsoft Edge, or Chrome on an Android phone, to hear it read aloud.",
+    kn: "ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಕನ್ನಡ ಧ್ವನಿ ಇಲ್ಲ. ಓದಿ ಕೇಳಲು ಈ ಪುಟವನ್ನು Microsoft Edge ಅಥವಾ Android ಫೋನ್‌ನ Chrome ನಲ್ಲಿ ತೆರೆಯಿರಿ.",
+    hi: "इस ब्राउज़र में आपकी भाषा की आवाज़ नहीं है। सुनने के लिए यह पेज Microsoft Edge या Android फ़ोन के Chrome में खोलें।",
+    ta: "இந்த உலாவியில் உங்கள் மொழிக்கான குரல் இல்லை. கேட்க, இந்தப் பக்கத்தை Microsoft Edge அல்லது Android ஃபோனின் Chrome இல் திறக்கவும்.",
+  },
   readingOptions: { en: "Reading options", kn: "ಓದುವ ಆಯ್ಕೆಗಳು", hi: "पढ़ने के विकल्प", ta: "படிக்கும் விருப்பங்கள்" },
   textSize: { en: "Text size", kn: "ಅಕ್ಷರದ ಗಾತ್ರ", hi: "अक्षरों का आकार", ta: "எழுத்து அளவு" },
   theme: { en: "Light / dark", kn: "ಲೈಟ್ / ಡಾರ್ಕ್", hi: "लाइट / डार्क", ta: "லைட் / டார்க்" },
