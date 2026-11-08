@@ -33,8 +33,9 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str = ""
 
-    # Optional natural voices. Azure AI Speech (free F0 tier) is used first if set, then Sarvam AI
-    # (paid); with neither, the browser's most natural voice is used.
+    # Optional natural voices, tried in order: a local GPU server (tts-local/, free and offline),
+    # Azure AI Speech (free F0 tier), Sarvam AI (paid); with none, the browser's most natural voice.
+    local_tts_url: str = ""      # e.g. http://127.0.0.1:8010
     azure_speech_key: str = ""
     azure_speech_region: str = ""
     azure_voices: str = ""       # optional overrides, e.g. "hi=hi-IN-MadhurNeural"

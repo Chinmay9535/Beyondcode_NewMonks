@@ -1,7 +1,9 @@
 """Text-to-speech for the patient's language.
 
-Providers (the first one configured is used):
-  1. Azure AI Speech neural voices: the best FREE option. The free (F0) tier includes 0.5 million
+Providers, tried in this order (each one that is configured; on failure the next is tried):
+  0. Local GPU (LOCAL_TTS_URL): AI4Bharat Indic Parler-TTS served by tts-local/server.py on the
+     clinic's or developer's own machine. Free, offline, private.
+  1. Azure AI Speech neural voices: the best free cloud option. The free (F0) tier includes 0.5 million
      neural characters a month, and Azure for Students needs no credit card. Female voices:
      Sapna (Kannada), Swara (Hindi), Pallavi (Tamil), Neerja (Indian English); override with AZURE_VOICES.
   2. Sarvam AI Bulbul (paid, optional): built for Indian languages.
@@ -41,13 +43,22 @@ class TTSError(Exception):
     pass
 
 
-def provider() -> str:
+def providers() -> list[str]:
     s = get_settings()
+    out = []
+    if s.local_tts_url:
+        out.append("local")
     if s.azure_speech_key and s.azure_speech_region:
-        return "azure"
+        out.append("azure")
     if s.sarvam_api_key:
-        return "sarvam"
-    return "none"
+        out.append("sarvam")
+    return out
+
+
+def provider() -> str:
+    """The preferred configured provider ("none" if there is none)."""
+    p = providers()
+    return p[0] if p else "none"
 
 
 def azure_voices() -> dict[str, str]:
@@ -72,20 +83,38 @@ def sarvam_voices() -> dict[str, tuple[str, str]]:
 
 
 def synthesize(text: str, lang: str) -> tuple[bytes, str] | None:
-    """Returns (audio bytes, media type), or None when no provider is configured."""
-    p = provider()
-    if p == "none":
+    """Returns (audio bytes, media type), or None when no provider is configured.
+    Tries each configured provider in order; raises TTSError only if all of them fail."""
+    chain = providers()
+    if not chain:
         return None
     lang = lang if lang in LOCALE else "en"
-    key = (p, lang, text)
-    if key in _cache:
-        _cache.move_to_end(key)
-        return _cache[key]
-    out = _sarvam(text, lang) if p == "sarvam" else _azure(text, lang)
-    _cache[key] = out
-    if len(_cache) > _CACHE_MAX:
-        _cache.popitem(last=False)
-    return out
+    errors = []
+    for p in chain:
+        key = (p, lang, text)
+        if key in _cache:
+            _cache.move_to_end(key)
+            return _cache[key]
+        try:
+            out = {"local": _local, "azure": _azure, "sarvam": _sarvam}[p](text, lang)
+        except TTSError as e:
+            errors.append(str(e))
+            continue
+        _cache[key] = out
+        if len(_cache) > _CACHE_MAX:
+            _cache.popitem(last=False)
+        return out
+    raise TTSError("; ".join(errors))
+
+
+def _local(text: str, lang: str) -> tuple[bytes, str]:
+    url = get_settings().local_tts_url.rstrip("/") + "/tts"
+    try:
+        r = httpx.post(url, json={"text": text, "lang": lang}, timeout=120)
+        r.raise_for_status()
+    except httpx.HTTPError as e:
+        raise TTSError(f"Local TTS failed ({url}): {e}") from e
+    return r.content, r.headers.get("content-type", "audio/wav").split(";")[0]
 
 
 def _sarvam(text: str, lang: str) -> tuple[bytes, str]:

@@ -1,0 +1,6 @@
+# Install PyTorch with CUDA first (see README.md), then: pip install -r requirements.txt
+fastapi>=0.115
+uvicorn>=0.30
+git+https://github.com/huggingface/parler-tts.git
+sentencepiece
+protobuf

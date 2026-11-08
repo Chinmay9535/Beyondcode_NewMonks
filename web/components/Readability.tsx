@@ -93,7 +93,10 @@ export function ReadingButton({ lang, reading }: { lang: Lang; reading: ReturnTy
 /** Small speaker button that reads a card's text in the patient's language. */
 export function ListenButton({ text, lang, tts, className }: { text: string; lang: Lang; tts: boolean; className?: string }) {
   const [on, setOn] = useState(false);
-  useEffect(() => () => stopSpeaking(), []);
+  // On unmount, stop speech only if this button started it (not, e.g., the assistant's greeting).
+  const onRef = useRef(false);
+  onRef.current = on;
+  useEffect(() => () => { if (onRef.current) stopSpeaking(); }, []);
   useEffect(() => {
     if (!on) return;
     // Clear the "playing" state once speech or server audio ends.

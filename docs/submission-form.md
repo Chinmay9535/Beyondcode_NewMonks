@@ -36,7 +36,7 @@ DrishtiSaathi is a voice-first companion in Kannada, Hindi, Tamil and English. T
 - **Lens ranking:** defocus curves (monocular, anchored to published figures for ZEISS AT LARA 829MP and AT LISA tri 839MP) combined across both eyes, an additive explainable score, clinical exclusion rules from `clinic.json`, SRK/T IOL power, toric check.
 - **On-device depth:** Depth Anything V2 Small via transformers.js and ONNX Runtime Web in a Web Worker.
 
-**Speech:** natural Microsoft neural voices in Kannada, Hindi, Tamil and Indian English through Azure AI Speech's free tier, with Sarvam AI Bulbul as an optional upgrade and the browser's most natural voice as the no-key fallback. Speech recognition uses the browser (Chrome on Android supports kn-IN, hi-IN, ta-IN).
+**Speech:** AI4Bharat's open Indic Parler-TTS running on the clinic's own GPU (free, offline, private) for natural Kannada, Hindi, Tamil and Indian-English voices, falling back to Azure AI Speech's free tier and then to the browser's most natural voice. Long answers are spoken sentence by sentence so speech starts quickly. Speech recognition uses the browser (Chrome on Android supports kn-IN, hi-IN, ta-IN).
 
 **Data & configuration:** clinic-editable files: `clinic.json` (lens catalogue, defocus curves with sources, A-constants, drop protocol, follow-ups, contacts) and Markdown guides. Biometry typed in or imported from a biometer CSV/JSON export (AL, K1, K2, axis, ACD).
 

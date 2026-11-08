@@ -86,22 +86,65 @@ export function bestVoice(voices: SpeechSynthesisVoice[], locale: string, lang: 
   return voices.map((v) => [score(v), v] as const).filter(([n]) => n >= 0).sort((a, b) => b[0] - a[0])[0]?.[1];
 }
 
-/** Text-to-speech: natural voice from the backend (Sarvam or Azure) if configured, else the browser's best voice. */
+let playToken = 0;        // bumps on every new speak()/stop, cancelling older playback
+let queueActive = false;  // true between server audio parts
+
+/** Splits text for speech: the first sentence alone (so audio starts fast), then groups of ~30 words. */
+export function speechParts(text: string): string[] {
+  const sentences = text.split(/(?<=[.!?।॥])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
+  if (sentences.length <= 1) return [text.trim()];
+  const parts = [sentences[0]];
+  let cur = "";
+  for (const s of sentences.slice(1)) {
+    const cand = cur ? `${cur} ${s}` : s;
+    if (cur && cand.split(/\s+/).length > 30) { parts.push(cur); cur = s; } else cur = cand;
+  }
+  if (cur) parts.push(cur);
+  return parts;
+}
+
+/** Plays server audio part by part, fetching the next part while the current one plays.
+ *  Resolves true once the first part starts playing, false if the server has no voice. */
+function playServer(text: string, lang: Lang, token: number): Promise<boolean> {
+  const fetchPart = (t: string) =>
+    fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: t, lang }) })
+      .then((r) => (r.status === 200 ? r.blob() : null)).catch(() => null);
+  const parts = speechParts(text);
+  return new Promise<boolean>((started) => {
+    (async () => {
+      let next = fetchPart(parts[0]);
+      queueActive = true;
+      try {
+        for (let i = 0; i < parts.length; i++) {
+          const blob = await next;
+          if (token !== playToken) return started(true);
+          if (!blob) return started(i > 0);
+          if (i + 1 < parts.length) next = fetchPart(parts[i + 1]);
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          currentAudio = audio;
+          const done = new Promise<void>((res) => { audio.onended = () => res(); audio.onpause = () => res(); audio.onerror = () => res(); });
+          try { await audio.play(); } catch { URL.revokeObjectURL(url); return started(i > 0); }
+          if (i === 0) started(true);
+          await done;
+          URL.revokeObjectURL(url);
+          if (token !== playToken) return;
+        }
+      } finally {
+        if (token === playToken) queueActive = false;
+      }
+    })();
+  });
+}
+
+/** Text-to-speech: natural voice from the backend (local GPU, Azure or Sarvam) if configured, else the browser's best voice. */
 export async function speak(text: string, lang: Lang, useServer: boolean): Promise<boolean> {
   if (typeof window === "undefined") return false;
+  const token = ++playToken;
   window.speechSynthesis?.cancel();
   currentAudio?.pause();
-  if (useServer) {
-    try {
-      const res = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, lang }) });
-      if (res.status === 200) {
-        const url = URL.createObjectURL(await res.blob());
-        currentAudio = new Audio(url);
-        await currentAudio.play();
-        return true;
-      }
-    } catch {}
-  }
+  if (useServer && (await playServer(text, lang, token))) return true;
+  if (token !== playToken) return true;
   const synth = window.speechSynthesis;
   if (!synth) return false;
   const locale = SPEECH_LOCALE[lang];
@@ -128,11 +171,13 @@ export async function speak(text: string, lang: Lang, useServer: boolean): Promi
 /** True while browser speech or server audio is playing. */
 export function isSpeaking() {
   if (typeof window === "undefined") return false;
-  return !!window.speechSynthesis?.speaking || (!!currentAudio && !currentAudio.paused && !currentAudio.ended);
+  return !!window.speechSynthesis?.speaking || queueActive || (!!currentAudio && !currentAudio.paused && !currentAudio.ended);
 }
 
 export function stopSpeaking() {
   if (typeof window === "undefined") return;
+  playToken++;
+  queueActive = false;
   window.speechSynthesis?.cancel();
   currentAudio?.pause();
 }

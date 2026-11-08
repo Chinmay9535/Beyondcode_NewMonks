@@ -11,7 +11,7 @@ from app.services import tts
 @pytest.fixture
 def settings(monkeypatch):
     s = get_settings()
-    for k, v in {"sarvam_api_key": "", "sarvam_voices": "", "azure_speech_key": "", "azure_speech_region": "", "azure_voices": ""}.items():
+    for k, v in {"sarvam_api_key": "", "sarvam_voices": "", "azure_speech_key": "", "azure_speech_region": "", "azure_voices": "", "local_tts_url": ""}.items():
         monkeypatch.setattr(s, k, v)
     tts._cache.clear()
     return s
@@ -90,3 +90,37 @@ def test_sarvam_error_becomes_502(settings, monkeypatch, client):
     monkeypatch.setattr(tts.httpx, "post", fake_post)
     r = client.post("/api/tts", json={"text": "hello", "lang": "en"})
     assert r.status_code == 502 and "invalid key" in r.json()["detail"]
+
+
+def test_local_gpu_first_then_falls_back(settings, monkeypatch):
+    monkeypatch.setattr(settings, "local_tts_url", "http://127.0.0.1:8010/")
+    monkeypatch.setattr(settings, "azure_speech_key", "k"); monkeypatch.setattr(settings, "azure_speech_region", "centralindia")
+    assert tts.providers() == ["local", "azure"]
+    calls = []
+
+    def ok(url, json=None, **_):
+        calls.append((url, json))
+        return httpx.Response(200, content=b"RIFFlocal", headers={"content-type": "audio/wav"}, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(tts.httpx, "post", ok)
+    assert tts.synthesize("ನಮಸ್ಕಾರ", "kn") == (b"RIFFlocal", "audio/wav")
+    assert calls[0] == ("http://127.0.0.1:8010/tts", {"text": "ನಮಸ್ಕಾರ", "lang": "kn"})
+
+    def local_down(url, **kw):
+        if "8010" in url:
+            raise httpx.ConnectError("refused", request=httpx.Request("POST", url))
+        return httpx.Response(200, content=b"ID3azure", request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(tts.httpx, "post", local_down)
+    assert tts.synthesize("नमस्ते", "hi") == (b"ID3azure", "audio/mpeg")     # local down -> Azure
+
+
+def test_all_providers_failing_is_502(settings, monkeypatch, client):
+    monkeypatch.setattr(settings, "local_tts_url", "http://127.0.0.1:9")
+
+    def down(url, **_):
+        raise httpx.ConnectError("refused", request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(tts.httpx, "post", down)
+    r = client.post("/api/tts", json={"text": "hello", "lang": "en"})
+    assert r.status_code == 502 and "Local TTS failed" in r.json()["detail"]
