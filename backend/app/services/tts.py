@@ -1,0 +1,120 @@
+"""Text-to-speech for the patient's language.
+
+Providers, best first (the first one configured is used):
+  1. Sarvam AI Bulbul: built for Indian languages, the most natural Kannada/Hindi/Tamil voices
+     we found. Warm female voices, one per language (override with SARVAM_VOICES).
+  2. Azure AI Speech neural voices.
+  3. None: the endpoint answers 204 and the browser uses its own voices.
+
+Audio is cached in memory by (provider, language, text): replaying a message is instant
+and does not spend API credits.
+"""
+from __future__ import annotations
+
+import base64
+import html
+from collections import OrderedDict
+
+import httpx
+
+from ..config import get_settings
+
+LOCALE = {"kn": "kn-IN", "hi": "hi-IN", "ta": "ta-IN", "en": "en-IN"}
+
+# (model, speaker). Female, calm and conversational, the same persona where the catalogue allows.
+# Bulbul v4 Flash has no female Tamil persona yet, so Tamil uses v3's top-rated female voice.
+SARVAM_VOICES: dict[str, tuple[str, str]] = {
+    "kn": ("bulbul:v4-flash", "chaitra_kn_conversation"),
+    "hi": ("bulbul:v4-flash", "aparna_hi_customer"),
+    "en": ("bulbul:v4-flash", "aparna_en_companion"),
+    "ta": ("bulbul:v3", "ishita"),
+}
+AZURE_VOICES = {"kn": "kn-IN-SapnaNeural", "hi": "hi-IN-SwaraNeural", "ta": "ta-IN-PallaviNeural", "en": "en-IN-NeerjaNeural"}
+
+_cache: OrderedDict[tuple[str, str, str], tuple[bytes, str]] = OrderedDict()
+_CACHE_MAX = 300
+
+
+class TTSError(Exception):
+    pass
+
+
+def provider() -> str:
+    s = get_settings()
+    if s.sarvam_api_key:
+        return "sarvam"
+    if s.azure_speech_key and s.azure_speech_region:
+        return "azure"
+    return "none"
+
+
+def sarvam_voices() -> dict[str, tuple[str, str]]:
+    """Default voices, with optional overrides like SARVAM_VOICES="ta=bulbul:v3/kavitha,kn=bulbul:v4-flash/suchitra_kn_narration"."""
+    voices = dict(SARVAM_VOICES)
+    for part in filter(None, (p.strip() for p in get_settings().sarvam_voices.split(","))):
+        lang, _, spec = part.partition("=")
+        model, _, speaker = spec.partition("/")
+        if lang.strip() in LOCALE and model and speaker:
+            voices[lang.strip()] = (model.strip(), speaker.strip())
+    return voices
+
+
+def synthesize(text: str, lang: str) -> tuple[bytes, str] | None:
+    """Returns (audio bytes, media type), or None when no provider is configured."""
+    p = provider()
+    if p == "none":
+        return None
+    lang = lang if lang in LOCALE else "en"
+    key = (p, lang, text)
+    if key in _cache:
+        _cache.move_to_end(key)
+        return _cache[key]
+    out = _sarvam(text, lang) if p == "sarvam" else _azure(text, lang)
+    _cache[key] = out
+    if len(_cache) > _CACHE_MAX:
+        _cache.popitem(last=False)
+    return out
+
+
+def _sarvam(text: str, lang: str) -> tuple[bytes, str]:
+    s = get_settings()
+    model, speaker = sarvam_voices()[lang]
+    body = {
+        "text": text[:2500],
+        "language_code": LOCALE[lang],
+        "model": model,
+        "speaker": speaker,
+        "pace": s.tts_pace,          # a touch slower than default: our listeners are older
+        "speech_sample_rate": 24000,
+    }
+    if model != "bulbul:v3":
+        body["enable_preprocessing"] = True  # reads numbers, times and dates naturally
+    try:
+        r = httpx.post("https://api.sarvam.ai/text-to-speech", json=body,
+                       headers={"api-subscription-key": s.sarvam_api_key}, timeout=30)
+        r.raise_for_status()
+        audios = r.json().get("audios") or []
+    except (httpx.HTTPError, ValueError) as e:
+        detail = e.response.text[:200] if isinstance(e, httpx.HTTPStatusError) else str(e)
+        raise TTSError(f"Sarvam TTS failed: {detail}") from e
+    if not audios:
+        raise TTSError("Sarvam TTS returned no audio")
+    return base64.b64decode("".join(audios)), "audio/wav"
+
+
+def _azure(text: str, lang: str) -> tuple[bytes, str]:
+    s = get_settings()
+    rate = f"{round((s.tts_pace - 1) * 100):+d}%"
+    ssml = (f"<speak version='1.0' xml:lang='{LOCALE[lang]}'><voice name='{AZURE_VOICES[lang]}'>"
+            f"<prosody rate='{rate}'>{html.escape(text)}</prosody></voice></speak>")
+    try:
+        r = httpx.post(
+            f"https://{s.azure_speech_region}.tts.speech.microsoft.com/cognitiveservices/v1",
+            headers={"Ocp-Apim-Subscription-Key": s.azure_speech_key, "Content-Type": "application/ssml+xml",
+                     "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3", "User-Agent": "drishtisaathi"},
+            content=ssml.encode(), timeout=20,
+        )
+        r.raise_for_status()
+    except httpx.HTTPError as e:
+        raise TTSError(f"Azure TTS failed: {e}") from e
+    return r.content, "audio/mpeg"

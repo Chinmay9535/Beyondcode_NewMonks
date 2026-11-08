@@ -1,7 +1,6 @@
 """DrishtiSaathi API."""
 from __future__ import annotations
 
-import html
 import logging
 from contextlib import asynccontextmanager
 
@@ -15,6 +14,7 @@ from .config import get_settings
 from .db import init_db
 from .routers import patient, staff
 from .services import lenses
+from .services import tts as tts_service
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -52,7 +52,8 @@ def meta():
     return {
         "clinic": lenses.clinic_config()["clinic"],
         "ai": llm.provider_label(),
-        "tts": bool(s.azure_speech_key and s.azure_speech_region),
+        "tts": tts_service.provider() != "none",
+        "tts_provider": tts_service.provider(),
         "curves": lenses.curves(),
         "conditions": lenses.CONDITIONS,
         "languages": {"kn": "ಕನ್ನಡ", "hi": "हिन्दी", "ta": "தமிழ்", "en": "English"},
@@ -79,7 +80,6 @@ def safety_try(body: TryText):
     return detect_rules(body.text)
 
 
-VOICES = {"kn": ("kn-IN", "kn-IN-SapnaNeural"), "hi": ("hi-IN", "hi-IN-SwaraNeural"), "ta": ("ta-IN", "ta-IN-PallaviNeural"), "en": ("en-IN", "en-IN-NeerjaNeural")}
 
 
 class Speak(BaseModel):
@@ -89,21 +89,13 @@ class Speak(BaseModel):
 
 @app.post("/api/tts")
 def tts(body: Speak):
-    """Neural speech for Indian languages via Azure AI Speech. 204 when not configured
-    (the browser then falls back to its built-in voices)."""
-    s = get_settings()
-    if not (s.azure_speech_key and s.azure_speech_region):
-        return Response(status_code=204)
-    locale, voice = VOICES.get(body.lang, VOICES["en"])
-    ssml = f"<speak version='1.0' xml:lang='{locale}'><voice name='{voice}'><prosody rate='-8%'>{html.escape(body.text)}</prosody></voice></speak>"
+    """Natural speech in the patient's language (Sarvam Bulbul, else Azure). 204 when no
+    provider is configured; the browser then uses its own best voice."""
     try:
-        r = httpx.post(
-            f"https://{s.azure_speech_region}.tts.speech.microsoft.com/cognitiveservices/v1",
-            headers={"Ocp-Apim-Subscription-Key": s.azure_speech_key, "Content-Type": "application/ssml+xml",
-                     "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3", "User-Agent": "drishtisaathi"},
-            content=ssml.encode(), timeout=20,
-        )
-        r.raise_for_status()
-    except httpx.HTTPError as e:
-        raise HTTPException(502, f"Speech service error: {e}") from e
-    return Response(content=r.content, media_type="audio/mpeg")
+        out = tts_service.synthesize(body.text, body.lang)
+    except tts_service.TTSError as e:
+        raise HTTPException(502, str(e)) from e
+    if out is None:
+        return Response(status_code=204)
+    audio, media = out
+    return Response(content=audio, media_type=media, headers={"Cache-Control": "private, max-age=86400"})

@@ -36,7 +36,7 @@ DrishtiSaathi is a voice-first companion in Kannada, Hindi, Tamil and English. T
 - **Lens ranking:** defocus curves (monocular, anchored to published figures for ZEISS AT LARA 829MP and AT LISA tri 839MP) combined across both eyes, an additive explainable score, clinical exclusion rules from `clinic.json`, SRK/T IOL power, toric check.
 - **On-device depth:** Depth Anything V2 Small via transformers.js and ONNX Runtime Web in a Web Worker.
 
-**Speech:** browser speech recognition and synthesis (Chrome on Android supports kn-IN, hi-IN, ta-IN). Optional Azure AI Speech neural voices for Kannada, Hindi and Tamil.
+**Speech:** voices from Sarvam AI's Bulbul, a text-to-speech model built for Indian languages (warm female voices in Kannada, Hindi, Tamil and Indian English), with Azure AI Speech as an alternative and the browser's most natural voice as the offline fallback. Speech recognition uses the browser (Chrome on Android supports kn-IN, hi-IN, ta-IN).
 
 **Data & configuration:** clinic-editable files: `clinic.json` (lens catalogue, defocus curves with sources, A-constants, drop protocol, follow-ups, contacts) and Markdown guides. Biometry typed in or imported from a biometer CSV/JSON export (AL, K1, K2, axis, ACD).
 

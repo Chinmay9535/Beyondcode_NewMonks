@@ -69,7 +69,24 @@ export function useDictation(lang: Lang, onFinal: (text: string) => void) {
 
 let currentAudio: HTMLAudioElement | null = null;
 
-/** Text-to-speech: neural voice from the backend if configured, else the browser's own voice. */
+/** Picks the most natural browser voice for a language. Edge ships free neural voices
+ *  ("Microsoft Sapna Online (Natural) - Kannada"), Chrome has "Google हिन्दी", Android has
+ *  Google's on-device voices; the old desktop voices sound robotic, so they come last. */
+export function bestVoice(voices: SpeechSynthesisVoice[], locale: string, lang: string): SpeechSynthesisVoice | undefined {
+  const score = (v: SpeechSynthesisVoice) => {
+    let n = v.lang === locale ? 100 : v.lang.replace("_", "-").startsWith(lang + "-") ? 60 : -1;
+    if (n < 0) return n;
+    if (/natural|neural/i.test(v.name)) n += 30;
+    if (/online/i.test(v.name)) n += 10;
+    if (/google/i.test(v.name)) n += 20;
+    if (!v.localService) n += 5;   // cloud voices are usually the higher-quality ones
+    if (/female|sapna|swara|pallavi|neerja|heera|kalpana|veena/i.test(v.name)) n += 3;
+    return n;
+  };
+  return voices.map((v) => [score(v), v] as const).filter(([n]) => n >= 0).sort((a, b) => b[0] - a[0])[0]?.[1];
+}
+
+/** Text-to-speech: natural voice from the backend (Sarvam or Azure) if configured, else the browser's best voice. */
 export async function speak(text: string, lang: Lang, useServer: boolean): Promise<boolean> {
   if (typeof window === "undefined") return false;
   window.speechSynthesis?.cancel();
@@ -88,8 +105,13 @@ export async function speak(text: string, lang: Lang, useServer: boolean): Promi
   const synth = window.speechSynthesis;
   if (!synth) return false;
   const locale = SPEECH_LOCALE[lang];
-  const voices = synth.getVoices();
-  const voice = voices.find((v) => v.lang === locale) || voices.find((v) => v.lang.startsWith(lang + "-"));
+  let voices = synth.getVoices();
+  if (!voices.length) {
+    // Chrome fills the voice list asynchronously; wait briefly for it.
+    await new Promise<void>((done) => { const t = setTimeout(done, 1000); synth.addEventListener("voiceschanged", () => { clearTimeout(t); done(); }, { once: true }); });
+    voices = synth.getVoices();
+  }
+  const voice = bestVoice(voices, locale, lang);
   if (!voice && lang !== "en") return false;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = locale;

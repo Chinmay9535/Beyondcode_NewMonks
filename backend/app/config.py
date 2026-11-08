@@ -33,9 +33,13 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str = ""
 
-    # Optional neural text-to-speech for Indian languages (Azure AI Speech).
+    # Optional natural voices. Sarvam AI (Bulbul) is used first if set, then Azure AI Speech;
+    # with neither, the browser's own voices are used.
+    sarvam_api_key: str = ""
+    sarvam_voices: str = ""      # optional overrides, e.g. "ta=bulbul:v3/kavitha"
     azure_speech_key: str = ""
     azure_speech_region: str = ""
+    tts_pace: float = 0.92       # 0.5-2.0; slightly slower than normal for older listeners
 
     seed_demo_data: bool = True
     clinic_timezone: str = "Asia/Kolkata"
