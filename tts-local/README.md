@@ -46,6 +46,13 @@ LOCAL_TTS_URL=http://127.0.0.1:8010
 Check it: open http://127.0.0.1:8010/health. The patient app's speaker buttons now use these voices.
 If this server is not running, the app falls back to Azure (if configured) or the browser's voice.
 
+## If something goes wrong
+
+- `cannot import name 'runtime_version' from 'google.protobuf'`: run
+  `.venv\Scripts\pip install sentencepiece==0.2.1` (already pinned in requirements.txt).
+- `CUDA out of memory`: close other GPU-heavy apps and start again (needs about 3 GB free).
+- `401` / `gated repo`: click **Agree** on the model page with the same account as your token.
+
 ## Notes
 
 - Speed depends on the GPU; long messages are spoken sentence by sentence, so the first words

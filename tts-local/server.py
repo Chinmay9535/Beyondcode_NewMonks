@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import io
 import os
+from contextlib import asynccontextmanager
 import re
 import threading
 import time
@@ -148,14 +149,17 @@ def _tone(seconds: float, rate: int) -> bytes:
     return buf.getvalue()
 
 
-app = FastAPI(title="DrishtiSaathi local TTS (Indic Parler-TTS)")
 engine: Engine | None = None
 
 
-@app.on_event("startup")
-def _load() -> None:
+@asynccontextmanager
+async def lifespan(_app):
     global engine
     engine = Engine()
+    yield
+
+
+app = FastAPI(title="DrishtiSaathi local TTS (Indic Parler-TTS)", lifespan=lifespan)
 
 
 @app.get("/health")

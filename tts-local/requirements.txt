@@ -2,5 +2,7 @@
 fastapi>=0.115
 uvicorn>=0.30
 git+https://github.com/huggingface/parler-tts.git
-sentencepiece
+# sentencepiece 0.2.2+ is built for protobuf 7, but parler-tts' audio dependencies keep protobuf older,
+# which fails with "cannot import name 'runtime_version'". 0.2.1 works with both.
+sentencepiece==0.2.1
 protobuf
