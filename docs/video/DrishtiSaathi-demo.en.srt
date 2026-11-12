@@ -1,0 +1,383 @@
+1
+00:00:00,020 --> 00:00:04,930
+Hello everyone, we are team New Monks from
+BMSIT and this is our POC DrishtiSaathi
+
+2
+00:00:04,980 --> 00:00:07,500
+built for the AI-Powered
+Digital Experiences stream.
+
+3
+00:00:09,880 --> 00:00:13,470
+We have two portals, one is the staff
+portal for clinic login, used by eye-care
+
+4
+00:00:13,520 --> 00:00:16,130
+professionals and doctors and
+another is the patient portal.
+
+5
+00:00:16,180 --> 00:00:18,080
+Here is the dashboard for the staff portal.
+
+6
+00:00:18,200 --> 00:00:21,410
+The staff can register a new patient. I will
+quickly fill in all the details required
+
+7
+00:00:21,460 --> 00:00:22,660
+for the new patient.
+
+8
+00:00:25,820 --> 00:00:28,690
+Here we can also select the particular
+ocular condition the patient is dealing with
+
+9
+00:00:28,740 --> 00:00:30,100
+so we will have better clarity.
+
+10
+00:00:31,240 --> 00:00:34,650
+The biometric details can be added right
+now by the staff while registering or it
+
+11
+00:00:34,700 --> 00:00:37,950
+can be imported later by any other test
+that the patient has taken from any other
+
+12
+00:00:38,000 --> 00:00:40,000
+clinic and we are creating the patient.
+
+13
+00:00:40,960 --> 00:00:44,350
+After registering the patient, each patient
+will be given a unique code and this
+
+14
+00:00:44,400 --> 00:00:48,220
+code can be sent to the patient directly
+on WhatsApp or through any other means.
+
+15
+00:00:48,520 --> 00:00:51,970
+Where we will store every single record of
+this particular patient so the staff will
+
+16
+00:00:52,020 --> 00:00:53,980
+have easy access to it
+throughout the process.
+
+17
+00:00:54,580 --> 00:00:57,220
+Now let us go and have a
+look at the patient portal.
+
+18
+00:00:58,480 --> 00:01:01,960
+Since the staff selected the patient language
+as Kannada, we have a Kannada interface.
+
+19
+00:01:02,880 --> 00:01:06,050
+<i>Assistant (in Kannada): Namaste Ramesh! I'm DrishtiSaathi. I'll
+ask a few questions about your daily life</i>
+
+20
+00:01:06,100 --> 00:01:09,610
+<i>Assistant (in Kannada): so your doctor can suggest the right lens. Tell
+me about a usual day: what work do you do?</i>
+
+21
+00:01:09,660 --> 00:01:13,750
+Here we have a voice-first assistant
+using which the patient can describe his
+
+22
+00:01:13,800 --> 00:01:15,610
+requirements and necessities to the system.
+
+23
+00:01:15,660 --> 00:01:18,560
+I will reply to it as a patient in
+Kannada and see what answers it gives.
+
+24
+00:01:19,760 --> 00:01:22,900
+<i>Ramesh (in Kannada): I'm Ramesh. I'm 60 years old.</i>
+
+25
+00:01:23,140 --> 00:01:25,850
+<i>Assistant (in Kannada): Thank you. Do you do any close-up work,
+like reading, sewing or using a phone?</i>
+
+26
+00:01:25,900 --> 00:01:29,400
+<i>Assistant (in Kannada): About how many hours a day?</i>
+
+27
+00:01:30,120 --> 00:01:33,000
+<i>Ramesh (in Kannada): I read for 3 hours and also do tailoring.</i>
+
+28
+00:01:33,220 --> 00:01:36,050
+<i>Assistant (in Kannada): Got it: reading newspapers and books.</i>
+
+29
+00:01:36,100 --> 00:01:39,630
+<i>Assistant (in Kannada): What about things at arm's length, like
+a computer, cooking or a shop counter?</i>
+
+30
+00:01:39,680 --> 00:01:41,500
+<i>Ramesh (in Kannada): Computer work.</i>
+
+31
+00:01:42,200 --> 00:01:42,750
+<i>Assistant (in Kannada): Thank you.</i>
+
+32
+00:01:42,800 --> 00:01:46,350
+Here it is asking us other lifestyle questions
+and how frequent we do it so that it
+
+33
+00:01:46,400 --> 00:01:49,140
+can understand our lifestyle properly
+and provide the best lenses.
+
+34
+00:01:50,580 --> 00:01:53,750
+<i>Assistant (in Kannada): Thank you, Ramesh. I've made a summary
+of your day for Dr. Meera Rao.</i>
+
+35
+00:01:53,800 --> 00:01:57,500
+<i>Assistant (in Kannada): They will go through the lens options
+with you and approve the final choice.</i>
+
+36
+00:01:57,780 --> 00:02:01,270
+It has taken all the lifestyle information
+from the patient and it has also shared
+
+37
+00:02:01,320 --> 00:02:04,710
+that information to the doctor, Dr. Meera,
+the staff member who created this patient's
+
+38
+00:02:04,760 --> 00:02:08,030
+profile. This is the next feature and even
+this feature is available in all Indian
+
+39
+00:02:08,080 --> 00:02:12,190
+regional languages. So here the patient can
+choose a photo from his daily life world
+
+40
+00:02:12,240 --> 00:02:16,140
+and see how different lenses will
+make him view that world differently.
+
+41
+00:02:19,230 --> 00:02:21,560
+I have selected the night road
+photo and you can have a look here.
+
+42
+00:02:21,610 --> 00:02:25,380
+The system has generated how the patient
+will view this road, considering his
+
+43
+00:02:25,430 --> 00:02:26,460
+conditions and without any lens.
+
+44
+00:02:26,510 --> 00:02:29,600
+And this is how it will be seen if
+he is wearing a monofocal lens.
+
+45
+00:02:29,650 --> 00:02:34,120
+These are the changes that will be seen
+if he goes with the EDOF lens and the
+
+46
+00:02:34,170 --> 00:02:37,780
+trifocal lens. So with this, the patient
+can actually decide, considering his
+
+47
+00:02:37,830 --> 00:02:39,720
+requirements, what kind of lenses he wants.
+
+48
+00:02:39,770 --> 00:02:41,070
+Let us go to the next feature.
+
+49
+00:02:41,710 --> 00:02:45,080
+This is the eye test feature. Right now we
+have three medically approved eye tests
+
+50
+00:02:45,130 --> 00:02:48,810
+for vision and going forward
+we are planning to add more.
+
+51
+00:02:50,300 --> 00:02:52,660
+We can select for which eye
+the patient is doing the test.
+
+52
+00:02:59,890 --> 00:03:01,100
+We also have a straight line test.
+
+53
+00:03:01,150 --> 00:03:02,950
+This is the newer test that
+is used in the clinics.
+
+54
+00:03:03,650 --> 00:03:07,660
+By adding all these different kinds of
+tests, the patient can continuously assess
+
+55
+00:03:07,710 --> 00:03:11,150
+the health of his eyes without
+actually going to the clinic.
+
+56
+00:03:12,610 --> 00:03:16,700
+Over here we have the chatbot which has
+the knowledge of this patient's particular
+
+57
+00:03:16,750 --> 00:03:20,680
+data. So it can answer context specifically
+regarding the conditions of this
+
+58
+00:03:20,730 --> 00:03:23,070
+specific patient. The patient
+can ask any question.
+
+59
+00:03:29,050 --> 00:03:32,360
+So here you can see we as a patient interacted
+with the chatbot and asked a question
+
+60
+00:03:32,410 --> 00:03:34,380
+and it gave context specific advice.
+
+61
+00:03:34,430 --> 00:03:38,440
+And every single information that the
+patient interacts with the portal will be
+
+62
+00:03:38,490 --> 00:03:43,290
+registered and sent to the staff or the
+doctor who has registered this patient.
+
+63
+00:03:43,790 --> 00:03:45,270
+Let's go and have a look at it.
+
+64
+00:03:47,400 --> 00:03:50,240
+I log back to the staff portal
+and we can have a look here.
+
+65
+00:03:50,380 --> 00:03:53,750
+Every test the patient took, every
+information the patient gave, everything is
+
+66
+00:03:53,800 --> 00:03:56,640
+registered and saved for the
+medical professional to view.
+
+67
+00:03:56,700 --> 00:04:00,930
+Considering the patient test, DrishtiSaathi
+has recommended a monofocal lens for the
+
+68
+00:04:00,980 --> 00:04:03,590
+patient and the medical
+professional can approve it.
+
+69
+00:04:03,640 --> 00:04:06,310
+Here are the metrics that show which
+lens is most suitable for the patient.
+
+70
+00:04:06,360 --> 00:04:09,040
+We can see monofocal lens has a score of 88.
+
+71
+00:04:09,360 --> 00:04:11,720
+And it also suggests the
+recommended lens for the patient.
+
+72
+00:04:11,820 --> 00:04:14,080
+That is ZEISS CT ASPHINA 409MP.
+
+73
+00:04:16,150 --> 00:04:19,680
+And you can see if they go with EDOF lens,
+there's a different solution that is ZEISS
+
+74
+00:04:19,730 --> 00:04:21,150
+AT LARA 829MP.
+
+75
+00:04:21,910 --> 00:04:24,060
+Here is the eye-health data of the patient.
+
+76
+00:04:24,110 --> 00:04:26,830
+The staff can also schedule the
+recovery timetable for the patient.
+
+77
+00:04:27,530 --> 00:04:31,400
+The medical professional also has access
+to the entire chat history of the patient
+
+78
+00:04:31,450 --> 00:04:34,010
+with DrishtiSaathi so they can
+understand the client better.
+
+79
+00:04:35,850 --> 00:04:38,800
+So this is our progress as of now and before
+the submission timeline, we have a lot
+
+80
+00:04:38,850 --> 00:04:40,940
+of features in mind that we
+plan to incorporate as well.
+
+81
+00:04:40,990 --> 00:04:42,190
+Thank you for watching.
+

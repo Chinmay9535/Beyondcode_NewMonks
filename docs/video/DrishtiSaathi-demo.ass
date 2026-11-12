@@ -1,0 +1,95 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Narration,Inter SemiBold,40,&H00FFFFFF,&H00FFFFFF,&H3A180F0B,&H3A180F0B,0,0,0,0,100,100,0,0,4,16,0,2,160,160,118,1
+Style: Kannada,Inter SemiBold,40,&H00FFE3BE,&H00FFFFFF,&H3A6A2A1D,&H3A6A2A1D,0,1,0,0,100,100,0,0,4,16,0,2,160,160,118,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.02,0:00:04.93,Narration,,0,0,0,,Hello everyone, we are team New Monks from\NBMSIT and this is our POC DrishtiSaathi
+Dialogue: 0,0:00:04.98,0:00:07.50,Narration,,0,0,0,,built for the AI-Powered\NDigital Experiences stream.
+Dialogue: 0,0:00:09.88,0:00:13.47,Narration,,0,0,0,,We have two portals, one is the staff\Nportal for clinic login, used by eye-care
+Dialogue: 0,0:00:13.52,0:00:16.13,Narration,,0,0,0,,professionals and doctors and\Nanother is the patient portal.
+Dialogue: 0,0:00:16.18,0:00:18.08,Narration,,0,0,0,,Here is the dashboard for the staff portal.
+Dialogue: 0,0:00:18.20,0:00:21.41,Narration,,0,0,0,,The staff can register a new patient. I will\Nquickly fill in all the details required
+Dialogue: 0,0:00:21.46,0:00:22.66,Narration,,0,0,0,,for the new patient.
+Dialogue: 0,0:00:25.82,0:00:28.69,Narration,,0,0,0,,Here we can also select the particular\Nocular condition the patient is dealing with
+Dialogue: 0,0:00:28.74,0:00:30.10,Narration,,0,0,0,,so we will have better clarity.
+Dialogue: 0,0:00:31.24,0:00:34.65,Narration,,0,0,0,,The biometric details can be added right\Nnow by the staff while registering or it
+Dialogue: 0,0:00:34.70,0:00:37.95,Narration,,0,0,0,,can be imported later by any other test\Nthat the patient has taken from any other
+Dialogue: 0,0:00:38.00,0:00:40.00,Narration,,0,0,0,,clinic and we are creating the patient.
+Dialogue: 0,0:00:40.96,0:00:44.35,Narration,,0,0,0,,After registering the patient, each patient\Nwill be given a unique code and this
+Dialogue: 0,0:00:44.40,0:00:48.22,Narration,,0,0,0,,code can be sent to the patient directly\Non WhatsApp or through any other means.
+Dialogue: 0,0:00:48.52,0:00:51.97,Narration,,0,0,0,,Where we will store every single record of\Nthis particular patient so the staff will
+Dialogue: 0,0:00:52.02,0:00:53.98,Narration,,0,0,0,,have easy access to it\Nthroughout the process.
+Dialogue: 0,0:00:54.58,0:00:57.22,Narration,,0,0,0,,Now let us go and have a\Nlook at the patient portal.
+Dialogue: 0,0:00:58.48,0:01:01.96,Narration,,0,0,0,,Since the staff selected the patient language\Nas Kannada, we have a Kannada interface.
+Dialogue: 0,0:01:02.88,0:01:06.05,Kannada,,0,0,0,,{\b1}Assistant:{\b0} Namaste Ramesh! I'm DrishtiSaathi. I'll\Nask a few questions about your daily life
+Dialogue: 0,0:01:06.10,0:01:09.61,Kannada,,0,0,0,,{\b1}Assistant:{\b0} so your doctor can suggest the right lens. Tell\Nme about a usual day: what work do you do?
+Dialogue: 0,0:01:09.66,0:01:13.75,Narration,,0,0,0,,Here we have a voice-first assistant\Nusing which the patient can describe his
+Dialogue: 0,0:01:13.80,0:01:15.61,Narration,,0,0,0,,requirements and necessities to the system.
+Dialogue: 0,0:01:15.66,0:01:18.56,Narration,,0,0,0,,I will reply to it as a patient in\NKannada and see what answers it gives.
+Dialogue: 0,0:01:19.76,0:01:22.90,Kannada,,0,0,0,,{\b1}Ramesh:{\b0} I'm Ramesh. I'm 60 years old.
+Dialogue: 0,0:01:23.14,0:01:25.85,Kannada,,0,0,0,,{\b1}Assistant:{\b0} Thank you. Do you do any close-up work,\Nlike reading, sewing or using a phone?
+Dialogue: 0,0:01:25.90,0:01:29.40,Kannada,,0,0,0,,{\b1}Assistant:{\b0} About how many hours a day?
+Dialogue: 0,0:01:30.12,0:01:33.00,Kannada,,0,0,0,,{\b1}Ramesh:{\b0} I read for 3 hours and also do tailoring.
+Dialogue: 0,0:01:33.22,0:01:36.05,Kannada,,0,0,0,,{\b1}Assistant:{\b0} Got it: reading newspapers and books.
+Dialogue: 0,0:01:36.10,0:01:39.63,Kannada,,0,0,0,,{\b1}Assistant:{\b0} What about things at arm's length, like\Na computer, cooking or a shop counter?
+Dialogue: 0,0:01:39.68,0:01:41.50,Kannada,,0,0,0,,{\b1}Ramesh:{\b0} Computer work.
+Dialogue: 0,0:01:42.20,0:01:42.75,Kannada,,0,0,0,,{\b1}Assistant:{\b0} Thank you.
+Dialogue: 0,0:01:42.80,0:01:46.35,Narration,,0,0,0,,Here it is asking us other lifestyle questions\Nand how frequent we do it so that it
+Dialogue: 0,0:01:46.40,0:01:49.14,Narration,,0,0,0,,can understand our lifestyle properly\Nand provide the best lenses.
+Dialogue: 0,0:01:50.58,0:01:53.75,Kannada,,0,0,0,,{\b1}Assistant:{\b0} Thank you, Ramesh. I've made a summary\Nof your day for Dr. Meera Rao.
+Dialogue: 0,0:01:53.80,0:01:57.50,Kannada,,0,0,0,,{\b1}Assistant:{\b0} They will go through the lens options\Nwith you and approve the final choice.
+Dialogue: 0,0:01:57.78,0:02:01.27,Narration,,0,0,0,,It has taken all the lifestyle information\Nfrom the patient and it has also shared
+Dialogue: 0,0:02:01.32,0:02:04.71,Narration,,0,0,0,,that information to the doctor, Dr. Meera,\Nthe staff member who created this patient's
+Dialogue: 0,0:02:04.76,0:02:08.03,Narration,,0,0,0,,profile. This is the next feature and even\Nthis feature is available in all Indian
+Dialogue: 0,0:02:08.08,0:02:12.19,Narration,,0,0,0,,regional languages. So here the patient can\Nchoose a photo from his daily life world
+Dialogue: 0,0:02:12.24,0:02:16.14,Narration,,0,0,0,,and see how different lenses will\Nmake him view that world differently.
+Dialogue: 0,0:02:19.23,0:02:21.56,Narration,,0,0,0,,I have selected the night road\Nphoto and you can have a look here.
+Dialogue: 0,0:02:21.61,0:02:25.38,Narration,,0,0,0,,The system has generated how the patient\Nwill view this road, considering his
+Dialogue: 0,0:02:25.43,0:02:26.46,Narration,,0,0,0,,conditions and without any lens.
+Dialogue: 0,0:02:26.51,0:02:29.60,Narration,,0,0,0,,And this is how it will be seen if\Nhe is wearing a monofocal lens.
+Dialogue: 0,0:02:29.65,0:02:34.12,Narration,,0,0,0,,These are the changes that will be seen\Nif he goes with the EDOF lens and the
+Dialogue: 0,0:02:34.17,0:02:37.78,Narration,,0,0,0,,trifocal lens. So with this, the patient\Ncan actually decide, considering his
+Dialogue: 0,0:02:37.83,0:02:39.72,Narration,,0,0,0,,requirements, what kind of lenses he wants.
+Dialogue: 0,0:02:39.77,0:02:41.07,Narration,,0,0,0,,Let us go to the next feature.
+Dialogue: 0,0:02:41.71,0:02:45.08,Narration,,0,0,0,,This is the eye test feature. Right now we\Nhave three medically approved eye tests
+Dialogue: 0,0:02:45.13,0:02:48.81,Narration,,0,0,0,,for vision and going forward\Nwe are planning to add more.
+Dialogue: 0,0:02:50.30,0:02:52.66,Narration,,0,0,0,,We can select for which eye\Nthe patient is doing the test.
+Dialogue: 0,0:02:59.89,0:03:01.10,Narration,,0,0,0,,We also have a straight line test.
+Dialogue: 0,0:03:01.15,0:03:02.95,Narration,,0,0,0,,This is the newer test that\Nis used in the clinics.
+Dialogue: 0,0:03:03.65,0:03:07.66,Narration,,0,0,0,,By adding all these different kinds of\Ntests, the patient can continuously assess
+Dialogue: 0,0:03:07.71,0:03:11.15,Narration,,0,0,0,,the health of his eyes without\Nactually going to the clinic.
+Dialogue: 0,0:03:12.61,0:03:16.70,Narration,,0,0,0,,Over here we have the chatbot which has\Nthe knowledge of this patient's particular
+Dialogue: 0,0:03:16.75,0:03:20.68,Narration,,0,0,0,,data. So it can answer context specifically\Nregarding the conditions of this
+Dialogue: 0,0:03:20.73,0:03:23.07,Narration,,0,0,0,,specific patient. The patient\Ncan ask any question.
+Dialogue: 0,0:03:29.05,0:03:32.36,Narration,,0,0,0,,So here you can see we as a patient interacted\Nwith the chatbot and asked a question
+Dialogue: 0,0:03:32.41,0:03:34.38,Narration,,0,0,0,,and it gave context specific advice.
+Dialogue: 0,0:03:34.43,0:03:38.44,Narration,,0,0,0,,And every single information that the\Npatient interacts with the portal will be
+Dialogue: 0,0:03:38.49,0:03:43.29,Narration,,0,0,0,,registered and sent to the staff or the\Ndoctor who has registered this patient.
+Dialogue: 0,0:03:43.79,0:03:45.27,Narration,,0,0,0,,Let's go and have a look at it.
+Dialogue: 0,0:03:47.40,0:03:50.24,Narration,,0,0,0,,I log back to the staff portal\Nand we can have a look here.
+Dialogue: 0,0:03:50.38,0:03:53.75,Narration,,0,0,0,,Every test the patient took, every\Ninformation the patient gave, everything is
+Dialogue: 0,0:03:53.80,0:03:56.64,Narration,,0,0,0,,registered and saved for the\Nmedical professional to view.
+Dialogue: 0,0:03:56.70,0:04:00.93,Narration,,0,0,0,,Considering the patient test, DrishtiSaathi\Nhas recommended a monofocal lens for the
+Dialogue: 0,0:04:00.98,0:04:03.59,Narration,,0,0,0,,patient and the medical\Nprofessional can approve it.
+Dialogue: 0,0:04:03.64,0:04:06.31,Narration,,0,0,0,,Here are the metrics that show which\Nlens is most suitable for the patient.
+Dialogue: 0,0:04:06.36,0:04:09.04,Narration,,0,0,0,,We can see monofocal lens has a score of 88.
+Dialogue: 0,0:04:09.36,0:04:11.72,Narration,,0,0,0,,And it also suggests the\Nrecommended lens for the patient.
+Dialogue: 0,0:04:11.82,0:04:14.08,Narration,,0,0,0,,That is ZEISS CT ASPHINA 409MP.
+Dialogue: 0,0:04:16.15,0:04:19.68,Narration,,0,0,0,,And you can see if they go with EDOF lens,\Nthere's a different solution that is ZEISS
+Dialogue: 0,0:04:19.73,0:04:21.15,Narration,,0,0,0,,AT LARA 829MP.
+Dialogue: 0,0:04:21.91,0:04:24.06,Narration,,0,0,0,,Here is the eye-health data of the patient.
+Dialogue: 0,0:04:24.11,0:04:26.83,Narration,,0,0,0,,The staff can also schedule the\Nrecovery timetable for the patient.
+Dialogue: 0,0:04:27.53,0:04:31.40,Narration,,0,0,0,,The medical professional also has access\Nto the entire chat history of the patient
+Dialogue: 0,0:04:31.45,0:04:34.01,Narration,,0,0,0,,with DrishtiSaathi so they can\Nunderstand the client better.
+Dialogue: 0,0:04:35.85,0:04:38.80,Narration,,0,0,0,,So this is our progress as of now and before\Nthe submission timeline, we have a lot
+Dialogue: 0,0:04:38.85,0:04:40.94,Narration,,0,0,0,,of features in mind that we\Nplan to incorporate as well.
+Dialogue: 0,0:04:40.99,0:04:42.19,Narration,,0,0,0,,Thank you for watching.
