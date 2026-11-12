@@ -2,6 +2,8 @@
 
 **Team New Monks, BMSIT&M:** Chinmay D M · Umashankar S · Vineeth Sagar S · Vishnu Kashyap D
 
+**ZEISS Hackathon · Track: AI-Powered Digital Experiences**
+
 Format: talk + live demo, four speakers. Suggested split, assign names among yourselves: **A** problem & vision · **B** patient demo · **C** surgeon side & safety · **D** progress, close and Q&A lead. One person can do all of it.
 Everything shown is the working app. Numbers here match the repository on 12 Nov 2026.
 
@@ -19,7 +21,7 @@ Everything shown is the working app. Numbers here match the repository on 12 Nov
 
 > "Imagine you're sixty-two, a tailor in Mysuru, and your doctor says you need cataract surgery. You have to choose a lens that stays in your eye for the rest of your life. Monofocal, EDOF, trifocal, toric. The brochure is in English. The counselling slot is ten minutes. Most people just pick on price, and some regret it for years."
 
-> "We're team New Monks from BMSIT&M. This is **DrishtiSaathi**, a companion for the cataract journey, built for the AI-Powered Digital Experiences stream."
+> "We're team New Monks from BMSIT&M. This is **DrishtiSaathi**, a companion for the cataract journey, built for the ZEISS Hackathon's AI-Powered Digital Experiences track."
 
 ## 2 · What we're solving (0:30–1:00) · A · keep scrolling the five chapters
 
