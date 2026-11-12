@@ -1,6 +1,8 @@
 # Mid-progress presentation: DrishtiSaathi (about 5 minutes + Q&A)
 
-Format: talk + live demo. Three speakers (**A** problem & vision, **B** patient demo, **C** surgeon side & tech); one person can do all of it.
+**Team New Monks, BMSIT&M:** Chinmay D M · Umashankar S · Vineeth Sagar S · Vishnu Kashyap D
+
+Format: talk + live demo, four speakers. Suggested split, assign names among yourselves: **A** problem & vision · **B** patient demo · **C** surgeon side & safety · **D** progress, close and Q&A lead. One person can do all of it.
 Everything shown is the working app. Numbers here match the repository on 12 Nov 2026.
 
 ## Before you start (10 minutes earlier)
@@ -17,7 +19,7 @@ Everything shown is the working app. Numbers here match the repository on 12 Nov
 
 > "Imagine you're sixty-two, a tailor in Mysuru, and your doctor says you need cataract surgery. You have to choose a lens that stays in your eye for the rest of your life. Monofocal, EDOF, trifocal, toric. The brochure is in English. The counselling slot is ten minutes. Most people just pick on price, and some regret it for years."
 
-> "We're team [name] from BMSIT&M. This is **DrishtiSaathi**, a companion for the cataract journey, built for the AI-Powered Digital Experiences stream."
+> "We're team New Monks from BMSIT&M. This is **DrishtiSaathi**, a companion for the cataract journey, built for the AI-Powered Digital Experiences stream."
 
 ## 2 · What we're solving (0:30–1:00) · A · keep scrolling the five chapters
 
@@ -64,19 +66,19 @@ Switch to `/staff/ABDUL` and show the urgent alert. Then on `/safety` type: *"aa
 
 > "Every patient message passes a red-flag check that works without AI, in four languages, including romanised and mixed typing. On its first held-out test of 85 messages it caught 97% of emergencies with no false alarms. And the AI can raise an alert but never clear one."
 
-## 7 · Progress so far and what's next (4:10–4:50) · A
+## 7 · Progress so far and what's next (4:10–4:50) · D
 
 > "Where we are at mid-point: the full patient and surgeon journey works end to end. We have 74 automated tests, a safety and Q&A scorecard on 235 labelled cases, and a browser test of the whole journey. It runs fully offline without any AI key, and the voices can run on an open-source Indian-language model on a laptop GPU, free and private."
 
 > "Next: a native-speaker and clinician review of every Kannada, Hindi and Tamil line and every safety case; a fresh held-out safety set written by people outside our team; drop reminders on WhatsApp; and a clinic outcomes page showing how close predicted vision is to the real result."
 
-## 8 · Close (4:50–5:00) · A
+## 8 · Close (4:50–5:00) · D
 
 > "DrishtiSaathi: so every patient sees the choice clearly, before they see the world clearly again. Thank you, happy to take questions."
 
 ---
 
-## Likely questions (short answers)
+## Likely questions (short answers) · D leads, others jump in
 
 **Is this a medical device? Is it safe?**
 It's decision support for the surgeon, not a diagnosis. The surgeon approves every plan before the patient sees it. Safety alerts use rules we measure on held-out cases, and the AI can only raise an alert, never clear one.

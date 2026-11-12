@@ -16,7 +16,7 @@ The judges want **Problem, Solution & Expected Impact, Execution** in 1–3 minu
 
 **1 · Hook (0:00–0:15) · laptop, landing page, top of the page**
 Let the pillars rise, then start scrolling slowly.
-> "Hi, we're team [name] from BMSIT&M. This is DrishtiSaathi, a companion for cataract patients, built for the AI-Powered Digital Experiences stream."
+> "Hi, we're team New Monks from BMSIT&M. This is DrishtiSaathi, a companion for cataract patients, built for the AI-Powered Digital Experiences stream."
 
 **2 · The problem (0:15–0:35) · keep scrolling through the five chapters**
 > "Every cataract patient chooses a lens that stays in their eye for life. Here, that choice often happens in a few rushed minutes, from an English brochure, in a language the family doesn't speak at home. So people pick on price, or regret what they paid for. And after surgery, clinics drown in repeat calls while real warning signs wait."
