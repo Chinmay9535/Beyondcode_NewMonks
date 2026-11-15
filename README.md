@@ -63,16 +63,11 @@ Surgeon dashboard: http://localhost:3000/staff, PIN `2468`. To reset the demo, d
 4. Open `/p/ABDUL` → **Eye test**. His trend is on the surgeon page; a bad result raises an urgent alert. Then on `/staff/ABDUL` enter "-0.50" in **Plan second eye**.
 5. Open `/safety` and type a message in any language.
 
-### Public demo link (Hugging Face Space)
+### Public demo link (Render, free)
 
-One container serves everything over HTTPS (needed for the microphone and camera): [`deploy/hf-space/`](deploy/hf-space) holds the Dockerfile, start script and Space card.
+One container serves everything over HTTPS (needed for the microphone and camera): [`deploy/Dockerfile`](deploy/Dockerfile) builds the site and the API, [`deploy/start.sh`](deploy/start.sh) runs both. [`render.yaml`](render.yaml) describes the service: on [Render](https://render.com), **New → Blueprint**, pick this repository, and enter `GEMINI_API_KEY` when asked (optional; without it the demo runs offline).
 
-```bash
-pip install huggingface_hub
-python scripts/deploy-hf.py <hf-user>/drishtisaathi   # needs a Hugging Face write token (HF_TOKEN)
-```
-
-Then, in the Space's **Settings → Variables and secrets**, add the secret `GEMINI_API_KEY`. The Space runs with `PUBLIC_DEMO=true`: opening Ramesh gives each visitor a fresh copy (code `RAMESHxxxx`, removed after a day), and the data resets to the four demo patients whenever the Space restarts.
+The service runs with `PUBLIC_DEMO=true`: opening Ramesh gives each visitor a fresh copy (code `RAMESHxxxx`, removed after a day), and the data resets to the four demo patients whenever the service restarts. Render's free plan sleeps after 15 idle minutes; the first visit after that takes about a minute.
 
 ### Configuration
 

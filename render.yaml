@@ -1,0 +1,17 @@
+# Render blueprint: the public demo as one free Docker web service (see deploy/Dockerfile).
+services:
+  - type: web
+    name: drishtisaathi
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
