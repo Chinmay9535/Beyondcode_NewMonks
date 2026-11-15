@@ -19,6 +19,7 @@ How matching works (rather than listing whole sentences)
 from __future__ import annotations
 
 import re
+import unicodedata
 from typing import Any
 
 from .. import llm
@@ -206,25 +207,38 @@ def detect_rules(text: str) -> dict[str, Any]:
             "worsening": worsening, "intense": intense, "source": "rules"}
 
 
-LLM_SYSTEM = """You triage messages from patients recovering from cataract surgery.
-Decide if the message describes a symptom that the clinic must know about.
+LLM_SYSTEM = """You triage messages from patients of a cataract clinic (before or after surgery).
+Decide if the message reports an eye or body SYMPTOM the patient has now that the clinic must know about.
 urgent: vision getting worse, severe or increasing pain, increasing redness with pain, discharge/pus, flashes/floaters/curtain, vomiting with eye pain, eye injury.
-soon: mild pain, redness, blurring, headache or anything else the doctor should review today.
-none: questions or normal recovery talk (watering, mild itching, grittiness, light sensitivity, halos).
-Return JSON: {"severity":"urgent|soon|none","category":"short snake_case","patient_en":"English translation"}"""
+soon: mild pain, redness, blurring, headache or another symptom the doctor should review today.
+none: no symptom. This includes describing daily life, work, hobbies, reading, sewing, driving or travel,
+answering questions about their routine, preferences or budget, questions about surgery or recovery,
+and normal recovery (watering, mild itching, grittiness, light sensitivity, halos).
+symptom_words: copy the exact words from the message that name the symptom ("" when none).
+Return JSON: {"severity":"urgent|soon|none","category":"short snake_case","symptom_words":"...","patient_en":"English translation"}"""
 
 RANK = {None: 0, "none": 0, "soon": 1, "urgent": 2}
+
+
+def _grounded(words: Any, text: str) -> bool:
+    """The LLM may only raise an alert for symptom words that are really in the message."""
+    if not isinstance(words, str):
+        return False
+    def clean(x: str) -> str:   # drop punctuation, keep letters and Indic vowel signs
+        return norm("".join(ch if ch.isalnum() or unicodedata.category(ch).startswith("M") else " " for ch in x))
+    w = clean(words)
+    return len(w.strip()) >= 2 and w in clean(text)
 
 
 def detect(text: str, *, use_llm: bool = True) -> dict[str, Any]:
     result = detect_rules(text)
     if use_llm and llm.enabled():
         try:
-            data = llm.complete_json(LLM_SYSTEM, text, max_tokens=200)
+            data = llm.complete_json(LLM_SYSTEM, text, max_tokens=250, temperature=0.0)
             sev = data.get("severity")
             result["patient_en"] = data.get("patient_en")
-            if RANK.get(sev, 0) > RANK.get(result["severity"], 0):
-                result.update(flag=True, severity=sev, source="llm")
+            if RANK.get(sev, 0) > RANK.get(result["severity"], 0) and _grounded(data.get("symptom_words"), text):
+                result.update(flag=True, severity=sev, source="llm", matched=result["matched"] + [str(data["symptom_words"])[:80]])
                 if data.get("category"):
                     result["categories"] = [str(data["category"])[:40]] + result["categories"]
         except llm.LLMUnavailable:

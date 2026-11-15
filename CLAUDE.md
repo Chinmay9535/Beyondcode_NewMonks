@@ -8,7 +8,7 @@ A voice-first assistant for cataract patients (Kannada, Hindi, Tamil, English) p
 1. **Intake** (`backend/app/services/intake.py`): the conversation is topic-driven by code (day → near → mid → night → glasses → budget). Topics already covered are skipped. Patient words become *activities* (distance_cm, detail, night, hours, importance) via the LLM, or offline via a multilingual lexicon (substring match for Indic words, whole-word match for English).
 2. **Ranking** (`services/lenses.py`): per-activity predicted logMAR from each lens's defocus curve (monocular, anchored to the published figures in each family's `sources`) gives the "Vision Day Map". The score is additive, so contributions are exact Shapley values vs. the average lens. Clinical rules come from `clinic.json`, plus a toric check and SRK/T IOL power.
 3. **Q&A** (`services/rag.py`): BM25 plus multilingual keywords over `backend/knowledge/*.md`. Sections carry `> kn:/hi:/ta:` curated translations. Every answer cites; "not found" creates an info alert.
-4. **Red flags** (`services/redflag.py`): rules run on every patient message. The LLM may only raise severity. Daily check-in rules live here too.
+4. **Red flags** (`services/redflag.py`): rules run on every patient message. The LLM may only raise severity, at temperature 0, and only when the `symptom_words` it quotes really occur in the message (`_grounded`); this keeps intake answers like "I ride a scooter at night" from raising alerts. Daily check-in rules live here too.
 5. **Recovery** (`services/recovery.py`): dose schedule from `clinic.json`, using naive clinic-local times (`config.local_now`).
 6. **Both eyes** (`lenses.rank`): plans are strategies from `clinic.json` (`families`/`targets` = [dominant, non-dominant]). Each eye's curve is shifted by its target; `binocular()` combines the eyes (better eye + summation fading with difference). Fellow eye: `planned` | `operated` (fixed, with `actual_se`, triggering the 50% second-eye refinement) | `natural`. Endpoint `/staff/patients/{id}/second-eye`.
 7. **Vision tests** (`services/visiontest.py`, `web/lib/vision.ts`, `components/VisionTest.tsx`): card calibration (85.6 mm), tumbling E sized from logMAR and distance, staircase (pass 3 before 2 wrong), Amsler grid. Post-op 2-line drop → urgent alert; Amsler distortion pre-op → macula note, post-op → soon.
@@ -20,12 +20,14 @@ The patient never sees a ranking until the surgeon approves (`Recommendation.sta
 ## Run / test
 
 - `./scripts/dev.sh`: API on :8000, web on :3000 (Next rewrites `/api/*` to `BACKEND_URL`).
-- `cd backend && .venv/bin/python -m pytest -q`: 65 tests, isolated DB, offline mode. `python -m app.services.evaluation --errors` prints the safety scorecard.
+- `cd backend && .venv/bin/python -m pytest -q`: 78 tests, isolated DB, offline mode. `python -m app.services.evaluation --errors` prints the safety scorecard.
 - `cd web && npx tsc --noEmit && npx next build`.
 - `node scripts/e2e-smoke.cjs [shotdir]`: Playwright journey (needs a fresh DB: delete `backend/drishtisaathi.db` and restart the API).
 - Demo codes: RAMESH (fresh), LAKSHMI, KAMALA, ABDUL. Staff PIN 2468. Seeds go through the real intake engine (`app/seed.py`, scripts keyed by topic).
 
 ## Conventions and gotchas
+
+- LLM (`app/llm.py`): `LLM_PROVIDER=gemini` + `GEMINI_API_KEY` is the free default (`gemini-3.5-flash-lite` via Gemini's OpenAI-compatible endpoint). A 429 starts a cooldown (`LLM_COOLDOWN_S`) during which every feature uses its offline path. Free tier is about 15 requests/minute: space out live LLM tests.
 
 - SQLModel ≥0.0.48 maps `datetime` to a tz-aware type. Our columns are declared `sa_type=DateTime` (naive): UTC for events, clinic-local for doses. API serialises event times with a `Z` suffix (`core.iso`).
 - Lexicon additions: check for substring collisions (e.g. ಹೊಲ inside ಹೊಲಿಗೆ, कार inside सरकार, படி inside இப்படி) and add a test in `tests/test_engine.py`.

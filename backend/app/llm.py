@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from typing import Any
 
 import httpx
@@ -19,8 +20,29 @@ from .config import get_settings
 log = logging.getLogger(__name__)
 
 
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
+GEMINI_MODEL = "gemini-3.5-flash-lite"  # free tier: about 15 requests/minute, 500/day
+
+# Free tiers rate-limit. After a 429 we stop calling for a while and every feature
+# runs on its offline rules, instead of spending a failed request on each message.
+_cooldown = {"until": 0.0}
+
+
 class LLMUnavailable(Exception):
     pass
+
+
+def model() -> str:
+    s = get_settings()
+    if s.llm_provider == "gemini":
+        return s.llm_model or GEMINI_MODEL
+    if s.llm_provider == "anthropic":
+        return s.llm_model or "claude-opus-5-5"
+    return s.llm_model
+
+
+def cooling_down() -> bool:
+    return time.monotonic() < _cooldown["until"]
 
 
 def enabled() -> bool:
@@ -31,6 +53,8 @@ def enabled() -> bool:
         return bool(s.openai_base_url and s.llm_model)
     if s.llm_provider == "anthropic":
         return bool(s.anthropic_api_key)
+    if s.llm_provider == "gemini":
+        return bool(s.gemini_api_key)
     return False
 
 
@@ -40,15 +64,25 @@ def provider_label() -> str:
         return "offline"
     if s.llm_provider == "azure":
         return f"azure:{s.azure_openai_deployment}"
-    if s.llm_provider == "anthropic":
-        return f"anthropic:{s.llm_model or 'claude-opus-5-5'}"
+    if s.llm_provider in ("anthropic", "gemini"):
+        return model()
     return f"openai-compatible:{s.llm_model}"
 
 
-def complete(system: str, user: str, *, json_mode: bool = False, max_tokens: int = 800) -> str:
+def _check(r: httpx.Response) -> None:
+    if r.status_code == 429:
+        wait = get_settings().llm_cooldown_s
+        _cooldown["until"] = time.monotonic() + wait
+        log.warning("LLM rate-limited; offline rules for %.0f s", wait)
+    r.raise_for_status()
+
+
+def complete(system: str, user: str, *, json_mode: bool = False, max_tokens: int = 800, temperature: float = 0.2) -> str:
     """Single-turn completion. Raises LLMUnavailable on any failure so callers can fall back."""
     if not enabled():
         raise LLMUnavailable("no provider configured")
+    if cooling_down():
+        raise LLMUnavailable("rate-limited, using offline rules for now")
     s = get_settings()
     try:
         with httpx.Client(timeout=s.llm_timeout_s) as client:
@@ -58,19 +92,20 @@ def complete(system: str, user: str, *, json_mode: bool = False, max_tokens: int
                     "https://api.anthropic.com/v1/messages",
                     headers={"x-api-key": s.anthropic_api_key, "anthropic-version": "2023-06-01"},
                     json={
-                        "model": s.llm_model or "claude-opus-5-5",
+                        "model": model(),
                         "max_tokens": max_tokens,
+                        "temperature": temperature,
                         "system": sys_prompt,
                         "messages": [{"role": "user", "content": user}],
                     },
                 )
-                r.raise_for_status()
+                _check(r)
                 return "".join(b.get("text", "") for b in r.json()["content"] if b.get("type") == "text")
 
             body: dict[str, Any] = {
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                 "max_tokens": max_tokens,
-                "temperature": 0.2,
+                "temperature": temperature,
             }
             if json_mode:
                 body["response_format"] = {"type": "json_object"}
@@ -80,12 +115,16 @@ def complete(system: str, user: str, *, json_mode: bool = False, max_tokens: int
                     f"{s.azure_openai_deployment}/chat/completions?api-version={s.azure_openai_api_version}"
                 )
                 headers = {"api-key": s.azure_openai_api_key}
+            elif s.llm_provider == "gemini":
+                url = f"{GEMINI_URL}/chat/completions"
+                headers = {"Authorization": f"Bearer {s.gemini_api_key}"}
+                body["model"] = model()
             else:
                 url = f"{s.openai_base_url.rstrip('/')}/chat/completions"
                 headers = {"Authorization": f"Bearer {s.openai_api_key or 'none'}"}
                 body["model"] = s.llm_model
             r = client.post(url, headers=headers, json=body)
-            r.raise_for_status()
+            _check(r)
             return r.json()["choices"][0]["message"]["content"] or ""
     except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
         log.warning("LLM call failed: %s", e)

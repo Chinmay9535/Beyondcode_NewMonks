@@ -17,8 +17,9 @@ class Settings(BaseSettings):
     surgeon_pin: str = "2468"
     secret_key: str = "change-me-in-production"
 
-    # LLM provider: "none" (offline rules + templates), "azure", "openai" (any
-    # OpenAI-compatible endpoint, e.g. Ollama at http://localhost:11434/v1) or "anthropic".
+    # LLM provider: "none" (offline rules + templates), "gemini" (free tier, Google AI Studio key),
+    # "azure", "openai" (any OpenAI-compatible endpoint, e.g. Ollama at http://localhost:11434/v1)
+    # or "anthropic".
     llm_provider: str = "none"
     llm_model: str = ""
     llm_timeout_s: float = 30.0
@@ -32,6 +33,9 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
 
     anthropic_api_key: str = ""
+
+    gemini_api_key: str = ""
+    llm_cooldown_s: float = 60.0  # after a rate limit (429), use offline rules for this long
 
     # Optional natural voices, tried in order: a local GPU server (tts-local/, free and offline),
     # Azure AI Speech (free F0 tier), Sarvam AI (paid); with none, the browser's most natural voice.

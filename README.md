@@ -69,8 +69,9 @@ Copy `backend/.env.example` to `backend/.env`. Everything is optional. Key setti
 
 | Variable | Purpose |
 |---|---|
-| `LLM_PROVIDER` | `none` (default, offline), `azure`, `openai` (any compatible endpoint), `anthropic` |
-| `AZURE_OPENAI_*` / `OPENAI_*` / `ANTHROPIC_API_KEY`, `LLM_MODEL` | Provider credentials |
+| `LLM_PROVIDER` | `none` (default, offline), `gemini` (**free**, recommended), `azure`, `openai` (any compatible endpoint), `anthropic` |
+| `GEMINI_API_KEY` | Free key from [Google AI Studio](https://aistudio.google.com/apikey), no card. Default model `gemini-3.5-flash-lite` (free tier about 15 requests/minute, 500/day; strong in Kannada, Hindi and Tamil). After a rate limit the app uses its offline rules for `LLM_COOLDOWN_S` (60 s) |
+| `AZURE_OPENAI_*` / `OPENAI_*` / `ANTHROPIC_API_KEY`, `LLM_MODEL` | Other providers' credentials; `LLM_MODEL` overrides the default model |
 | `LOCAL_TTS_URL` | Free, offline natural voices on your own NVIDIA GPU: run [`tts-local/`](tts-local/README.md) (AI4Bharat Indic Parler-TTS). Default `auto` finds it on 127.0.0.1:8010; tried first |
 | `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` | Natural Kannada/Hindi/Tamil/Indian-English voices, **free**: Azure AI Speech's Free (F0) tier includes 0.5M neural characters a month, and [Azure for Students](https://azure.microsoft.com/free/students) needs no credit card. Optional `AZURE_VOICES`, `TTS_PACE` |
 | `SARVAM_API_KEY` | Paid alternative: Sarvam AI Bulbul voices. With no key at all, the browser's most natural voice is used (Microsoft Edge has the same neural voices built in) |
