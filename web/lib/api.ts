@@ -120,6 +120,7 @@ export type Curve = { name: string; curve: [number, number][]; halo: number };
 export type Meta = {
   clinic: Clinic;
   ai: string;
+  public_demo?: boolean;
   tts: boolean;
   curves: Record<string, Curve>;
   conditions: Record<string, string>;

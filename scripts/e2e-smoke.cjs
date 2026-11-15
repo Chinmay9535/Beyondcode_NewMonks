@@ -13,6 +13,9 @@ const shot = (pg, name, full) => OUT ? pg.screenshot({ path: OUT + '/' + name, f
   const phone = await b.newContext({ ...devices['Pixel 7'] });
   const p = await phone.newPage(); watch(p, 'ramesh');
   await p.goto(BASE + '/p/RAMESH');
+  await p.getByRole('button', { name: /ಒಪ್ಪುತ್ತೇನೆ/ }).waitFor();
+  const RCODE = p.url().split('/p/')[1];      // a fresh copy (RAMESHxxxx) on the public demo
+  console.log('patient code:', RCODE);
   await p.getByRole('button', { name: /ಒಪ್ಪುತ್ತೇನೆ/ }).click();
   await p.waitForSelector('text=ನಮಸ್ಕಾರ');
   const input = p.getByRole('textbox');
@@ -45,7 +48,7 @@ const shot = (pg, name, full) => OUT ? pg.screenshot({ path: OUT + '/' + name, f
   await s.waitForSelector('text=Abdul Rahim');
   await s.waitForTimeout(600);
   await shot(s, '6-staff-dashboard.png', true);
-  await s.goto(BASE + '/staff/RAMESH');
+  await s.goto(BASE + '/staff/' + RCODE);
   await s.waitForSelector('text=Recommended plan');
   await s.waitForTimeout(800);
   await shot(s, '7-staff-ramesh.png', true);

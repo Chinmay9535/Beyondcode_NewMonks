@@ -42,7 +42,14 @@ export default function PatientApp() {
 
   const load = useCallback(async () => {
     try {
-      const [v, m] = await Promise.all([api<PatientView>(`/p/${code}`), api<Meta>("/meta")]);
+      const m = await api<Meta>("/meta");
+      // Hosted demo: each visitor gets their own fresh Ramesh, so finished interviews don't pile up.
+      if (m.public_demo && code.toUpperCase() === "RAMESH") {
+        const r = await api<{ code: string }>("/demo/ramesh", { method: "POST" });
+        router.replace(`/p/${r.code}`);
+        return;
+      }
+      const v = await api<PatientView>(`/p/${code}`);
       setMe(v); setMeta(m);
       const [im, am] = await Promise.all([api<Message[]>(`/p/${code}/messages?channel=intake`), api<Message[]>(`/p/${code}/messages?channel=recovery`)]);
       setIntakeMsgs(im); setAskMsgs(am);
@@ -50,7 +57,7 @@ export default function PatientApp() {
     } catch (e) {
       setErr(e instanceof ApiError && e.status === 404 ? "notfound" : String(e));
     }
-  }, [code]);
+  }, [code, router]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 
@@ -141,6 +148,13 @@ export default function PatientApp() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {meta.public_demo && !me.consented && (
+        <p lang="en" className="mx-4 mt-3 rounded-xl border border-line px-3 py-2 text-[0.8125rem] leading-snug text-muted">
+          Public demo with a sample patient: please don&apos;t enter real health information. Your copy&apos;s code is{" "}
+          <span className="font-semibold text-ink">{me.id}</span>; it stays for a day.
+        </p>
+      )}
 
       {!me.consented ? (
         <motion.main variants={stagger} initial="hidden" animate="show" className="relative flex flex-1 flex-col justify-center gap-6 overflow-hidden px-5 py-10">

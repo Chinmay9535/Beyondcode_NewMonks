@@ -8,10 +8,11 @@ import httpx
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from sqlmodel import Session
 
 from . import llm
 from .config import get_settings
-from .db import init_db
+from .db import engine, init_db
 from .routers import patient, staff
 from .services import lenses
 from .services import tts as tts_service
@@ -52,12 +53,24 @@ def meta():
     return {
         "clinic": lenses.clinic_config()["clinic"],
         "ai": llm.provider_label(),
+        "public_demo": s.public_demo,
         "tts": tts_service.provider() != "none",
         "tts_provider": tts_service.provider(),
         "curves": lenses.curves(),
         "conditions": lenses.CONDITIONS,
         "languages": {"kn": "ಕನ್ನಡ", "hi": "हिन्दी", "ta": "தமிழ்", "en": "English"},
     }
+
+
+@app.post("/api/demo/ramesh")
+def demo_ramesh():
+    """Public demo only: a fresh copy of Ramesh for this visitor."""
+    if not get_settings().public_demo:
+        raise HTTPException(404, "Not a public demo")
+    from .seed import fresh_ramesh
+
+    with Session(engine) as s:
+        return {"code": fresh_ramesh(s).id}
 
 
 @app.get("/api/safety")

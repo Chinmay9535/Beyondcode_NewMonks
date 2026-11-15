@@ -141,3 +141,26 @@ def seed() -> None:
                     ans = rag.answer(text, p.language)
                     add_message(s, p, "recovery", "assistant", ans["text"], ans["text_en"], kind="answer", citations=ans["citations"], found=ans["found"], mode="curated")
         s.commit()
+
+
+def fresh_ramesh(s: Session) -> Patient:
+    """A new copy of the fresh demo patient, for the hosted public demo. Old copies are
+    removed (more than a day old, or beyond `demo_copies_max`) so the dashboard stays usable."""
+    from .config import get_settings
+    from .models import new_code
+    from .routers.patient import erase
+
+    d = DEMO[0]
+    copies = s.exec(select(Patient).where(Patient.id.startswith("RAMESH"), Patient.id != "RAMESH").order_by(Patient.created_at.desc())).all()
+    cutoff = now() - timedelta(days=1)
+    for i, old in enumerate(copies):
+        if i >= get_settings().demo_copies_max - 1 or old.created_at < cutoff:
+            erase(s, old.id)
+    p = Patient(**{**d["patient"], "id": "RAMESH" + new_code()[:4]})
+    s.add(p)
+    s.flush()
+    s.add(Biometry(patient_id=p.id, eye=p.eye, **d["biometry"]))
+    s.add(Biometry(patient_id=p.id, eye="left" if p.eye == "right" else "right", **d["fellow_biometry"]))
+    s.commit()
+    s.refresh(p)
+    return p

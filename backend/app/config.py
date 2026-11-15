@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     tts_pace: float = 0.92       # 0.5-2.0; slightly slower than normal for older listeners
 
     seed_demo_data: bool = True
+    # Hosted public demo: every visitor who opens /p/RAMESH gets a fresh copy of Ramesh
+    # (code RAMESHxxxx), so one judge finishing the interview doesn't block the next.
+    public_demo: bool = False
+    demo_copies_max: int = 60
     clinic_timezone: str = "Asia/Kolkata"
 
 

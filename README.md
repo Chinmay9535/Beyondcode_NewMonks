@@ -63,6 +63,17 @@ Surgeon dashboard: http://localhost:3000/staff, PIN `2468`. To reset the demo, d
 4. Open `/p/ABDUL` → **Eye test**. His trend is on the surgeon page; a bad result raises an urgent alert. Then on `/staff/ABDUL` enter "-0.50" in **Plan second eye**.
 5. Open `/safety` and type a message in any language.
 
+### Public demo link (Hugging Face Space)
+
+One container serves everything over HTTPS (needed for the microphone and camera): [`deploy/hf-space/`](deploy/hf-space) holds the Dockerfile, start script and Space card.
+
+```bash
+pip install huggingface_hub
+python scripts/deploy-hf.py <hf-user>/drishtisaathi   # needs a Hugging Face write token (HF_TOKEN)
+```
+
+Then, in the Space's **Settings → Variables and secrets**, add the secret `GEMINI_API_KEY`. The Space runs with `PUBLIC_DEMO=true`: opening Ramesh gives each visitor a fresh copy (code `RAMESHxxxx`, removed after a day), and the data resets to the four demo patients whenever the Space restarts.
+
 ### Configuration
 
 Copy `backend/.env.example` to `backend/.env`. Everything is optional. Key settings:
